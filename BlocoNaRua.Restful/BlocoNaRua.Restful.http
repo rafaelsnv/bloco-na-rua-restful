@@ -1,0 +1,6 @@
+@BlocoNaRua.Restful_HostAddress = http://localhost:5248
+
+GET {{BlocoNaRua.Restful_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

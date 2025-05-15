@@ -1,0 +1,55 @@
+{
+  "version": "2.0.0",
+  "options": {
+    "cwd": "${workspaceFolder}/BlocoNaRua.Restful"
+  },
+  "tasks": [
+    {
+      "label": "clean",
+      "command": "dotnet",
+      "type": "process",
+      "args": ["clean"],
+      "problemMatcher": "$msCompile",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": false,
+        "revealProblems": "onProblem"
+      }
+    },
+    {
+      "label": "watch build",
+      "dependsOn": "clean",
+      "dependsOrder": "sequence",
+      "command": "dotnet",
+      "type": "process",
+      "args": ["watch", "build", "-v:m", "--property", "WarningLevel=0"],
+      "problemMatcher": {
+        "owner": "csharp",
+        "fileLocation": ["absolute"],
+        "pattern": {
+          "regexp": "^(?!.*Exited with error code -1).\\s*(.*)\\((\\d+),(\\d+)\\):\\s*(error|warning)\\s*(\\w+):\\s*(.*)$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "severity": 4,
+          "code": 5,
+          "message": 6
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "Executing task:.*watch",
+          "endsPattern": "^\\s*(Construir êxito.*|Build succeeded.*)$"
+        },
+        "applyTo": "allDocuments"
+      },
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "clear": true,
+        "revealProblems": "onProblem"
+      }
+    }
+  ]
+}
