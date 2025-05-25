@@ -11,6 +11,11 @@
       "preLaunchTask": "watch build",
       "program": "${workspaceFolder}/BlocoNaRua.Restful/bin/Debug/net8.0/BlocoNaRua.Restful.dll",
       "cwd": "${workspaceFolder}/BlocoNaRua.Restful",
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "\\bNow listening on:\\s+(https?://\\S+)",
+        "uriFormat": "%s/swagger"
+      },
       "env": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },

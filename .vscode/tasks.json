@@ -39,7 +39,7 @@
         "background": {
           "activeOnStart": true,
           "beginsPattern": "Executing task:.*watch",
-          "endsPattern": "^\\s*(Construir êxito.*|Build succeeded.*)$"
+          "endsPattern": "^\\s*(Compilação com êxito.*|Build succeeded.*)$"
         },
         "applyTo": "allDocuments"
       },
