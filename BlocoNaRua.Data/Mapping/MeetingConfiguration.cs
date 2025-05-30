@@ -12,7 +12,7 @@ public class MeetingConfiguration : IEntityTypeConfiguration<MeetingEntity>
 
         builder.HasKey(m => m.Id);
 
-        builder.HasMany(m => m.Attendances)
+        builder.HasMany(m => m.Presences)
                .WithOne(a => a.Meeting)
                .HasForeignKey(a => a.MeetingId);
     }
