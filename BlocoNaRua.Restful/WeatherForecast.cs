@@ -1,4 +1,4 @@
-namespace BlocoNaRua.Restful;
+﻿namespace BlocoNaRua.Restful;
 
 public class WeatherForecast
 {

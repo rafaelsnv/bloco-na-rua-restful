@@ -1,4 +1,4 @@
-using BlocoNaRua.Core.Models;
+﻿using BlocoNaRua.Core.Models;
 
 namespace BlocoNaRua.Domain.Entities;
 
