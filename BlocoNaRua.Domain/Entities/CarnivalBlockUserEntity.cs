@@ -4,7 +4,8 @@ namespace BlocoNaRua.Domain.Entities;
 
 
 
-public class CarnivalBlockUserEntity(int id) : EntityBase(id) // Entidade que representa a relação entre um bloco de carnaval e um usuário
+public class CarnivalBlockUserEntity(int id) : EntityBase(id)
+// Entidade que representa a relação entre um bloco de carnaval e um usuário
 {
     public int CarnivalBlockId { get; set; }
     public CarnivalBlockEntity CarnivalBlock { get; set; } = null!;
