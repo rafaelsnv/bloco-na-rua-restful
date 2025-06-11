@@ -1,4 +1,5 @@
-﻿using BlocoNaRua.Domain.Entities;
+﻿using BlocoNaRua.Data.Mapping;
+using BlocoNaRua.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace BlocoNaRua.Data.Context;
@@ -13,6 +14,10 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder
+            .HasDefaultSchema("public")
+            .ApplyConfiguration(new UserConfiguration());
+
         base.OnModelCreating(modelBuilder);
     }
 }

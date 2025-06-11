@@ -1,5 +1,5 @@
-﻿using AulaRepositoryPattern.Data.Repositories;
-using BlocoNaRua.Data.Context;
+﻿using BlocoNaRua.Data.Context;
+using BlocoNaRua.Data.Repositories.Base;
 using BlocoNaRua.Data.Repositories.Interfaces;
 using BlocoNaRua.Domain.Entities;
 

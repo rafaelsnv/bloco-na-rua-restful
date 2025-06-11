@@ -1,11 +1,12 @@
-﻿using AulaRepositoryPattern.Data.Repositories;
-using BlocoNaRua.Core.Models;
+﻿using BlocoNaRua.Core.Models;
 using BlocoNaRua.Data.Context;
 using BlocoNaRua.Data.Repositories;
+using BlocoNaRua.Data.Repositories.Base;
 using BlocoNaRua.Data.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Npgsql.EntityFrameworkCore.PostgreSQL;
 
 namespace BlocoNaRua.Data.Extensions;
 
@@ -15,7 +16,9 @@ public static class DataExtensions
     {
         services.AddDbContext<AppDbContext>(options =>
         {
-            options.UseNpgsql(configuration.GetConnectionString("DefaultConnection"));
+            options.UseNpgsql(configuration.GetConnectionString("DefaultConnection"))
+                   .EnableSensitiveDataLogging()
+                   .EnableDetailedErrors();
         });
 
         return services;

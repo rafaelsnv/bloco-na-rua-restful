@@ -9,9 +9,9 @@ public class UserEntity(int id) : EntityBase(id)
     public string Password { get; set; } = string.Empty;
     public string Phone { get; set; } = string.Empty;
     public string ProfileImage { get; set; } = string.Empty;
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
-    public List<CarnivalBlockUserEntity> CarnivalBlockUsers { get; set; } = [];
-    public List<MeetingPresenceEntity> MeetingAttendances { get; set; } = [];
+    public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime? UpdatedAt { get; set; } = DateTime.UtcNow;
+    // public List<CarnivalBlockUserEntity> CarnivalBlockUsers { get; set; } = [];
+    // public List<MeetingPresenceEntity> MeetingPresences { get; set; } = [];
 
 }
