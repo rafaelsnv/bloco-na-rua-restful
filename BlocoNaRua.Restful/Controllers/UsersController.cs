@@ -14,7 +14,7 @@ public class UsersController
     private readonly ILogger<UsersController> _logger = logger;
     private readonly IUserRepository _userRepository = userRepository;
 
-    [HttpGet]
+    [HttpGet("GetAll")]
     public async Task<IActionResult> GetUsers()
     {
         var users = await _userRepository.GetAllAsync();
