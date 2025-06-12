@@ -10,14 +10,15 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<MeetingEntity> Meetings { get; set; }
     public DbSet<CarnivalBlockEntity> CarnivalBlocks { get; set; }
     public DbSet<MeetingPresenceEntity> MeetingAttendances { get; set; }
-    public DbSet<CarnivalBlockUserEntity> CarnivalBlockUsers { get; set; }
+    public DbSet<CarnivalBlockUsersEntity> CarnivalBlockUsers { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder
             .HasDefaultSchema("public")
             .ApplyConfiguration(new UserConfiguration())
-            .ApplyConfiguration(new CarnivalBlockConfiguration());
+            .ApplyConfiguration(new CarnivalBlockConfiguration())
+            .ApplyConfiguration(new CarnivalBlockUsersConfiguration());
 
         base.OnModelCreating(modelBuilder);
     }

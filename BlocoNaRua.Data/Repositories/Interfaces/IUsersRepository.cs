@@ -3,4 +3,4 @@ using BlocoNaRua.Domain.Entities;
 
 namespace BlocoNaRua.Data.Repositories.Interfaces;
 
-public interface IUserRepository : IRepositoryBase<UserEntity>;
+public interface IUsersRepository : IRepositoryBase<UserEntity>;

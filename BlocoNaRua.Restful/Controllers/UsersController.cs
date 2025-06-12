@@ -8,11 +8,11 @@ namespace BlocoNaRua.Restful.Controllers;
 public class UsersController
     (
         ILogger<UsersController> logger,
-        IUserRepository userRepository
+        IUsersRepository userRepository
     ) : ControllerBase
 {
     private readonly ILogger<UsersController> _logger = logger;
-    private readonly IUserRepository _userRepository = userRepository;
+    private readonly IUsersRepository _userRepository = userRepository;
 
     [HttpGet("GetAll")]
     public async Task<IActionResult> GetUsers()

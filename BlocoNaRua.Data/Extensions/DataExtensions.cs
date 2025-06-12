@@ -25,8 +25,9 @@ public static class DataExtensions
     public static IServiceCollection AddRepositories(this IServiceCollection services)
     {
         services.AddScoped(typeof(IRepositoryBase<>), typeof(RepositoryBase<>));
-        services.AddScoped<IUserRepository, UserRepository>();
-        services.AddScoped<ICarnivalBlocksRepository, CarnivalBlockRepository>();
+        services.AddScoped<IUsersRepository, UsersRepository>();
+        services.AddScoped<ICarnivalBlocksRepository, CarnivalBlocksRepository>();
+        services.AddScoped<ICarnivalBlockUsersRepository, CarnivalBlockUsersRepository>();
         return services;
     }
 

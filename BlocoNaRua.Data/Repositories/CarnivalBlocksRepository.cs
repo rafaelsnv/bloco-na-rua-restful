@@ -5,6 +5,6 @@ using BlocoNaRua.Domain.Entities;
 
 namespace BlocoNaRua.Data.Repositories;
 
-public class CarnivalBlockRepository(AppDbContext appContext) : RepositoryBase<CarnivalBlockEntity>(appContext), ICarnivalBlocksRepository
+public class CarnivalBlocksRepository(AppDbContext appContext) : RepositoryBase<CarnivalBlockEntity>(appContext), ICarnivalBlocksRepository
 {
 }
