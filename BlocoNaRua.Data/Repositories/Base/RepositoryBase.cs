@@ -12,16 +12,7 @@ public class RepositoryBase<TEntity>(AppDbContext appContext) : IRepositoryBase<
 
     public async Task<List<TEntity>> GetAllAsync()
     {
-        try
-        {
-            return await _DbSet.AsNoTracking().ToListAsync();
-        }
-        catch (Exception ex)
-        
-        {
-            var msg = ex.Message;
-            throw;
-        }
+        return await _DbSet.AsNoTracking().ToListAsync();
     }
 
     public async Task<IEnumerable<TEntity>> GetAsync(Expression<Func<TEntity, bool>> filter = null)
