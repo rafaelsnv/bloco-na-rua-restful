@@ -18,7 +18,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             .HasDefaultSchema("public")
             .ApplyConfiguration(new UserConfiguration())
             .ApplyConfiguration(new CarnivalBlockConfiguration())
-            .ApplyConfiguration(new CarnivalBlockUsersConfiguration());
+            .ApplyConfiguration(new CarnivalBlockUsersConfiguration())
+            .ApplyConfiguration(new MeetingConfiguration());
 
         base.OnModelCreating(modelBuilder);
     }

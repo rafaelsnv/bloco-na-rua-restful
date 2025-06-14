@@ -13,21 +13,21 @@ public static class DataExtensions
 {
     public static IServiceCollection AddEntityFramework(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddDbContext<AppDbContext>(options =>
+        return services.AddDbContext<AppDbContext>(options =>
         {
             options.UseNpgsql(configuration.GetConnectionString("DefaultConnection"))
                    .EnableDetailedErrors();
         });
 
-        return services;
     }
 
     public static IServiceCollection AddRepositories(this IServiceCollection services)
     {
-        services.AddScoped(typeof(IRepositoryBase<>), typeof(RepositoryBase<>));
-        services.AddScoped<IUsersRepository, UsersRepository>();
-        services.AddScoped<ICarnivalBlocksRepository, CarnivalBlocksRepository>();
-        services.AddScoped<ICarnivalBlockUsersRepository, CarnivalBlockUsersRepository>();
+        services.AddScoped(typeof(IRepositoryBase<>), typeof(RepositoryBase<>))
+                .AddScoped<IUsersRepository, UsersRepository>()
+                .AddScoped<IMeetingsRepository, MeetingsRepository>()
+                .AddScoped<ICarnivalBlocksRepository, CarnivalBlocksRepository>()
+                .AddScoped<ICarnivalBlockUsersRepository, CarnivalBlockUsersRepository>();
         return services;
     }
 
