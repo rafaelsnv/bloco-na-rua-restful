@@ -16,6 +16,7 @@ public static class DataExtensions
         return services.AddDbContext<AppDbContext>(options =>
         {
             options.UseNpgsql(configuration.GetConnectionString("DefaultConnection"))
+                   .EnableSensitiveDataLogging()
                    .EnableDetailedErrors();
         });
 
@@ -27,6 +28,7 @@ public static class DataExtensions
                 .AddScoped<IUsersRepository, UsersRepository>()
                 .AddScoped<IMeetingsRepository, MeetingsRepository>()
                 .AddScoped<ICarnivalBlocksRepository, CarnivalBlocksRepository>()
+                .AddScoped<IMeetingPresencesRepository, MeetingPresencesRepository>()
                 .AddScoped<ICarnivalBlockUsersRepository, CarnivalBlockUsersRepository>();
         return services;
     }

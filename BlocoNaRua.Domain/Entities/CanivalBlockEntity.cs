@@ -12,6 +12,6 @@ public class CarnivalBlockEntity(int id) : EntityBase(id)
     public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; } = DateTime.UtcNow;
     public ICollection<CarnivalBlockUsersEntity> CarnivalBlockUsers { get; set; } = [];
-    public ICollection<MeetingEntity> CarnivalBlockMeetings { get; set; } = [];
-    // public List<MeetingEntity> Meetings { get; set; } = []; // TODO
+    public ICollection<MeetingEntity> Meetings { get; set; } = [];
+    public ICollection<MeetingPresenceEntity> Presences { get; set; } = [];
 }

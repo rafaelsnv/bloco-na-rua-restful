@@ -41,13 +41,9 @@ public class MeetingConfiguration : IEntityTypeConfiguration<MeetingEntity>
                .HasColumnName("updated_at");
                
         builder.HasOne(m => m.CarnivalBlock)
-               .WithMany(cb => cb.CarnivalBlockMeetings)
+               .WithMany(cb => cb.Meetings)
                .HasForeignKey(m => m.CarnivalBlockId)
                .OnDelete(DeleteBehavior.Restrict)
                .HasConstraintName("meetings_carnival_block_id_fkey");
-
-        // builder.HasMany(m => m.Presences)
-        //        .WithOne(a => a.Meeting)
-        //        .HasForeignKey(a => a.MeetingId);
     }
 }

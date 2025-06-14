@@ -4,9 +4,13 @@ namespace BlocoNaRua.Domain.Entities;
 
 public class MeetingPresenceEntity(int id) : EntityBase(id) // Entidade que representa a presença de um usuário em um encontro
 {
-    public int MeetingId { get; set; }
-    public MeetingEntity Meeting { get; set; } = null!;
     public int UserId { get; set; }
+    public int MeetingId { get; set; }
+    public int CarnivalBlockId { get; set; }
+    public bool IsPresent { get; set; } = false;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime? UpdatedAt { get; set; } = DateTime.UtcNow;
     public UserEntity User { get; set; } = null!;
-    public bool IsPresent { get; set; } = true;
+    public MeetingEntity Meeting { get; set; } = null!;
+    public CarnivalBlockEntity CarnivalBlock { get; set; } = null!;
 }

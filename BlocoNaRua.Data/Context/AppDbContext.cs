@@ -17,9 +17,10 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         modelBuilder
             .HasDefaultSchema("public")
             .ApplyConfiguration(new UserConfiguration())
+            .ApplyConfiguration(new MeetingConfiguration())
             .ApplyConfiguration(new CarnivalBlockConfiguration())
-            .ApplyConfiguration(new CarnivalBlockUsersConfiguration())
-            .ApplyConfiguration(new MeetingConfiguration());
+            .ApplyConfiguration(new MeetingPresenceConfiguration())
+            .ApplyConfiguration(new CarnivalBlockUsersConfiguration());
 
         base.OnModelCreating(modelBuilder);
     }

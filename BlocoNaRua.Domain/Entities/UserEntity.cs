@@ -12,6 +12,6 @@ public class UserEntity(int id) : EntityBase(id)
     public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; } = DateTime.UtcNow;
     public ICollection<CarnivalBlockUsersEntity> CarnivalBlockUsers { get; set; } = [];
-    // public List<MeetingPresenceEntity> MeetingPresences { get; set; } = [];
+    public ICollection<MeetingPresenceEntity> Presences { get; set; } = [];
 
 }
