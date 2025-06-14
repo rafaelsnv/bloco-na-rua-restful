@@ -14,31 +14,40 @@ public class MeetingConfiguration : IEntityTypeConfiguration<MeetingEntity>
                .HasName("id");
 
         builder.Property(m => m.Id)
-               .HasColumnName("id");
+               .HasColumnName("id")
+               .IsRequired();
 
         builder.Property(m => m.CarnivalBlockId)
-               .HasColumnName("carnival_block_id");
+               .HasColumnName("carnival_block_id")
+               .IsRequired();
 
         builder.Property(m => m.Name)
-               .HasColumnName("name");
+               .HasColumnName("name")
+               .IsRequired(false);
 
         builder.Property(m => m.Description)
-               .HasColumnName("description");
+               .HasColumnName("description")
+               .IsRequired(false);
 
         builder.Property(m => m.Location)
-               .HasColumnName("location");
+               .HasColumnName("location")
+               .IsRequired(false);
 
         builder.Property(m => m.MeetingCode)
-               .HasColumnName("meeting_code");
+               .HasColumnName("meeting_code")
+               .IsRequired(false);
 
         builder.Property(m => m.MeetingDateTime)
-               .HasColumnName("meeting_date_time");
+               .HasColumnName("meeting_date_time")
+               .IsRequired(false);
 
         builder.Property(m => m.CreatedAt)
-               .HasColumnName("created_at");
+               .HasColumnName("created_at")
+               .IsRequired();
 
         builder.Property(m => m.UpdatedAt)
-               .HasColumnName("updated_at");
+               .HasColumnName("updated_at")
+               .IsRequired(false);
                
         builder.HasOne(m => m.CarnivalBlock)
                .WithMany(cb => cb.Meetings)

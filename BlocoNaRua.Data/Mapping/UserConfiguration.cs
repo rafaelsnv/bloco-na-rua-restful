@@ -14,35 +14,35 @@ public class UserConfiguration : IEntityTypeConfiguration<UserEntity>
                .HasName("id");
 
         builder.Property(u => u.Id)
-               .HasColumnName("id");
+               .HasColumnName("id")
+               .IsRequired();
 
         builder.Property(u => u.Name)
-                .HasColumnName("name");
+                .HasColumnName("name")
+                .IsRequired();
 
         builder.Property(u => u.Email)
-               .HasColumnName("email");
+               .HasColumnName("email")
+               .IsRequired();
 
         builder.Property(u => u.Password)
-               .HasColumnName("password");
+               .HasColumnName("password")
+               .IsRequired();
 
         builder.Property(u => u.Phone)
-               .HasColumnName("phone");
+               .HasColumnName("phone")
+               .IsRequired();
 
         builder.Property(u => u.ProfileImage)
-               .HasColumnName("profile_image");
+               .HasColumnName("profile_image")
+               .IsRequired(false);
 
         builder.Property(u => u.CreatedAt)
-               .HasColumnName("created_at");
-        
+               .HasColumnName("created_at")
+               .IsRequired();
+
         builder.Property(u => u.UpdatedAt)
-               .HasColumnName("updated_at");
-
-        // builder.HasMany(u => u.CarnivalBlockUsers) // TODO
-        //        .WithOne(cbu => cbu.User)
-        //        .HasForeignKey(cbu => cbu.UserId);
-
-        // builder.HasMany(u => u.MeetingPresences) // TODO
-        //        .WithOne(a => a.User)
-        //        .HasForeignKey(a => a.UserId);
+               .HasColumnName("updated_at")
+               .IsRequired(false);
     }
 }

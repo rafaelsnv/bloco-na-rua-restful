@@ -14,28 +14,36 @@ public class CarnivalBlockConfiguration : IEntityTypeConfiguration<CarnivalBlock
                .HasName("id");
 
         builder.Property(u => u.Id)
-               .HasColumnName("id");
+               .HasColumnName("id")
+               .IsRequired();
 
         builder.Property(u => u.Name)
-                .HasColumnName("name");
+                .HasColumnName("name")
+                .IsRequired();
 
         builder.Property(u => u.Owner)
-               .HasColumnName("owner");
+               .HasColumnName("owner")
+               .IsRequired();
 
         builder.Property(u => u.InviteCode)
-               .HasColumnName("invite_code");
+               .HasColumnName("invite_code")
+               .IsRequired(false);
 
         builder.Property(u => u.ManagersInviteCode)
-               .HasColumnName("managers_invite_code");
+               .HasColumnName("managers_invite_code")
+               .IsRequired(false);
 
         builder.Property(u => u.CarnivalBlockImage)
-               .HasColumnName("carnival_block_image");
+               .HasColumnName("carnival_block_image")
+               .IsRequired(false);
 
         builder.Property(u => u.CreatedAt)
-               .HasColumnName("created_at");
-        
+               .HasColumnName("created_at")
+               .IsRequired();
+
         builder.Property(u => u.UpdatedAt)
-               .HasColumnName("updated_at");
+               .HasColumnName("updated_at")
+               .IsRequired(false);
 
         // builder.HasMany(cb => cb.Meetings)
         //        .WithOne()

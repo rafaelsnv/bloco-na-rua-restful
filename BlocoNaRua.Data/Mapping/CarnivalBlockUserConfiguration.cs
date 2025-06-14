@@ -14,22 +14,28 @@ public class CarnivalBlockUsersConfiguration : IEntityTypeConfiguration<Carnival
                .HasName("id");
 
         builder.Property(e => e.Id)
-               .HasColumnName("id");
+               .HasColumnName("id")
+               .IsRequired();
 
         builder.Property(e => e.CarnivalBlockId)
-               .HasColumnName("carnival_block_id");
+               .HasColumnName("carnival_block_id")
+               .IsRequired();
 
         builder.Property(e => e.UserId)
-               .HasColumnName("user_id");
+               .HasColumnName("user_id")
+               .IsRequired();
 
         builder.Property(e => e.Role)
-               .HasColumnName("role");
+               .HasColumnName("role")
+               .IsRequired();
 
         builder.Property(e => e.CreatedAt)
-               .HasColumnName("created_at");
+               .HasColumnName("created_at")
+               .IsRequired();
 
         builder.Property(e => e.UpdatedAt)
-               .HasColumnName("updated_at");
+               .HasColumnName("updated_at")
+               .IsRequired(false);
 
         builder.HasOne(e => e.CarnivalBlock)
                .WithMany(cb => cb.CarnivalBlockUsers)
