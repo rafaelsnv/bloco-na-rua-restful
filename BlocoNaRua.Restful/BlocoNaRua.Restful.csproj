@@ -14,4 +14,11 @@
     <ProjectReference Include="..\BlocoNaRua.Data\BlocoNaRua.Data.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="appsettings.Development.json">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

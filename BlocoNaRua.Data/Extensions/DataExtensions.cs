@@ -13,9 +13,12 @@ public static class DataExtensions
 {
     public static IServiceCollection AddEntityFramework(this IServiceCollection services, IConfiguration configuration)
     {
+        var connectionString = configuration.GetConnectionString("DefaultConnection");
+        Console.WriteLine($"Using connection string: {connectionString}");
+
         return services.AddDbContext<AppDbContext>(options =>
         {
-            options.UseNpgsql(configuration.GetConnectionString("DefaultConnection"))
+            options.UseNpgsql(connectionString)
                    .EnableSensitiveDataLogging()
                    .EnableDetailedErrors();
         });

@@ -4,12 +4,22 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
+builder.Configuration.AddEnvironmentVariables();
 IConfiguration configuration = builder.Configuration;
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(setup =>
+{
+    setup.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+    {
+        Title = "BlocoNaRua API",
+        Version = "v1",
+        Description = "API for managing carnival blocks and meetings in BlocoNaRua application."
+    });
+
+});
 builder.Services.AddEntityFramework(configuration);
 builder.Services.AddRepositories();
 
@@ -21,15 +31,6 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwaggerUI();
 }
-
-builder.Services.ConfigureSwaggerGen(setup =>
-{
-    setup.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
-    {
-        Title = "BlocoNaRua",
-        Version = "v1"
-    });
-});
 
 app.UseHttpsRedirection();
 
