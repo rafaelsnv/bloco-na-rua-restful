@@ -15,9 +15,9 @@ public class CarnivalBlockUsersController
     private readonly ICarnivalBlockUsersRepository _carnivalBlockUsersRepo = carnivalBlockUsersRepo;
 
     [HttpGet("GetAll")]
-    public async Task<IActionResult> GetCarnivalBlocks()
+    public async Task<IActionResult> GetBlocksUsers()
     {
-        var carnivalBlocks = await _carnivalBlockUsersRepo.GetAllAsync();
+        var blocksUsersList = await _carnivalBlockUsersRepo.GetAllAsync();
         return Ok(new List<string> { "CarnivalBlock1", "CarnivalBlock2" });
     }
 

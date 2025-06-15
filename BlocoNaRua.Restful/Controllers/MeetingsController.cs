@@ -17,7 +17,7 @@ public class MeetingsController
     [HttpGet("GetAll")]
     public async Task<IActionResult> GetMeetings()
     {
-        var meetings = await _meetingsRepository.GetAllAsync();
+        var meetingsList = await _meetingsRepository.GetAllAsync();
         return Ok(new List<string> { "Meeting1", "Meeting2" });
     }
 

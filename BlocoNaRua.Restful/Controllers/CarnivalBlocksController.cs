@@ -17,7 +17,7 @@ public class CarnivalBlocksController
     [HttpGet("GetAll")]
     public async Task<IActionResult> GetCarnivalBlocks()
     {
-        var carnivalBlocks = await _carnivalBlocksRepository.GetAllAsync();
+        var carnivalBlocksList = await _carnivalBlocksRepository.GetAllAsync();
         return Ok(new List<string> { "CarnivalBlock1", "CarnivalBlock2" });
     }
 

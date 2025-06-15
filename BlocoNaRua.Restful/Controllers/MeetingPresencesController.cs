@@ -17,7 +17,7 @@ public class MeetingPresencesController
     [HttpGet("GetAll")]
     public async Task<IActionResult> GetMeetingPresences()
     {
-        var presences = await _meetingPresencesRepo.GetAllAsync();
+        var presencesList = await _meetingPresencesRepo.GetAllAsync();
         return Ok(new List<string> { "Presence1", "Presence2" });
     }
 
