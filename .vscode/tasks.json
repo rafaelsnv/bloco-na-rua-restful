@@ -50,6 +50,33 @@
         "clear": true,
         "revealProblems": "onProblem"
       }
+    },
+    {
+      "label": "pre-deploy",
+      "command": "dotnet",
+      "type": "process",
+      "args": ["test"],
+      "problemMatcher": "$msCompile",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true,
+        "revealProblems": "onProblem"
+      }
+    },
+    {
+      "label": "deploy",
+      // "dependsOn": "pre-deploy",
+      "command": "dotnet",
+      "type": "process",
+      "args": ["publish", "-c", "Release", "-o", "${workspaceFolder}/publish"],
+      "problemMatcher": "$msCompile",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true,
+        "revealProblems": "onProblem"
+      }
     }
   ]
 }
