@@ -4,7 +4,6 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-builder.Configuration.AddEnvironmentVariables();
 IConfiguration configuration = builder.Configuration;
 
 builder.Services.AddControllers();
@@ -25,12 +24,15 @@ builder.Services.AddRepositories();
 
 var app = builder.Build();
 
+app.MapGet("/", () => Results.Redirect("/swagger/index.html"))
+   .ExcludeFromDescription();
+
 // Configure the HTTP request pipeline.
 app.UseSwagger();
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwaggerUI();
-}
+// if (app.Environment.IsDevelopment())
+// {
+app.UseSwaggerUI();
+// }
 
 app.UseHttpsRedirection();
 
