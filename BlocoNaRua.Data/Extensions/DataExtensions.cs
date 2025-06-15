@@ -13,14 +13,15 @@ public static class DataExtensions
 {
     public static IServiceCollection AddEntityFramework(this IServiceCollection services, IConfiguration configuration)
     {
-        var connectionString = configuration.GetConnectionString("DefaultConnection");
-        Console.WriteLine($"Using connection string: {connectionString}");
+        var connectionString = configuration.GetConnectionString("DefaultConnection")
+        ?? Environment.GetEnvironmentVariable("POSTGRESQLCONNSTR_SupabaseDB");
 
         return services.AddDbContext<AppDbContext>(options =>
         {
             options.UseNpgsql(connectionString)
-                   .EnableSensitiveDataLogging()
-                   .EnableDetailedErrors();
+                   .EnableDetailedErrors()
+                   .EnableServiceProviderCaching()
+                   .EnableThreadSafetyChecks();
         });
 
     }
