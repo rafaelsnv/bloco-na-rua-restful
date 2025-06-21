@@ -1,4 +1,4 @@
-using BlocoNaRua.Domain.Entities;
+﻿using BlocoNaRua.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -8,12 +8,51 @@ public class MeetingConfiguration : IEntityTypeConfiguration<MeetingEntity>
 {
     public void Configure(EntityTypeBuilder<MeetingEntity> builder)
     {
-        // builder.ToTable("Meetings"); // TODO
+        builder.ToTable("meetings");
 
-        builder.HasKey(m => m.Id);
+        builder.HasKey(m => m.Id)
+               .HasName("id");
 
-        builder.HasMany(m => m.Attendances)
-               .WithOne(a => a.Meeting)
-               .HasForeignKey(a => a.MeetingId);
+        builder.Property(m => m.Id)
+               .HasColumnName("id")
+               .IsRequired();
+
+        builder.Property(m => m.CarnivalBlockId)
+               .HasColumnName("carnival_block_id")
+               .IsRequired();
+
+        builder.Property(m => m.Name)
+               .HasColumnName("name")
+               .IsRequired(false);
+
+        builder.Property(m => m.Description)
+               .HasColumnName("description")
+               .IsRequired(false);
+
+        builder.Property(m => m.Location)
+               .HasColumnName("location")
+               .IsRequired(false);
+
+        builder.Property(m => m.MeetingCode)
+               .HasColumnName("meeting_code")
+               .IsRequired(false);
+
+        builder.Property(m => m.MeetingDateTime)
+               .HasColumnName("meeting_date_time")
+               .IsRequired(false);
+
+        builder.Property(m => m.CreatedAt)
+               .HasColumnName("created_at")
+               .IsRequired();
+
+        builder.Property(m => m.UpdatedAt)
+               .HasColumnName("updated_at")
+               .IsRequired(false);
+               
+        builder.HasOne(m => m.CarnivalBlock)
+               .WithMany(cb => cb.Meetings)
+               .HasForeignKey(m => m.CarnivalBlockId)
+               .OnDelete(DeleteBehavior.Restrict)
+               .HasConstraintName("meetings_carnival_block_id_fkey");
     }
 }

@@ -11,6 +11,9 @@
       "preLaunchTask": "watch build",
       "program": "${workspaceFolder}/BlocoNaRua.Restful/bin/Debug/net8.0/BlocoNaRua.Restful.dll",
       "cwd": "${workspaceFolder}/BlocoNaRua.Restful",
+      "launchBrowser": {
+        "enabled": true
+      },
       "env": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },

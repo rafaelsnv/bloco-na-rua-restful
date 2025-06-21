@@ -1,4 +1,4 @@
-using BlocoNaRua.Domain.Entities;
+﻿using BlocoNaRua.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -8,16 +8,41 @@ public class UserConfiguration : IEntityTypeConfiguration<UserEntity>
 {
     public void Configure(EntityTypeBuilder<UserEntity> builder)
     {
-        // builder.ToTable("Users"); // TODO
+        builder.ToTable("users");
 
-        builder.HasKey(u => u.Id);
+        builder.HasKey(u => u.Id)
+               .HasName("id");
 
-        builder.HasMany(u => u.CarnivalBlockUsers)
-               .WithOne(cbu => cbu.User)
-               .HasForeignKey(cbu => cbu.UserId);
+        builder.Property(u => u.Id)
+               .HasColumnName("id")
+               .IsRequired();
 
-        builder.HasMany(u => u.MeetingAttendances)
-               .WithOne(a => a.User)
-               .HasForeignKey(a => a.UserId);
+        builder.Property(u => u.Name)
+                .HasColumnName("name")
+                .IsRequired();
+
+        builder.Property(u => u.Email)
+               .HasColumnName("email")
+               .IsRequired();
+
+        builder.Property(u => u.Password)
+               .HasColumnName("password")
+               .IsRequired();
+
+        builder.Property(u => u.Phone)
+               .HasColumnName("phone")
+               .IsRequired();
+
+        builder.Property(u => u.ProfileImage)
+               .HasColumnName("profile_image")
+               .IsRequired(false);
+
+        builder.Property(u => u.CreatedAt)
+               .HasColumnName("created_at")
+               .IsRequired();
+
+        builder.Property(u => u.UpdatedAt)
+               .HasColumnName("updated_at")
+               .IsRequired(false);
     }
 }
