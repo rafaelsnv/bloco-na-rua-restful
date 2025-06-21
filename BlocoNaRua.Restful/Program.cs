@@ -31,7 +31,13 @@ app.MapGet("/", () => Results.Redirect("/swagger/index.html"))
 app.UseSwagger();
 // if (app.Environment.IsDevelopment())
 // {
-app.UseSwaggerUI();
+app.UseSwaggerUI(options =>
+{
+    options.DocumentTitle = "BlocoNaRua API";
+    options.ConfigObject.ShowExtensions = true;
+    options.ConfigObject.ShowCommonExtensions = true;
+    options.ConfigObject.DisplayRequestDuration = true;
+});
 // }
 
 app.UseHttpsRedirection();
