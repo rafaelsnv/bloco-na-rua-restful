@@ -14,4 +14,24 @@ public class CarnivalBlockEntity(int id) : EntityBase(id)
     public ICollection<CarnivalBlockUsersEntity> CarnivalBlockUsers { get; set; } = [];
     public ICollection<MeetingEntity> Meetings { get; set; } = [];
     public ICollection<MeetingPresenceEntity> Presences { get; set; } = [];
+
+    public CarnivalBlockEntity(
+        int id,
+        string name,
+        string owner,
+        string inviteCode,
+        string managersInviteCode,
+        string carnivalBlockImage,
+        DateTime? createdAt = null,
+        DateTime? updatedAt = null
+    ) : this(id)
+    {
+        Name = name;
+        Owner = owner;
+        InviteCode = inviteCode;
+        ManagersInviteCode = managersInviteCode;
+        CarnivalBlockImage = carnivalBlockImage;
+        CreatedAt = createdAt;
+        UpdatedAt = updatedAt;
+    }
 }
