@@ -14,4 +14,23 @@ public class UserEntity(int id) : EntityBase(id)
     public ICollection<CarnivalBlockUsersEntity> CarnivalBlockUsers { get; set; } = [];
     public ICollection<MeetingPresenceEntity> Presences { get; set; } = [];
 
+    public UserEntity(
+        int id,
+        string name,
+        string email,
+        string password,
+        string phone,
+        string profileImage,
+        DateTime? createdAt = null,
+        DateTime? updatedAt = null
+    ) : this(id)
+    {
+        Name = name;
+        Email = email;
+        Password = password;
+        Phone = phone;
+        ProfileImage = profileImage;
+        CreatedAt = createdAt;
+        UpdatedAt = updatedAt;
+    }
 }
