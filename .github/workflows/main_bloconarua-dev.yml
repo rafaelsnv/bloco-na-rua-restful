@@ -68,3 +68,4 @@ jobs:
           app-name: "bloconarua-dev"
           slot-name: "Production"
           package: .
+          clean: true
