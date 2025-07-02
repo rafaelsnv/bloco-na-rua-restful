@@ -14,7 +14,8 @@ public static class DataExtensions
     public static IServiceCollection AddEntityFramework(this IServiceCollection services, IConfiguration configuration)
     {
         var connectionString = configuration.GetConnectionString("DefaultConnection")
-        ?? Environment.GetEnvironmentVariable("POSTGRESQLCONNSTR_SupabaseDB");
+        ?? Environment.GetEnvironmentVariable("POSTGRESQLCONNSTR_SupabaseDB")
+        ?? throw new InvalidOperationException("Connection string not found");
 
         return services.AddDbContext<AppDbContext>(options =>
         {
