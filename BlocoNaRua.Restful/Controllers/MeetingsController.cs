@@ -7,11 +7,11 @@ namespace BlocoNaRua.Restful.Controllers;
 [Route("api/[controller]")]
 public class MeetingsController
     (
-        ILogger<UsersController> logger,
+        ILogger<MeetingsController> logger,
         IMeetingsRepository meetingsRepository
     ) : ControllerBase
 {
-    private readonly ILogger<UsersController> _logger = logger;
+    private readonly ILogger<MeetingsController> _logger = logger;
     private readonly IMeetingsRepository _meetingsRepository = meetingsRepository;
 
     [HttpGet("GetAll")]

@@ -4,23 +4,23 @@ using BlocoNaRua.Data.Repositories.Interfaces;
 
 namespace BlocoNaRua.Tests.Data;
 
-public class UsersRepositoryTests
+public class MembersRepositoryTests
 {
     private readonly AppDbContext _contextMock;
-    private readonly IUsersRepository _userRepository;
-    public UsersRepositoryTests()
+    private readonly IMembersRepository _membersRepository;
+    public MembersRepositoryTests()
     {
         _contextMock = AppDbContextMock.GetContext();
-        _userRepository = new UsersRepository(_contextMock);
+        _membersRepository = new MembersRepository(_contextMock);
     }
 
     private async Task AddData()
     {
-        await _userRepository.AddAsync
+        await _membersRepository.AddAsync
         (new
             (
                 id: 1,
-                name: "Test User1",
+                name: "Test Member1",
                 email: "test1@test.com",
                 password: "password123",
                 phone: "1234567890",
@@ -29,11 +29,11 @@ public class UsersRepositoryTests
                 updatedAt: DateTime.MinValue
             )
         );
-        await _userRepository.AddAsync
+        await _membersRepository.AddAsync
         (new
             (
                 id: 2,
-                name: "Test User2",
+                name: "Test Member2",
                 email: "test2@test.com",
                 password: "password123",
                 phone: "1234567890",
@@ -48,7 +48,7 @@ public class UsersRepositoryTests
     public async Task GetByIdAsyncExists()
     {
         await AddData();
-        var result = await _userRepository.GetByIdAsync(1);
+        var result = await _membersRepository.GetByIdAsync(1);
 
         Assert.Equal(1, result.Id);
     }

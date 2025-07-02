@@ -21,7 +21,7 @@ public class CarnivalBlocksRepositoryTests
             (
                 id: 1,
                 name: "Test Carnival Block1",
-                owner: "User1",
+                owner: "Member1",
                 inviteCode: "invite_code",
                 managersInviteCode: "managers_invite_code",
                 carnivalBlockImage: "block_logo.jpg",
@@ -39,7 +39,7 @@ public class CarnivalBlocksRepositoryTests
 
         var act = await _carnivalBlocksRepository.GetByIdAsync(1);
         act.Name = "Updated Carnival Block";
-        act.Owner = "Updated User";
+        act.Owner = "Updated Member";
         act.InviteCode = "updated_invite_code";
         act.ManagersInviteCode = "updated_managers_invite_code";
         act.CarnivalBlockImage = "updated_block_logo.jpg";

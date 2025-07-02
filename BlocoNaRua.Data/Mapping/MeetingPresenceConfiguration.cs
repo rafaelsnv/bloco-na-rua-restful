@@ -16,8 +16,8 @@ public class MeetingPresenceConfiguration : IEntityTypeConfiguration<MeetingPres
         builder.Property(mp => mp.Id)
                .HasColumnName("id");
 
-        builder.Property(mp => mp.UserId)
-               .HasColumnName("user_id")
+        builder.Property(mp => mp.MemberId)
+               .HasColumnName("member_id")
                .IsRequired();
 
         builder.Property(mp => mp.MeetingId)
@@ -39,13 +39,13 @@ public class MeetingPresenceConfiguration : IEntityTypeConfiguration<MeetingPres
         builder.Property(mp => mp.UpdatedAt)
                .HasColumnName("updated_at")
                .IsRequired(false);
-        
-        builder.HasOne(mp => mp.User)
+
+        builder.HasOne(mp => mp.Member)
                .WithMany(u => u.Presences)
-               .HasForeignKey(mp => mp.UserId)
+               .HasForeignKey(mp => mp.MemberId)
                .OnDelete(DeleteBehavior.Restrict)
                .HasConstraintName("meeting_presence_user_id_fkey");
-        
+
         builder.HasOne(mp => mp.Meeting)
                .WithMany(m => m.Presences)
                .HasForeignKey(mp => mp.MeetingId)

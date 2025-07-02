@@ -6,21 +6,21 @@ namespace BlocoNaRua.Data.Context;
 
 public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
 {
-    public DbSet<UserEntity> Users { get; set; }
+    public DbSet<MemberEntity> Members { get; set; }
     public DbSet<MeetingEntity> Meetings { get; set; }
     public DbSet<CarnivalBlockEntity> CarnivalBlocks { get; set; }
     public DbSet<MeetingPresenceEntity> MeetingAttendances { get; set; }
-    public DbSet<CarnivalBlockUsersEntity> CarnivalBlockUsers { get; set; }
+    public DbSet<CarnivalBlockMembersEntity> CarnivalBlockMembers { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder
             .HasDefaultSchema("public")
-            .ApplyConfiguration(new UserConfiguration())
+            .ApplyConfiguration(new MemberConfiguration())
             .ApplyConfiguration(new MeetingConfiguration())
             .ApplyConfiguration(new CarnivalBlockConfiguration())
             .ApplyConfiguration(new MeetingPresenceConfiguration())
-            .ApplyConfiguration(new CarnivalBlockUsersConfiguration());
+            .ApplyConfiguration(new CarnivalBlockMembersConfiguration());
 
         base.OnModelCreating(modelBuilder);
     }

@@ -2,7 +2,7 @@
 
 namespace BlocoNaRua.Domain.Entities;
 
-public class UserEntity(int id) : EntityBase(id)
+public class MemberEntity(int id) : EntityBase(id)
 {
     public string Name { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
@@ -11,10 +11,10 @@ public class UserEntity(int id) : EntityBase(id)
     public string ProfileImage { get; set; } = string.Empty;
     public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; } = DateTime.UtcNow;
-    public ICollection<CarnivalBlockUsersEntity> CarnivalBlockUsers { get; set; } = [];
+    public ICollection<CarnivalBlockMembersEntity> CarnivalBlockMembers { get; set; } = [];
     public ICollection<MeetingPresenceEntity> Presences { get; set; } = [];
 
-    public UserEntity(
+    public MemberEntity(
         int id,
         string name,
         string email,
