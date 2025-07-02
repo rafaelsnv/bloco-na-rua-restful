@@ -14,5 +14,23 @@ public class MeetingEntity(int id) : EntityBase(id)
     public DateTime? UpdatedAt { get; set; } = DateTime.UtcNow;
     public CarnivalBlockEntity CarnivalBlock { get; set; } = null!;
     public ICollection<MeetingPresenceEntity> Presences { get; set; } = [];
-
+    public MeetingEntity(
+        int id,
+        string name,
+        string description,
+        string location,
+        string meetingCode,
+        DateTime? meetingDateTime,
+        int carnivalBlockId
+    ) : this(id)
+    {
+        Name = name;
+        Description = description;
+        Location = location;
+        MeetingCode = meetingCode;
+        MeetingDateTime = meetingDateTime ?? new DateTime(1900, 1, 1);
+        CarnivalBlockId = carnivalBlockId;
+        CreatedAt = DateTime.UtcNow;
+        UpdatedAt = DateTime.MinValue;
+    }
 }
