@@ -4,11 +4,11 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace BlocoNaRua.Data.Mapping;
 
-public class CarnivalBlockUsersConfiguration : IEntityTypeConfiguration<CarnivalBlockUsersEntity>
+public class CarnivalBlockMembersConfiguration : IEntityTypeConfiguration<CarnivalBlockMembersEntity>
 {
-    public void Configure(EntityTypeBuilder<CarnivalBlockUsersEntity> builder)
+    public void Configure(EntityTypeBuilder<CarnivalBlockMembersEntity> builder)
     {
-        builder.ToTable("carnival_block_users");
+        builder.ToTable("carnival_block_members");
 
         builder.HasKey(e => e.Id)
                .HasName("id");
@@ -21,8 +21,8 @@ public class CarnivalBlockUsersConfiguration : IEntityTypeConfiguration<Carnival
                .HasColumnName("carnival_block_id")
                .IsRequired();
 
-        builder.Property(e => e.UserId)
-               .HasColumnName("user_id")
+        builder.Property(e => e.MemberId)
+               .HasColumnName("member_id")
                .IsRequired();
 
         builder.Property(e => e.Role)
@@ -38,14 +38,14 @@ public class CarnivalBlockUsersConfiguration : IEntityTypeConfiguration<Carnival
                .IsRequired(false);
 
         builder.HasOne(e => e.CarnivalBlock)
-               .WithMany(cb => cb.CarnivalBlockUsers)
+               .WithMany(cb => cb.CarnivalBlockMembers)
                .HasForeignKey(e => e.CarnivalBlockId)
                .OnDelete(DeleteBehavior.Restrict)
                .HasConstraintName("carnival_block_users_carnival_block_id_fkey");
-        
-        builder.HasOne(e => e.User)
-               .WithMany(u => u.CarnivalBlockUsers)
-               .HasForeignKey(e => e.UserId)
+
+        builder.HasOne(e => e.Member)
+               .WithMany(u => u.CarnivalBlockMembers)
+               .HasForeignKey(e => e.MemberId)
                .OnDelete(DeleteBehavior.Restrict)
                .HasConstraintName("carnival_block_users_user_id_fkey");
     }

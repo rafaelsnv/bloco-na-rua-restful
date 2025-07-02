@@ -4,11 +4,11 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace BlocoNaRua.Data.Mapping;
 
-public class UserConfiguration : IEntityTypeConfiguration<UserEntity>
+public class MemberConfiguration : IEntityTypeConfiguration<MemberEntity>
 {
-    public void Configure(EntityTypeBuilder<UserEntity> builder)
+    public void Configure(EntityTypeBuilder<MemberEntity> builder)
     {
-        builder.ToTable("users");
+        builder.ToTable("members");
 
         builder.HasKey(u => u.Id)
                .HasName("id");

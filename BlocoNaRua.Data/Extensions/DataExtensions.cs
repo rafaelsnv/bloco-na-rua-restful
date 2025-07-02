@@ -30,11 +30,11 @@ public static class DataExtensions
     public static IServiceCollection AddRepositories(this IServiceCollection services)
     {
         services.AddScoped(typeof(IRepositoryBase<>), typeof(RepositoryBase<>))
-                .AddScoped<IUsersRepository, UsersRepository>()
+                .AddScoped<IMembersRepository, MembersRepository>()
                 .AddScoped<IMeetingsRepository, MeetingsRepository>()
                 .AddScoped<ICarnivalBlocksRepository, CarnivalBlocksRepository>()
                 .AddScoped<IMeetingPresencesRepository, MeetingPresencesRepository>()
-                .AddScoped<ICarnivalBlockUsersRepository, CarnivalBlockUsersRepository>();
+                .AddScoped<ICarnivalBlockMembersRepository, CarnivalBlockMembersRepository>();
         return services;
     }
 

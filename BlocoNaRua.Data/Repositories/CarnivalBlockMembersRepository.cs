@@ -5,6 +5,4 @@ using BlocoNaRua.Domain.Entities;
 
 namespace BlocoNaRua.Data.Repositories;
 
-public class UsersRepository(AppDbContext appContext) : RepositoryBase<UserEntity>(appContext), IUsersRepository
-{
-}
+public class CarnivalBlockMembersRepository(AppDbContext appContext) : RepositoryBase<CarnivalBlockMembersEntity>(appContext), ICarnivalBlockMembersRepository;
