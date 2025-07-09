@@ -1,8 +1,6 @@
-using System.Xml.XPath;
 using BlocoNaRua.Data.Context;
 using BlocoNaRua.Data.Repositories;
 using BlocoNaRua.Data.Repositories.Interfaces;
-using BlocoNaRua.Domain.Entities;
 
 namespace BlocoNaRua.Tests.Data;
 

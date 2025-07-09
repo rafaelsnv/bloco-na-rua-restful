@@ -24,7 +24,7 @@ public class MembersController
     }
 
     [HttpGet("Get/{id}")]
-    public async Task<IActionResult> GetMember(int id)
+    public async Task<IActionResult> GetMemberById(int id)
     {
         var member = await _membersRepository.GetByIdAsync(id);
         if (member == null)
@@ -51,7 +51,7 @@ public class MembersController
         var result = await _membersRepository.AddAsync(entity);
         return CreatedAtAction
         (
-            nameof(GetMember),
+            nameof(GetMemberById),
             new { id = result.Id },
             result
         );
