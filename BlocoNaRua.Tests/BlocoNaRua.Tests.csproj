@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\BlocoNaRua.Data\BlocoNaRua.Data.csproj" />
+    <ProjectReference Include="..\BlocoNaRua.Restful\BlocoNaRua.Restful.csproj" />
   </ItemGroup>
 
   <ItemGroup>

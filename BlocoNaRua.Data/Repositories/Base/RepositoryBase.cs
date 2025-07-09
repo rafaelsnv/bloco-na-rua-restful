@@ -32,10 +32,11 @@ public class RepositoryBase<TEntity>(AppDbContext appContext) : IRepositoryBase<
         return await _DbSet.FindAsync(id);
     }
 
-    public async Task<int> AddAsync(TEntity entity)
+    public async Task<TEntity> AddAsync(TEntity entity)
     {
-        await _DbSet.AddAsync(entity);
-        return await _AppDbContext.SaveChangesAsync();
+        var result = await _DbSet.AddAsync(entity);
+        await _AppDbContext.SaveChangesAsync();
+        return result.Entity;
     }
 
     public async Task DeleteAsync(TEntity entity)
