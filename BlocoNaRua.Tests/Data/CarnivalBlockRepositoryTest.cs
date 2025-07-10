@@ -1,27 +1,40 @@
 using BlocoNaRua.Data.Context;
 using BlocoNaRua.Data.Repositories;
 using BlocoNaRua.Data.Repositories.Interfaces;
+using BlocoNaRua.Domain.Entities;
 
 namespace BlocoNaRua.Tests.Data;
 
 public class CarnivalBlocksRepositoryTests
 {
     private readonly AppDbContext _contextMock;
+    private readonly Mock<IMembersRepository> _membersRepositoryMock;
     private readonly ICarnivalBlocksRepository _carnivalBlocksRepository;
+    private readonly Mock<ICarnivalBlockMembersRepository> _carnivalBlockMembersRepoMock;
     public CarnivalBlocksRepositoryTests()
     {
         _contextMock = AppDbContextMock.GetContext();
-        _carnivalBlocksRepository = new CarnivalBlocksRepository(_contextMock);
+
+        _membersRepositoryMock = new Mock<IMembersRepository>();
+        _carnivalBlockMembersRepoMock = new Mock<ICarnivalBlockMembersRepository>();
+
+        _carnivalBlocksRepository = new CarnivalBlocksRepository
+        (
+            _contextMock,
+            _membersRepositoryMock.Object,
+            _carnivalBlockMembersRepoMock.Object
+        );
     }
 
     private async Task AddData()
     {
+
         await _carnivalBlocksRepository.AddAsync
         (new
             (
                 id: 1,
                 name: "Test Carnival Block1",
-                owner: "Member1",
+                ownerId: 1,
                 inviteCode: "invite_code",
                 managersInviteCode: "managers_invite_code",
                 carnivalBlockImage: "block_logo.jpg"
@@ -33,11 +46,22 @@ public class CarnivalBlocksRepositoryTests
     [Fact]
     public async Task UpdateAsync()
     {
+        _membersRepositoryMock
+            .Setup(r => r.GetByIdAsync(1))
+            .ReturnsAsync(new MemberEntity(
+                id: 1,
+                name: "Test Member",
+                email: "test@test.com",
+                password: "password123",
+                phone: "1234567890",
+                profileImage: "profile_image.jpg"
+            ));
+
         await AddData();
 
         var act = await _carnivalBlocksRepository.GetByIdAsync(1);
         act.Name = "Updated Carnival Block";
-        act.Owner = "Updated Member";
+        act.OwnerId = 1;
         act.InviteCode = "updated_invite_code";
         act.ManagersInviteCode = "updated_managers_invite_code";
         act.CarnivalBlockImage = "updated_block_logo.jpg";

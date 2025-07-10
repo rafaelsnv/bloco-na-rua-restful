@@ -1,5 +1,6 @@
 ﻿using BlocoNaRua.Data.Mapping;
 using BlocoNaRua.Domain.Entities;
+using BlocoNaRua.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace BlocoNaRua.Data.Context;
@@ -16,6 +17,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     {
         modelBuilder
             .HasDefaultSchema("public")
+            .HasPostgresEnum<RolesEnum>()
             .ApplyConfiguration(new MemberConfiguration())
             .ApplyConfiguration(new MeetingConfiguration())
             .ApplyConfiguration(new CarnivalBlockConfiguration())

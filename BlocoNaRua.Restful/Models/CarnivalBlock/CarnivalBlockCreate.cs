@@ -2,6 +2,6 @@ namespace BlocoNaRua.Restful.Models.CarnivalBlock;
 
 public record class CarnivalBlockCreate(
     string Name,
-    string Owner,
+    int OwnerId,
     string CarnivalBlockImage
 );

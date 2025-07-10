@@ -21,8 +21,8 @@ public class CarnivalBlockConfiguration : IEntityTypeConfiguration<CarnivalBlock
                 .HasColumnName("name")
                 .IsRequired();
 
-        builder.Property(u => u.Owner)
-               .HasColumnName("owner")
+        builder.Property(u => u.OwnerId)
+               .HasColumnName("owner_id")
                .IsRequired();
 
         builder.Property(u => u.InviteCode)
@@ -44,6 +44,11 @@ public class CarnivalBlockConfiguration : IEntityTypeConfiguration<CarnivalBlock
         builder.Property(u => u.UpdatedAt)
                .HasColumnName("updated_at")
                .IsRequired(false);
+
+        builder.HasOne(cb => cb.Owner)
+                .WithOne()
+                .HasForeignKey<CarnivalBlockEntity>(cb => cb.OwnerId)
+                .HasConstraintName("carnival_blocks_owner_id_fkey");
 
         // builder.HasMany(cb => cb.Meetings)
         //        .WithOne()

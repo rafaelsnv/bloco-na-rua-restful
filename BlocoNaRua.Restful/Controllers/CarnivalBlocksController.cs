@@ -35,25 +35,32 @@ public class CarnivalBlocksController
     [HttpPost("Create")]
     public async Task<IActionResult> CreateCarnivalBlock([FromBody] CarnivalBlockCreate carnivalBlock)
     {
-        if (carnivalBlock == null)
-            return BadRequest();
+        try
+        {
+            if (carnivalBlock == null)
+                return BadRequest();
 
-        var entity = new CarnivalBlockEntity(
-            id: 0,
-            name: carnivalBlock.Name,
-            owner: carnivalBlock.Owner,
-            inviteCode: string.Empty,
-            managersInviteCode: string.Empty,
-            carnivalBlockImage: carnivalBlock.CarnivalBlockImage
-        );
+            var entity = new CarnivalBlockEntity(
+                id: 0,
+                name: carnivalBlock.Name,
+                ownerId: carnivalBlock.OwnerId,
+                inviteCode: string.Empty,
+                managersInviteCode: string.Empty,
+                carnivalBlockImage: carnivalBlock.CarnivalBlockImage
+            );
 
-        var result = await _carnivalBlocksRepository.AddAsync(entity);
-        return CreatedAtAction
-        (
-            nameof(GetCarnivalBlockById),
-            new { id = result.Id },
-            result
-        );
+            var result = await _carnivalBlocksRepository.AddAsync(entity);
+            return CreatedAtAction
+            (
+                nameof(GetCarnivalBlockById),
+                new { id = result.Id },
+                result
+            );
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     [HttpDelete("Delete/{id}")]
