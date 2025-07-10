@@ -35,10 +35,10 @@ public class RepositoryBase<TEntity>(AppDbContext appContext) : IRepositoryBase<
         await AppDbContext.SaveChangesAsync();
     }
 
-    public async Task<int> UpdateAsync(TEntity entity)
+    public async Task<bool> UpdateAsync(TEntity entity)
     {
         entity.UpdatedAt = DateTime.UtcNow;
         DbSet.Update(entity);
-        return await AppDbContext.SaveChangesAsync();
+        return await AppDbContext.SaveChangesAsync() > 0;
     }
 }

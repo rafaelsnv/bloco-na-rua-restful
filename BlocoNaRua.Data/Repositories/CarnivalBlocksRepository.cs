@@ -14,7 +14,7 @@ ICarnivalBlockMembersRepository carnivalBlockMembersRepo) : RepositoryBase<Carni
     new public async Task<CarnivalBlockEntity> AddAsync(CarnivalBlockEntity carnivalBlock)
     {
         var owner = await _membersRepository.GetByIdAsync(carnivalBlock.OwnerId)
-            ?? throw new ArgumentException("OwnerId does not exist.");
+            ?? throw new KeyNotFoundException("Member does not exist.");
 
         await _carnivalBlockMembersRepo.AddAsync(new
         (
@@ -25,5 +25,25 @@ ICarnivalBlockMembersRepository carnivalBlockMembersRepo) : RepositoryBase<Carni
         ));
 
         return await base.AddAsync(carnivalBlock);
+    }
+
+    public async Task<bool> UpdateAsync(int memberId, CarnivalBlockEntity carnivalBlock)
+    {
+        var existingCarnivalBlock = await GetByIdAsync(carnivalBlock.Id)
+            ?? throw new KeyNotFoundException("Carnival block does not exist.");
+
+        if (existingCarnivalBlock.OwnerId != memberId)
+        {
+            var member = await _carnivalBlockMembersRepo.GetByIdAsync(memberId)
+            ?? throw new KeyNotFoundException("Member does not exist.");
+
+            if (member.Role == RolesEnum.Member)
+                throw new UnauthorizedAccessException
+                (
+                    "Insufficient permissions to modify this carnival block."
+                );
+        }
+
+        return await UpdateAsync(carnivalBlock);
     }
 }

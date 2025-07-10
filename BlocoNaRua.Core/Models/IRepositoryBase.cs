@@ -9,6 +9,6 @@ public interface IRepositoryBase<TEntity> where TEntity : EntityBase
     Task<TEntity> AddAsync(TEntity entity);
     // Task<bool> AddRangeAsync(List<TEntity> entityList); //TODO
     Task DeleteAsync(TEntity entity);
-    Task<int> UpdateAsync(TEntity entity);
+    Task<bool> UpdateAsync(TEntity entity);
     // Task<int> UpdateRangeAsync(List<TEntity> entityList); //TODO
 }

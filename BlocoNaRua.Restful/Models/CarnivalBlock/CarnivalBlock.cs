@@ -3,7 +3,7 @@ namespace BlocoNaRua.Restful.Models.CarnivalBlock;
 public record class CarnivalBlock(
     int Id,
     string Name,
-    string Owner,
+    string OwnerId,
     string InviteCode,
     string ManagersInviteCode,
     string CarnivalBlockImage,

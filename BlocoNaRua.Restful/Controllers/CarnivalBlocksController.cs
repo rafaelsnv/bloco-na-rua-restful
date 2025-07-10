@@ -63,6 +63,23 @@ public class CarnivalBlocksController
         }
     }
 
+    [HttpPut("Update/{id}")]
+    public async Task<IActionResult> UpdateCarnivalBlock(int id, [FromBody] CarnivalBlockUpdate carnivalBlock)
+    {
+        if (carnivalBlock == null)
+            return BadRequest();
+
+        var existingCarnivalBlock = await _carnivalBlocksRepository.GetByIdAsync(id);
+        if (existingCarnivalBlock == null)
+            return NotFound();
+
+        existingCarnivalBlock.Name = carnivalBlock.Name;
+        existingCarnivalBlock.CarnivalBlockImage = carnivalBlock.CarnivalBlockImage;
+
+        await _carnivalBlocksRepository.UpdateAsync(carnivalBlock.MemberId, existingCarnivalBlock);
+        return NoContent();
+    }
+
     [HttpDelete("Delete/{id}")]
     public async Task<IActionResult> DeleteCarnivalBlock(int id)
     {
