@@ -8,8 +8,6 @@ public class CarnivalBlockMembersEntity(int id) : EntityBase(id)
     public int CarnivalBlockId { get; set; }
     public int MemberId { get; set; }
     public string Role { get; set; } = string.Empty; // "Manager", "Percussionist", etc.
-    public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;
-    public DateTime? UpdatedAt { get; set; } = DateTime.UtcNow;
     public MemberEntity Member { get; set; } = null!;
     public CarnivalBlockEntity CarnivalBlock { get; set; } = null!;
 }

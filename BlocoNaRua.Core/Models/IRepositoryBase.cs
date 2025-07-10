@@ -4,9 +4,8 @@ namespace BlocoNaRua.Core.Models;
 
 public interface IRepositoryBase<TEntity> where TEntity : EntityBase
 {
-    Task<IEnumerable<TEntity>> GetAsync(Expression<Func<TEntity, bool>>? filter = null);
     Task<List<TEntity>> GetAllAsync();
-    Task<TEntity> GetByIdAsync(int id);
+    Task<TEntity?> GetByIdAsync(int id);
     Task<TEntity> AddAsync(TEntity entity);
     // Task<bool> AddRangeAsync(List<TEntity> entityList); //TODO
     Task DeleteAsync(TEntity entity);

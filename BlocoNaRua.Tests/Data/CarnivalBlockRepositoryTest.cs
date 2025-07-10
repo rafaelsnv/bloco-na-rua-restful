@@ -24,9 +24,7 @@ public class CarnivalBlocksRepositoryTests
                 owner: "Member1",
                 inviteCode: "invite_code",
                 managersInviteCode: "managers_invite_code",
-                carnivalBlockImage: "block_logo.jpg",
-                createdAt: DateTime.UtcNow,
-                updatedAt: DateTime.MinValue
+                carnivalBlockImage: "block_logo.jpg"
             )
 
         );

@@ -1,7 +1,7 @@
 using BlocoNaRua.Data.Repositories.Interfaces;
 using BlocoNaRua.Domain.Entities;
 using BlocoNaRua.Restful.Controllers;
-using BlocoNaRua.Restful.Models;
+using BlocoNaRua.Restful.Models.Member;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
@@ -27,8 +27,7 @@ public class MembersControllerTests
                 email: "test@email.com",
                 password: "pass",
                 phone: "123",
-                profileImage: "img",
-                createdAt: DateTime.UtcNow
+                profileImage: "img"
             )
         };
         _repoMock.Setup(r => r.GetAllAsync()).ReturnsAsync(members);
@@ -53,8 +52,7 @@ public class MembersControllerTests
             "test@email.com",
             "pass",
             "123",
-            "img",
-            DateTime.UtcNow
+            "img"
         );
         _repoMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(member);
 
@@ -99,7 +97,7 @@ public class MembersControllerTests
             Phone: "123",
             ProfileImage: "img"
         );
-        var entity = new MemberEntity(1, memberCreate.Name, memberCreate.Email, memberCreate.Password, memberCreate.Phone, memberCreate.ProfileImage, DateTime.UtcNow);
+        var entity = new MemberEntity(1, memberCreate.Name, memberCreate.Email, memberCreate.Password, memberCreate.Phone, memberCreate.ProfileImage);
         _repoMock.Setup(r => r.AddAsync(It.IsAny<MemberEntity>())).ReturnsAsync(entity);
 
         var controller = CreateController();
@@ -140,7 +138,7 @@ public class MembersControllerTests
     [Fact]
     public async Task UpdateMember_ReturnsAccepted_WhenSuccess()
     {
-        var existing = new MemberEntity(1, "Test", "test@email.com", "pass", "123", null, DateTime.UtcNow);
+        var existing = new MemberEntity(1, "Test", "test@email.com", "pass", "123", null);
         _repoMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(existing);
 
         var controller = CreateController();
@@ -167,7 +165,7 @@ public class MembersControllerTests
     [Fact]
     public async Task DeleteMember_ReturnsNoContent_WhenSuccess()
     {
-        var member = new MemberEntity(1, "Test", "test@email.com", "pass", "123", "img", DateTime.UtcNow);
+        var member = new MemberEntity(1, "Test", "test@email.com", "pass", "123", "img");
         _repoMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(member);
 
         var controller = CreateController();

@@ -10,8 +10,6 @@ public class MeetingEntity(int id) : EntityBase(id)
     public string MeetingCode { get; set; } = string.Empty;
     public DateTime? MeetingDateTime { get; set; } = new DateTime(1900, 1, 1);
     public int CarnivalBlockId { get; set; }
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    public DateTime? UpdatedAt { get; set; } = DateTime.UtcNow;
     public CarnivalBlockEntity CarnivalBlock { get; set; } = null!;
     public ICollection<MeetingPresenceEntity> Presences { get; set; } = [];
     public MeetingEntity(
@@ -30,7 +28,5 @@ public class MeetingEntity(int id) : EntityBase(id)
         MeetingCode = meetingCode;
         MeetingDateTime = meetingDateTime ?? new DateTime(1900, 1, 1);
         CarnivalBlockId = carnivalBlockId;
-        CreatedAt = DateTime.UtcNow;
-        UpdatedAt = DateTime.MinValue;
     }
 }

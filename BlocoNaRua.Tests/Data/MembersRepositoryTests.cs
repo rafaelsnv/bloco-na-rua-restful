@@ -24,9 +24,7 @@ public class MembersRepositoryTests
                 email: "test1@test.com",
                 password: "password123",
                 phone: "1234567890",
-                profileImage: "profile1.jpg",
-                createdAt: DateTime.UtcNow,
-                updatedAt: DateTime.MinValue
+                profileImage: "profile1.jpg"
             )
         );
         await _membersRepository.AddAsync
@@ -37,9 +35,7 @@ public class MembersRepositoryTests
                 email: "test2@test.com",
                 password: "password123",
                 phone: "1234567890",
-                profileImage: "profile2.jpg",
-                createdAt: DateTime.UtcNow,
-                updatedAt: DateTime.MinValue
+                profileImage: "profile2.jpg"
             )
         );
     }

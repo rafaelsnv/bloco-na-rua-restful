@@ -9,8 +9,6 @@ public class CarnivalBlockEntity(int id) : EntityBase(id)
     public string InviteCode { get; set; } = string.Empty;
     public string ManagersInviteCode { get; set; } = string.Empty;
     public string CarnivalBlockImage { get; set; } = string.Empty;
-    public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;
-    public DateTime? UpdatedAt { get; set; } = DateTime.UtcNow;
     public ICollection<CarnivalBlockMembersEntity> CarnivalBlockMembers { get; set; } = [];
     public ICollection<MeetingEntity> Meetings { get; set; } = [];
     public ICollection<MeetingPresenceEntity> Presences { get; set; } = [];
@@ -21,9 +19,7 @@ public class CarnivalBlockEntity(int id) : EntityBase(id)
         string owner,
         string inviteCode,
         string managersInviteCode,
-        string carnivalBlockImage,
-        DateTime? createdAt = null,
-        DateTime? updatedAt = null
+        string carnivalBlockImage
     ) : this(id)
     {
         Name = name;
@@ -31,7 +27,5 @@ public class CarnivalBlockEntity(int id) : EntityBase(id)
         InviteCode = inviteCode;
         ManagersInviteCode = managersInviteCode;
         CarnivalBlockImage = carnivalBlockImage;
-        CreatedAt = createdAt;
-        UpdatedAt = updatedAt;
     }
 }
