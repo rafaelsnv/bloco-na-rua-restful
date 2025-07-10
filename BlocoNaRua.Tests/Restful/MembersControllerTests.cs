@@ -16,7 +16,7 @@ public class MembersControllerTests
         new(_loggerMock.Object, _repoMock.Object);
 
     [Fact]
-    public async Task GetAllMembers_ReturnsOkWithMembers()
+    public async Task GetAllMembers_Success()
     {
         // Arrange
         var members = new List<MemberEntity>
@@ -43,7 +43,7 @@ public class MembersControllerTests
     }
 
     [Fact]
-    public async Task GetMember_ReturnsOk_WhenFound()
+    public async Task GetMemberById_Success()
     {
         var member = new MemberEntity
         (
@@ -65,7 +65,7 @@ public class MembersControllerTests
     }
 
     [Fact]
-    public async Task GetMember_ReturnsNotFound_WhenNotFound()
+    public async Task GetMemberById_NotFound()
     {
         _repoMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync((MemberEntity)null);
 
@@ -77,7 +77,7 @@ public class MembersControllerTests
     }
 
     [Fact]
-    public async Task CreateMember_ReturnsBadRequest_WhenNull()
+    public async Task CreateMember_BadRequest()
     {
         var controller = CreateController();
 
@@ -87,7 +87,7 @@ public class MembersControllerTests
     }
 
     [Fact]
-    public async Task CreateMember_ReturnsCreatedAtAction()
+    public async Task CreateMember_Success()
     {
         var memberCreate = new MemberCreate
         (
@@ -110,7 +110,7 @@ public class MembersControllerTests
     }
 
     [Fact]
-    public async Task UpdateMember_ReturnsBadRequest_WhenNullOrIdMismatch()
+    public async Task UpdateMember_BadRequest()
     {
         var controller = CreateController();
 
@@ -123,7 +123,7 @@ public class MembersControllerTests
     }
 
     [Fact]
-    public async Task UpdateMember_ReturnsNotFound_WhenMemberNotFound()
+    public async Task UpdateMember_NotFound()
     {
         _repoMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync((MemberEntity)null);
 
@@ -136,7 +136,7 @@ public class MembersControllerTests
     }
 
     [Fact]
-    public async Task UpdateMember_ReturnsAccepted_WhenSuccess()
+    public async Task UpdateMember_Success()
     {
         var existing = new MemberEntity(1, "Test", "test@email.com", "pass", "123", null);
         _repoMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(existing);
@@ -151,7 +151,7 @@ public class MembersControllerTests
     }
 
     [Fact]
-    public async Task DeleteMember_ReturnsNotFound_WhenNotFound()
+    public async Task DeleteMember_NotFound()
     {
         _repoMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync((MemberEntity)null);
 
@@ -163,7 +163,7 @@ public class MembersControllerTests
     }
 
     [Fact]
-    public async Task DeleteMember_ReturnsNoContent_WhenSuccess()
+    public async Task DeleteMember_Success()
     {
         var member = new MemberEntity(1, "Test", "test@email.com", "pass", "123", "img");
         _repoMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(member);
