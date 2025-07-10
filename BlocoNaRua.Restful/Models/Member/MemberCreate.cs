@@ -1,4 +1,4 @@
-namespace BlocoNaRua.Restful.Models;
+namespace BlocoNaRua.Restful.Models.Member;
 
 public record class MemberCreate(
     string Name,

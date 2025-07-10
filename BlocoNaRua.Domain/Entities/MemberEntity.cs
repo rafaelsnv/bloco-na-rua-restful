@@ -9,8 +9,6 @@ public class MemberEntity(int id) : EntityBase(id)
     public string Password { get; set; } = string.Empty;
     public string Phone { get; set; } = string.Empty;
     public string ProfileImage { get; set; } = string.Empty;
-    public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;
-    public DateTime? UpdatedAt { get; set; } = DateTime.UtcNow;
     public ICollection<CarnivalBlockMembersEntity> CarnivalBlockMembers { get; set; } = [];
     public ICollection<MeetingPresenceEntity> Presences { get; set; } = [];
 
@@ -20,9 +18,7 @@ public class MemberEntity(int id) : EntityBase(id)
         string email,
         string password,
         string phone,
-        string profileImage,
-        DateTime? createdAt = null,
-        DateTime? updatedAt = null
+        string profileImage
     ) : this(id)
     {
         Name = name;
@@ -30,7 +26,5 @@ public class MemberEntity(int id) : EntityBase(id)
         Password = password;
         Phone = phone;
         ProfileImage = profileImage;
-        CreatedAt = createdAt;
-        UpdatedAt = updatedAt;
     }
 }

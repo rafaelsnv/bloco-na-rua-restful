@@ -1,6 +1,6 @@
 using BlocoNaRua.Data.Repositories.Interfaces;
 using BlocoNaRua.Domain.Entities;
-using BlocoNaRua.Restful.Models;
+using BlocoNaRua.Restful.Models.Member;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BlocoNaRua.Restful.Controllers;
@@ -44,8 +44,7 @@ public class MembersController
             email: member.Email,
             password: member.Password,
             phone: member.Phone,
-            profileImage: member.ProfileImage,
-            createdAt: DateTime.UtcNow
+            profileImage: member.ProfileImage
         );
 
         var result = await _membersRepository.AddAsync(entity);
@@ -72,13 +71,11 @@ public class MembersController
         existingMember.Phone = member.Phone ?? existingMember.Phone;
         existingMember.ProfileImage = member.ProfileImage ?? existingMember.ProfileImage;
         existingMember.Password = member.Password ?? existingMember.Password;
-        existingMember.UpdatedAt = DateTime.UtcNow;
 
         await _membersRepository.UpdateAsync(existingMember);
         return Accepted();
     }
 
-    // DELETE: api/Members/{id}
     [HttpDelete("Delete/{id}")]
     public async Task<IActionResult> DeleteMember(int id)
     {
