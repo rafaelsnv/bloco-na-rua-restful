@@ -1,6 +1,6 @@
-using BlocoNaRua.Data.Repositories.Interfaces;
 using BlocoNaRua.Domain.Entities;
 using BlocoNaRua.Restful.Models.Member;
+using BlocoNaRua.Restful.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BlocoNaRua.Restful.Controllers;
@@ -10,81 +10,110 @@ namespace BlocoNaRua.Restful.Controllers;
 public class MembersController
     (
         ILogger<MembersController> logger,
-        IMembersRepository membersRepository
+        IMemberService memberService
     ) : ControllerBase
 {
     private readonly ILogger<MembersController> _logger = logger;
-    private readonly IMembersRepository _membersRepository = membersRepository;
+    private readonly IMemberService _memberService = memberService;
 
     [HttpGet("Get")]
     public async Task<IActionResult> GetAllMembers()
     {
-        var membersList = await _membersRepository.GetAllAsync();
-        return Ok(membersList);
+        try
+        {
+            var membersList = await _memberService.GetAllMembersAsync();
+            return Ok(membersList);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao buscar todos os membros");
+            return StatusCode(500, "Erro interno do servidor");
+        }
     }
 
     [HttpGet("Get/{id}")]
     public async Task<IActionResult> GetMemberById(int id)
     {
-        var member = await _membersRepository.GetByIdAsync(id);
-        if (member == null)
-            return NotFound();
-        return Ok(member);
+        try
+        {
+            var member = await _memberService.GetMemberByIdAsync(id);
+            if (member == null)
+                return NotFound();
+            return Ok(member);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao buscar membro com ID: {Id}", id);
+            return StatusCode(500, "Erro interno do servidor");
+        }
     }
 
     [HttpPost("Create")]
     public async Task<IActionResult> CreateMember([FromBody] MemberCreate member)
     {
-        if (member == null)
-            return BadRequest();
+        try
+        {
+            if (member == null)
+                return BadRequest("Dados do membro são obrigatórios");
 
-        var entity = new MemberEntity(
-            id: 0,
-            name: member.Name,
-            email: member.Email,
-            password: member.Password,
-            phone: member.Phone,
-            profileImage: member.ProfileImage
-        );
-
-        var result = await _membersRepository.AddAsync(entity);
-        return CreatedAtAction
-        (
-            nameof(GetMemberById),
-            new { id = result.Id },
-            result
-        );
+            var result = await _memberService.CreateMemberAsync(member);
+            return CreatedAtAction
+            (
+                nameof(GetMemberById),
+                new { id = result.Id },
+                result
+            );
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao criar membro");
+            return StatusCode(500, "Erro interno do servidor");
+        }
     }
 
     [HttpPut("Update/{id}")]
     public async Task<IActionResult> UpdateMember(int id, [FromBody] Member member)
     {
-        if (member == null || member.Id != id)
-            return BadRequest();
+        try
+        {
+            if (member == null || member.Id != id)
+                return BadRequest("Dados de atualização são obrigatórios");
 
-        var existingMember = await _membersRepository.GetByIdAsync(id);
-        if (existingMember == null)
-            return NotFound();
-
-        existingMember.Name = member.Name ?? existingMember.Name;
-        existingMember.Email = member.Email ?? existingMember.Email;
-        existingMember.Phone = member.Phone ?? existingMember.Phone;
-        existingMember.ProfileImage = member.ProfileImage ?? existingMember.ProfileImage;
-        existingMember.Password = member.Password ?? existingMember.Password;
-
-        await _membersRepository.UpdateAsync(existingMember);
-        return Accepted();
+            var success = await _memberService.UpdateMemberAsync(id, member);
+            return Accepted();
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao atualizar membro com ID: {Id}", id);
+            return StatusCode(500, "Erro interno do servidor");
+        }
     }
 
     [HttpDelete("Delete/{id}")]
     public async Task<IActionResult> DeleteMember(int id)
     {
-        var member = await _membersRepository.GetByIdAsync(id);
-        if (member == null)
-            return NotFound();
-
-        await _membersRepository.DeleteAsync(member);
-        return NoContent();
+        try
+        {
+            var success = await _memberService.DeleteMemberAsync(id);
+            return NoContent();
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao deletar membro com ID: {Id}", id);
+            return StatusCode(500, "Erro interno do servidor");
+        }
     }
 
 }

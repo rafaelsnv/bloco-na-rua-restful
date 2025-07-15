@@ -49,13 +49,5 @@ public class CarnivalBlockConfiguration : IEntityTypeConfiguration<CarnivalBlock
                 .WithOne()
                 .HasForeignKey<CarnivalBlockEntity>(cb => cb.OwnerId)
                 .HasConstraintName("carnival_blocks_owner_id_fkey");
-
-        // builder.HasMany(cb => cb.Meetings)
-        //        .WithOne()
-        //        .HasForeignKey(m => m.CarnivalBlockId);
-
-        // builder.HasMany(cb => cb.CarnivalBlockUsers)
-        //        .WithOne(cbu => cbu.CarnivalBlock)
-        //        .HasForeignKey(cbu => cbu.CarnivalBlockId);
     }
 }

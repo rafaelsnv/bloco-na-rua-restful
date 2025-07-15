@@ -2,7 +2,7 @@ namespace BlocoNaRua.Domain.Enums;
 
 public enum RolesEnum
 {
-    Owner,
+    Member,
     Manager,
-    Member
+    Owner,
 }

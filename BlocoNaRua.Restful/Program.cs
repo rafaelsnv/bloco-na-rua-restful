@@ -1,4 +1,6 @@
 ﻿using BlocoNaRua.Data.Extensions;
+using BlocoNaRua.Restful.Services;
+using BlocoNaRua.Restful.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,6 +23,10 @@ builder.Services.AddSwaggerGen(setup =>
 });
 builder.Services.AddEntityFramework(configuration);
 builder.Services.AddRepositories();
+
+// Register application services
+builder.Services.AddScoped<ICarnivalBlockService, CarnivalBlockService>();
+builder.Services.AddScoped<IMemberService, MemberService>();
 
 var app = builder.Build();
 
