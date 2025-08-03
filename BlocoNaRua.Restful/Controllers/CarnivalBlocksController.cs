@@ -1,123 +1,103 @@
 using BlocoNaRua.Domain.Entities;
 using BlocoNaRua.Restful.Models.CarnivalBlock;
-using BlocoNaRua.Restful.Services.Interfaces;
+using BlocoNaRua.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BlocoNaRua.Restful.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
-public class CarnivalBlocksController
-    (
-        ILogger<CarnivalBlocksController> logger,
-        ICarnivalBlockService carnivalBlockService
-    ) : ControllerBase
+[Route("api/v{version:apiVersion}/[controller]")]
+public class CarnivalBlocksController(ICarnivalBlockService service) : ControllerBase
 {
-    private readonly ILogger<CarnivalBlocksController> _logger = logger;
-    private readonly ICarnivalBlockService _carnivalBlockService = carnivalBlockService;
+    private readonly ICarnivalBlockService _service = service;
 
-    [HttpGet("Get")]
-    public async Task<IActionResult> GetAllCarnivalBlocks()
+    [HttpGet]
+    public async Task<IActionResult> GetAll()
     {
-        try
-        {
-            var carnivalBlocksList = await _carnivalBlockService.GetAllBlocksAsync();
-            return Ok(carnivalBlocksList);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Erro ao buscar todos os blocos de carnaval");
-            return StatusCode(500, "Erro interno do servidor");
-        }
+        var list = await _service.GetAllAsync();
+        return Ok(list.Select(ToDTO).ToList());
     }
 
-    [HttpGet("Get/{id}")]
-    public async Task<IActionResult> GetCarnivalBlockById(int id)
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetById(int id)
     {
+        var entity = await _service.GetByIdAsync(id);
+        if (entity is null)
+            return NotFound();
+        var result = ToDTO(entity);
+        return Ok(result);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Create([FromBody] CarnivalBlockCreate model)
+    {
+        var entity = new CarnivalBlockEntity
+        (
+            id: 0,
+            ownerId: model.OwnerId,
+            name: model.Name,
+            inviteCode: string.Empty,
+            managersInviteCode: string.Empty,
+            carnivalBlockImage: model.CarnivalBlockImage
+        );
+        var created = await _service.CreateAsync(entity);
+        var result = ToDTO(created);
+        return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
+    }
+
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(int id, [FromBody] CarnivalBlockUpdate model)
+    {
+        var entity = new CarnivalBlockEntity
+        (
+            id: 0,
+            ownerId: model.MemberId,
+            name: model.Name,
+            inviteCode: string.Empty,
+            managersInviteCode: string.Empty,
+            carnivalBlockImage: model.CarnivalBlockImage
+        );
         try
         {
-            var carnivalBlock = await _carnivalBlockService.GetBlockByIdAsync(id);
-            if (carnivalBlock == null)
+            var updated = await _service.UpdateAsync(id, model.MemberId, entity);
+            if (updated is null)
                 return NotFound();
-            return Ok(carnivalBlock);
+            var result = ToDTO(updated);
+            return Ok(result);
         }
-        catch (Exception ex)
+        catch (UnauthorizedAccessException ex)
         {
-            _logger.LogError(ex, "Erro ao buscar bloco de carnaval com ID: {Id}", id);
-            return StatusCode(500, "Erro interno do servidor");
-        }
-    }
-
-    [HttpPost("Create")]
-    public async Task<IActionResult> CreateCarnivalBlock([FromBody] CarnivalBlockCreate carnivalBlock)
-    {
-        try
-        {
-            if (carnivalBlock == null)
-                return BadRequest("Dados do bloco são obrigatórios");
-
-            var result = await _carnivalBlockService.CreateBlockAsync(carnivalBlock);
-
-            return CreatedAtAction
-            (
-                nameof(GetCarnivalBlockById),
-                new { id = result.Id },
-                result
-            );
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(ex.Message);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Erro ao criar bloco de carnaval");
-            return StatusCode(500, "Erro interno do servidor");
+            return Unauthorized(ex.Message);
         }
     }
 
-    [HttpPatch("Update/{id}")]
-    public async Task<IActionResult> UpdateCarnivalBlock(int id, [FromBody] CarnivalBlockUpdate carnivalBlock)
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(int id, [FromHeader(Name = "X-Member-Id")] int memberId)
     {
         try
         {
-            if (carnivalBlock == null)
-                return BadRequest("Dados de atualização são obrigatórios");
-
-            var success = await _carnivalBlockService.UpdateBlockAsync(id, carnivalBlock, carnivalBlock.MemberId);
+            var deleted = await _service.DeleteAsync(id, memberId);
+            if (!deleted)
+                return NotFound();
             return NoContent();
         }
-        catch (ArgumentException ex)
+        catch (UnauthorizedAccessException ex)
         {
-            return BadRequest(ex.Message);
-        }
-        catch (UnauthorizedAccessException)
-        {
-            return Unauthorized();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Erro ao atualizar bloco de carnaval com ID: {Id}", id);
-            return StatusCode(500, "Erro interno do servidor");
+            return Unauthorized(ex.Message);
         }
     }
 
-    [HttpDelete("Delete/{id}")]
-    public async Task<IActionResult> DeleteCarnivalBlock(int id)
+    private static CarnivalBlockDTO ToDTO(CarnivalBlockEntity entity)
     {
-        try
-        {
-            var success = await _carnivalBlockService.DeleteBlockAsync(id);
-            return NoContent();
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(ex.Message);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Erro ao deletar bloco de carnaval com ID: {Id}", id);
-            return StatusCode(500, "Erro interno do servidor");
-        }
+        return new CarnivalBlockDTO(
+            entity.Id,
+            entity.OwnerId,
+            entity.Name,
+            entity.InviteCode,
+            entity.ManagersInviteCode,
+            entity.CarnivalBlockImage,
+            entity.CreatedAt,
+            entity.UpdatedAt
+        );
     }
 }

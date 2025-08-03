@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace BlocoNaRua.Restful.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/v{version:apiVersion}/[controller]")]
 public class CarnivalBlockMembersController
     (
         ILogger<CarnivalBlockMembersController> logger,
@@ -16,14 +16,14 @@ public class CarnivalBlockMembersController
     private readonly ILogger<CarnivalBlockMembersController> _logger = logger;
     private readonly ICarnivalBlockMembersRepository _carnivalBlockMembersRepo = carnivalBlockMembersRepo;
 
-    [HttpGet("Get")]
+    [HttpGet]
     public async Task<IActionResult> GetAllBlocksMembers()
     {
         var blocksMembersList = await _carnivalBlockMembersRepo.GetAllAsync();
         return Ok(blocksMembersList);
     }
 
-    [HttpGet("Get/{id}")]
+    [HttpGet("{id}")]
     public async Task<IActionResult> GetBlocksMembersById(int id)
     {
         var blockMember = await _carnivalBlockMembersRepo.GetByIdAsync(id);
@@ -32,7 +32,7 @@ public class CarnivalBlockMembersController
         return Ok(blockMember);
     }
 
-    [HttpPost("Create")]
+    [HttpPost]
     public async Task<IActionResult> CreateCarnivalBlockMember([FromBody] CarnivalBlockMemberCreate blockMember)
     {
         try

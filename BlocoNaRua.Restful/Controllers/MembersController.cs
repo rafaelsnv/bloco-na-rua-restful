@@ -1,119 +1,84 @@
+using Asp.Versioning;
 using BlocoNaRua.Domain.Entities;
 using BlocoNaRua.Restful.Models.Member;
-using BlocoNaRua.Restful.Services.Interfaces;
+using BlocoNaRua.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BlocoNaRua.Restful.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
-public class MembersController
-    (
-        ILogger<MembersController> logger,
-        IMemberService memberService
-    ) : ControllerBase
+[Route("api/v{version:apiVersion}/[controller]")]
+[ApiVersion("1.0")]
+public class MembersController(IMembersService service) : ControllerBase
 {
-    private readonly ILogger<MembersController> _logger = logger;
-    private readonly IMemberService _memberService = memberService;
+    private readonly IMembersService _service = service;
 
-    [HttpGet("Get")]
-    public async Task<IActionResult> GetAllMembers()
+    [HttpGet]
+    public async Task<IActionResult> GetAll()
     {
-        try
-        {
-            var membersList = await _memberService.GetAllMembersAsync();
-            return Ok(membersList);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Erro ao buscar todos os membros");
-            return StatusCode(500, "Erro interno do servidor");
-        }
+        var list = await _service.GetAllAsync();
+        return Ok(list.Select(ToDTO).ToList());
     }
 
-    [HttpGet("Get/{id}")]
-    public async Task<IActionResult> GetMemberById(int id)
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetById(int id)
     {
-        try
-        {
-            var member = await _memberService.GetMemberByIdAsync(id);
-            if (member == null)
-                return NotFound();
-            return Ok(member);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Erro ao buscar membro com ID: {Id}", id);
-            return StatusCode(500, "Erro interno do servidor");
-        }
+        var entity = await _service.GetByIdAsync(id);
+        if (entity is null)
+            return NotFound();
+        var result = ToDTO(entity);
+        return Ok(result);
     }
 
-    [HttpPost("Create")]
-    public async Task<IActionResult> CreateMember([FromBody] MemberCreate member)
+    [HttpPost]
+    public async Task<IActionResult> Create([FromBody] MemberCreate model)
     {
-        try
-        {
-            if (member == null)
-                return BadRequest("Dados do membro são obrigatórios");
-
-            var result = await _memberService.CreateMemberAsync(member);
-            return CreatedAtAction
-            (
-                nameof(GetMemberById),
-                new { id = result.Id },
-                result
-            );
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(ex.Message);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Erro ao criar membro");
-            return StatusCode(500, "Erro interno do servidor");
-        }
+        var entity = new MemberEntity(
+            id: 0, // Assuming ID is auto-generated
+            name: model.Name,
+            email: model.Email,
+            phone: model.Phone,
+            profileImage: model.ProfileImage
+        );
+        var created = await _service.CreateAsync(entity);
+        var result = ToDTO(created);
+        return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 
-    [HttpPut("Update/{id}")]
-    public async Task<IActionResult> UpdateMember(int id, [FromBody] Member member)
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(int id, [FromBody] MemberUpdate model)
     {
-        try
-        {
-            if (member == null || member.Id != id)
-                return BadRequest("Dados de atualização são obrigatórios");
-
-            var success = await _memberService.UpdateMemberAsync(id, member);
-            return Accepted();
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(ex.Message);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Erro ao atualizar membro com ID: {Id}", id);
-            return StatusCode(500, "Erro interno do servidor");
-        }
+        var entity = new MemberEntity(
+            id: id, // Use the provided ID for update
+            name: model.Name,
+            email: model.Email,
+            phone: model.Phone,
+            profileImage: model.ProfileImage
+        );
+        var updated = await _service.UpdateAsync(id, entity);
+        if (updated is null)
+            return NotFound();
+        var result = ToDTO(updated);
+        return Ok(result);
     }
 
-    [HttpDelete("Delete/{id}")]
-    public async Task<IActionResult> DeleteMember(int id)
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(int id)
     {
-        try
-        {
-            var success = await _memberService.DeleteMemberAsync(id);
-            return NoContent();
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(ex.Message);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Erro ao deletar membro com ID: {Id}", id);
-            return StatusCode(500, "Erro interno do servidor");
-        }
+        var deleted = await _service.DeleteAsync(id);
+        if (!deleted)
+            return NotFound();
+        return NoContent();
     }
 
+    private static MemberDTO ToDTO(MemberEntity entity)
+    {
+        return new MemberDTO(
+            entity.Id,
+            entity.Name,
+            entity.Email,
+            entity.Phone,
+            entity.ProfileImage
+        );
+    }
 }
