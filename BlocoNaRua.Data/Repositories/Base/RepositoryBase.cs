@@ -14,10 +14,9 @@ public class RepositoryBase<TEntity>(AppDbContext appContext) : IRepositoryBase<
         return await DbSet.AsNoTracking().ToListAsync();
     }
 
-    public async Task<TEntity> GetByIdAsync(int id)
+    public async Task<TEntity?> GetByIdAsync(int id)
     {
-        var entity = await DbSet.FindAsync(id)
-            ?? throw new KeyNotFoundException($"Id `{id}` not found.");
+        var entity = await DbSet.FindAsync(id);
         return entity;
     }
 

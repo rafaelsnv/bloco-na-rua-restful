@@ -25,10 +25,6 @@ public class MemberConfiguration : IEntityTypeConfiguration<MemberEntity>
                .HasColumnName("email")
                .IsRequired();
 
-        builder.Property(u => u.Password)
-               .HasColumnName("password")
-               .IsRequired();
-
         builder.Property(u => u.Phone)
                .HasColumnName("phone")
                .IsRequired();
