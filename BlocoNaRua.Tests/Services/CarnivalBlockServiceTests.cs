@@ -76,6 +76,67 @@ public class CarnivalBlockServiceTests
     }
 
     [Fact]
+    public async Task GetAllAsync_ShouldReturnAllCarnivalBlocks()
+    {
+        // Arrange
+        await AddData(1, 101, "Block 1", 101, RolesEnum.Owner);
+        await AddData(2, 201, "Block 2", 202, RolesEnum.Manager);
+
+        // Act
+        var result = await _carnivalBlockService.GetAllAsync();
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(2, result.Count);
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_ShouldReturnCarnivalBlock_WhenBlockExists()
+    {
+        // Arrange
+        await AddData(1, 101, "Block 1", 101, RolesEnum.Owner);
+
+        // Act
+        var result = await _carnivalBlockService.GetByIdAsync(1);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(1, result.Id);
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_ShouldReturnNull_WhenBlockDoesNotExist()
+    {
+        // Act
+        var result = await _carnivalBlockService.GetByIdAsync(999);
+
+        // Assert
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public async Task CreateAsync_ShouldCreateCarnivalBlock()
+    {
+        // Arrange
+        var newBlock = new CarnivalBlockEntity(
+            id: 0,
+            ownerId: 1,
+            name: "New Block",
+            inviteCode: "test",
+            managersInviteCode: "test",
+            carnivalBlockImage: "image.jpg"
+        );
+
+        // Act
+        var result = await _carnivalBlockService.CreateAsync(newBlock);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotEqual(0, result.Id);
+        Assert.Equal("New Block", result.Name);
+    }
+
+    [Fact]
     public async Task UpdateAsync_ShouldUpdateCarnivalBlock_WhenMemberIsOwner()
     {
         // Arrange

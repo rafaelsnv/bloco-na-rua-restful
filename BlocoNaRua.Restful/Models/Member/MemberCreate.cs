@@ -3,7 +3,6 @@ namespace BlocoNaRua.Restful.Models.Member;
 public record MemberCreate(
     string Name,
     string Email,
-    string Password,
     string Phone,
     string ProfileImage
 );
