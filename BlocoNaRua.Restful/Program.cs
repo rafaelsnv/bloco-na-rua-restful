@@ -4,12 +4,9 @@ using BlocoNaRua.Data.Extensions;
 using BlocoNaRua.Services.Implementations;
 using BlocoNaRua.Services.Interfaces;
 using Microsoft.AspNetCore.Diagnostics;
-using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Host.UseSerilog((context, configuration) =>
-    configuration.ReadFrom.Configuration(context.Configuration));
 
 // Add services to the container.
 builder.Configuration.AddEnvironmentVariables();
@@ -23,7 +20,6 @@ if (string.IsNullOrEmpty(configuration.GetConnectionString("DefaultConnection"))
 }
 
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddApiVersioning(options =>
 {
     options.DefaultApiVersion = new ApiVersion(1, 0);
@@ -47,7 +43,6 @@ builder.Services.AddScoped<IMembersService, MembersService>();
 
 var app = builder.Build();
 
-app.UseSerilogRequestLogging();
 
 app.MapGet("/", () => Results.Redirect("/swagger/index.html"))
    .ExcludeFromDescription();
