@@ -1,178 +1,183 @@
-// using BlocoNaRua.Data.Repositories.Interfaces;
-// using BlocoNaRua.Domain.Entities;
-// using BlocoNaRua.Restful.Controllers;
-// using BlocoNaRua.Restful.Models.Member;
-// using Microsoft.AspNetCore.Mvc;
-// using Microsoft.Extensions.Logging;
+using BlocoNaRua.Domain.Entities;
+using BlocoNaRua.Restful.Controllers;
+using BlocoNaRua.Restful.Models.Member;
+using BlocoNaRua.Services.Interfaces;
+using Microsoft.AspNetCore.Mvc;
 
-// namespace BlocoNaRua.Tests.Restful;
+namespace BlocoNaRua.Tests.Restful;
 
-// public class MembersControllerTests
-// {
-//     private readonly Mock<ILogger<MembersController>> _loggerMock = new();
-//     private readonly Mock<IMembersRepository> _repoMock = new();
+public class MembersControllerTests
+{
+    private readonly Mock<IMembersService> _serviceMock = new();
 
-//     private MembersController CreateController() =>
-//         new(_loggerMock.Object, _repoMock.Object);
+    private MembersController CreateController() => new(_serviceMock.Object);
 
-//     [Fact]
-//     public async Task GetAllMembers_Success()
-//     {
-//         // Arrange
-//         var members = new List<MemberEntity>
-//         { new
-//             (
-//                 id: 1,
-//                 name: "Test",
-//                 email: "test@email.com",
-//                 password: "pass",
-//                 phone: "123",
-//                 profileImage: "img"
-//             )
-//         };
-//         _repoMock.Setup(r => r.GetAllAsync()).ReturnsAsync(members);
+    [Fact]
+    public async Task GetAll_ReturnsOkWithList()
+    {
+        // Arrange
+        var entities = new List<MemberEntity>
+        {
+            new(1, "Member 1", "member1@test.com", "111", "img1.jpg"),
+            new(2, "Member 2", "member2@test.com", "222", "img2.jpg")
+        };
+        _serviceMock.Setup(s => s.GetAllAsync()).ReturnsAsync(entities);
 
-//         var controller = CreateController();
+        var controller = CreateController();
 
-//         // Act
-//         var result = await controller.GetAllMembers();
+        // Act
+        var result = await controller.GetAll();
 
-//         // Assert
-//         var okResult = Assert.IsType<OkObjectResult>(result);
-//         Assert.Equal(members, okResult.Value);
-//     }
+        // Assert
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        var dtoList = Assert.IsAssignableFrom<IList<MemberDTO>>(okResult.Value);
+        Assert.Equal(2, dtoList.Count);
+    }
 
-//     [Fact]
-//     public async Task GetMemberById_Success()
-//     {
-//         var member = new MemberEntity
-//         (
-//             1,
-//             "Test",
-//             "test@email.com",
-//             "pass",
-//             "123",
-//             "img"
-//         );
-//         _repoMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(member);
+    [Fact]
+    public async Task GetById_ReturnsOkWithEntity()
+    {
+        // Arrange
+        var entity = new MemberEntity(1, "Test Member", "test@test.com", "123", "img.jpg");
+        _serviceMock.Setup(s => s.GetByIdAsync(1)).ReturnsAsync(entity);
 
-//         var controller = CreateController();
+        var controller = CreateController();
 
-//         var result = await controller.GetMemberById(1);
+        // Act
+        var result = await controller.GetById(1);
 
-//         var okResult = Assert.IsType<OkObjectResult>(result);
-//         Assert.Equal(member, okResult.Value);
-//     }
+        // Assert
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        var dto = Assert.IsType<MemberDTO>(okResult.Value);
+        Assert.Equal(1, dto.Id);
+    }
 
-//     [Fact]
-//     public async Task GetMemberById_NotFound()
-//     {
-//         _repoMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync((MemberEntity)null);
+    [Fact]
+    public async Task GetById_ReturnsNotFound()
+    {
+        // Arrange
+        _serviceMock.Setup(s => s.GetByIdAsync(1)).ReturnsAsync((MemberEntity?)null);
 
-//         var controller = CreateController();
+        var controller = CreateController();
 
-//         var result = await controller.GetMemberById(1);
+        // Act
+        var result = await controller.GetById(1);
 
-//         Assert.IsType<NotFoundResult>(result);
-//     }
+        // Assert
+        Assert.IsType<NotFoundResult>(result);
+    }
 
-//     [Fact]
-//     public async Task CreateMember_BadRequest()
-//     {
-//         var controller = CreateController();
+    [Fact]
+    public async Task Create_ReturnsCreatedAtAction()
+    {
+        // Arrange
+        var createDto = new MemberCreate("Test", "test@test.com", "123", "img.jpg");
+        var entity = new MemberEntity(1, createDto.Name, createDto.Email, createDto.Phone, createDto.ProfileImage);
+        _serviceMock.Setup(s => s.CreateAsync(It.IsAny<MemberEntity>())).ReturnsAsync(entity);
 
-//         var result = await controller.CreateMember(null);
+        var controller = CreateController();
 
-//         Assert.IsType<BadRequestResult>(result);
-//     }
+        // Act
+        var result = await controller.Create(createDto);
 
-//     [Fact]
-//     public async Task CreateMember_Success()
-//     {
-//         var memberCreate = new MemberCreate
-//         (
-//             Name: "Test",
-//             Email: "test@email.com",
-//             Password: "pass",
-//             Phone: "123",
-//             ProfileImage: "img"
-//         );
-//         var entity = new MemberEntity(1, memberCreate.Name, memberCreate.Email, memberCreate.Password, memberCreate.Phone, memberCreate.ProfileImage);
-//         _repoMock.Setup(r => r.AddAsync(It.IsAny<MemberEntity>())).ReturnsAsync(entity);
+        // Assert
+        var created = Assert.IsType<CreatedAtActionResult>(result);
+        Assert.Equal("GetById", created.ActionName);
+        var dto = Assert.IsType<MemberDTO>(created.Value);
+        Assert.Equal(1, dto.Id);
+    }
 
-//         var controller = CreateController();
+    [Fact]
+    public async Task Update_ReturnsNotFound_WhenEntityDoesNotExist()
+    {
+        // Arrange
+        _serviceMock.Setup(s => s.UpdateAsync(1, 1, It.IsAny<MemberEntity>())).ReturnsAsync((MemberEntity?)null);
+        var updateDto = new MemberUpdate(1, "Test", "test@test.com", "123", "img.jpg");
+        var controller = CreateController();
 
-//         var result = await controller.CreateMember(memberCreate);
+        // Act
+        var result = await controller.Update(1, updateDto);
 
-//         var created = Assert.IsType<CreatedAtActionResult>(result);
-//         Assert.Equal("GetMemberById", created.ActionName);
-//         Assert.Equal(entity, created.Value);
-//     }
+        // Assert
+        Assert.IsType<NotFoundResult>(result);
+    }
 
-//     [Fact]
-//     public async Task UpdateMember_BadRequest()
-//     {
-//         var controller = CreateController();
+    [Fact]
+    public async Task Update_ReturnsUnauthorized_WhenRequesterIsNotTarget()
+    {
+        // Arrange
+        _serviceMock.Setup(s => s.UpdateAsync(1, 2, It.IsAny<MemberEntity>()))
+            .ThrowsAsync(new UnauthorizedAccessException("Member is not authorized to update this resource."));
+        var updateDto = new MemberUpdate(2, "Test", "test@test.com", "123", "img.jpg");
+        var controller = CreateController();
 
-//         var result1 = await controller.UpdateMember(1, null);
-//         Assert.IsType<BadRequestResult>(result1);
+        // Act
+        var result = await controller.Update(1, updateDto);
 
-//         var member = new Member(2, "Test", "test@email.com", "pass", "123", "img", DateTime.UtcNow, null);
-//         var result2 = await controller.UpdateMember(1, member);
-//         Assert.IsType<BadRequestResult>(result2);
-//     }
+        // Assert
+        var unauthorizedResult = Assert.IsType<UnauthorizedObjectResult>(result);
+        Assert.Equal("Member is not authorized to update this resource.", unauthorizedResult.Value);
+    }
 
-//     [Fact]
-//     public async Task UpdateMember_NotFound()
-//     {
-//         _repoMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync((MemberEntity)null);
+    [Fact]
+    public async Task Update_ReturnsOk_WhenSuccess()
+    {
+        // Arrange
+        var updatedEntity = new MemberEntity(1, "Updated", "updated@test.com", "321", "updated.jpg");
+        _serviceMock.Setup(s => s.UpdateAsync(1, 1, It.IsAny<MemberEntity>())).ReturnsAsync(updatedEntity);
+        var updateDto = new MemberUpdate(1, "Updated", "updated@test.com", "321", "updated.jpg");
+        var controller = CreateController();
 
-//         var controller = CreateController();
-//         var member = new Member(1, null, null, null, null, null, null, null);
+        // Act
+        var result = await controller.Update(1, updateDto);
 
-//         var result = await controller.UpdateMember(1, member);
+        // Assert
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        var dto = Assert.IsType<MemberDTO>(okResult.Value);
+        Assert.Equal("Updated", dto.Name);
+    }
 
-//         Assert.IsType<NotFoundResult>(result);
-//     }
+    [Fact]
+    public async Task Delete_ReturnsNotFound_WhenEntityDoesNotExist()
+    {
+        // Arrange
+        _serviceMock.Setup(s => s.DeleteAsync(1, 1)).ReturnsAsync(false);
+        var controller = CreateController();
 
-//     [Fact]
-//     public async Task UpdateMember_Success()
-//     {
-//         var existing = new MemberEntity(1, "Test", "test@email.com", "pass", "123", null);
-//         _repoMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(existing);
+        // Act
+        var result = await controller.Delete(1, 1);
 
-//         var controller = CreateController();
-//         var member = new Member(1, "Updated", null, null, null, null, null, null);
+        // Assert
+        Assert.IsType<NotFoundResult>(result);
+    }
 
-//         var result = await controller.UpdateMember(1, member);
+    [Fact]
+    public async Task Delete_ReturnsUnauthorized_WhenRequesterIsNotTarget()
+    {
+        // Arrange
+        _serviceMock.Setup(s => s.DeleteAsync(1, 2))
+            .ThrowsAsync(new UnauthorizedAccessException("Member is not authorized to delete this resource."));
+        var controller = CreateController();
 
-//         Assert.IsType<AcceptedResult>(result);
-//         _repoMock.Verify(r => r.UpdateAsync(It.Is<MemberEntity>(m => m.Name == "Updated")), Times.Once);
-//     }
+        // Act
+        var result = await controller.Delete(1, 2);
 
-//     [Fact]
-//     public async Task DeleteMember_NotFound()
-//     {
-//         _repoMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync((MemberEntity)null);
+        // Assert
+        var unauthorizedResult = Assert.IsType<UnauthorizedObjectResult>(result);
+        Assert.Equal("Member is not authorized to delete this resource.", unauthorizedResult.Value);
+    }
 
-//         var controller = CreateController();
+    [Fact]
+    public async Task Delete_ReturnsNoContent_WhenSuccess()
+    {
+        // Arrange
+        _serviceMock.Setup(s => s.DeleteAsync(1, 1)).ReturnsAsync(true);
+        var controller = CreateController();
 
-//         var result = await controller.DeleteMember(1);
+        // Act
+        var result = await controller.Delete(1, 1);
 
-//         Assert.IsType<NotFoundResult>(result);
-//     }
-
-//     [Fact]
-//     public async Task DeleteMember_Success()
-//     {
-//         var member = new MemberEntity(1, "Test", "test@email.com", "pass", "123", "img");
-//         _repoMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(member);
-
-//         var controller = CreateController();
-
-//         var result = await controller.DeleteMember(1);
-
-//         Assert.IsType<NoContentResult>(result);
-//         _repoMock.Verify(r => r.DeleteAsync(member), Times.Once);
-//     }
-// }
+        // Assert
+        Assert.IsType<NoContentResult>(result);
+    }
+}

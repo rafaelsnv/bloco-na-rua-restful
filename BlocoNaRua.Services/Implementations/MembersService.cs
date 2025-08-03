@@ -20,10 +20,6 @@ public class MembersService(IMembersRepository repository) : IMembersService
 
     public async Task<MemberEntity> CreateAsync(MemberEntity entity)
     {
-        // Assuming MemberEntity has properties like Name, Role, etc.
-        // The constructor for MemberEntity is not provided, so we'll assume a default constructor or properties can be set directly.
-        // If MemberEntity has specific constructor parameters, they would need to be passed here.
-        // For now, we'll create a new entity with the provided data.
         var newMember = new MemberEntity(
             0, // Assuming ID is auto-generated
             entity.Name,
@@ -34,8 +30,11 @@ public class MembersService(IMembersRepository repository) : IMembersService
         return await _repository.AddAsync(newMember);
     }
 
-    public async Task<MemberEntity?> UpdateAsync(int id, MemberEntity model)
+    public async Task<MemberEntity?> UpdateAsync(int id, int requesterId, MemberEntity model)
     {
+        if (id != requesterId)
+            throw new UnauthorizedAccessException("Member is not authorized to update this resource.");
+
         var entity = await _repository.GetByIdAsync(id);
         if (entity is null)
             return null;
@@ -45,14 +44,16 @@ public class MembersService(IMembersRepository repository) : IMembersService
         entity.Email = model.Email;
         entity.Phone = model.Phone;
         entity.ProfileImage = model.ProfileImage;
-        // Update other properties as needed
 
         await _repository.UpdateAsync(entity);
         return entity;
     }
 
-    public async Task<bool> DeleteAsync(int id)
+    public async Task<bool> DeleteAsync(int id, int requesterId)
     {
+        if (id != requesterId)
+            throw new UnauthorizedAccessException("Member is not authorized to delete this resource.");
+
         var entity = await _repository.GetByIdAsync(id);
         if (entity is null)
             return false;

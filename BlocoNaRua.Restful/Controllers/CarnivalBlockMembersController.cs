@@ -1,6 +1,7 @@
 using BlocoNaRua.Data.Repositories.Interfaces;
 using BlocoNaRua.Domain.Entities;
 using BlocoNaRua.Restful.Models.CarnivalBlockMember;
+using BlocoNaRua.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BlocoNaRua.Restful.Controllers;
@@ -10,26 +11,28 @@ namespace BlocoNaRua.Restful.Controllers;
 public class CarnivalBlockMembersController
     (
         ILogger<CarnivalBlockMembersController> logger,
-        ICarnivalBlockMembersRepository carnivalBlockMembersRepo
+        ICarnivalBlockMembersService carnivalBlockMembersService
     ) : ControllerBase
 {
     private readonly ILogger<CarnivalBlockMembersController> _logger = logger;
-    private readonly ICarnivalBlockMembersRepository _carnivalBlockMembersRepo = carnivalBlockMembersRepo;
+    private readonly ICarnivalBlockMembersService _carnivalBlockMembersService = carnivalBlockMembersService;
 
     [HttpGet]
     public async Task<IActionResult> GetAllBlocksMembers()
     {
-        var blocksMembersList = await _carnivalBlockMembersRepo.GetAllAsync();
-        return Ok(blocksMembersList);
+        var blocksMembersList = await _carnivalBlockMembersService.GetAllAsync();
+        var response = blocksMembersList.Select(ToDTO).ToList();
+        return Ok(response);
     }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetBlocksMembersById(int id)
     {
-        var blockMember = await _carnivalBlockMembersRepo.GetByIdAsync(id);
+        var blockMember = await _carnivalBlockMembersService.GetByIdAsync(id);
         if (blockMember == null)
             return NotFound();
-        return Ok(blockMember);
+        var response = ToDTO(blockMember);
+        return Ok(response);
     }
 
     [HttpPost]
@@ -47,13 +50,17 @@ public class CarnivalBlockMembersController
                 role: blockMember.Role
             );
 
-            var result = await _carnivalBlockMembersRepo.AddAsync(entity);
+            await _carnivalBlockMembersService.CreateAsync(entity);
             return CreatedAtAction
             (
                 nameof(GetBlocksMembersById),
-                new { id = result.Id },
-                result
+                new { id = entity.Id },
+                ToDTO(entity)
             );
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
         }
         catch (Exception ex)
         {
@@ -61,6 +68,76 @@ public class CarnivalBlockMembersController
         }
     }
 
-    // [HttpPut("Update/{memberId}")] // TODO?
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdateCarnivalBlockMember(int id, [FromBody] CarnivalBlockMemberUpdate updateRole)
+    {
+        try
+        {
+            if (updateRole == null)
+                return BadRequest();
 
+            var updated = await _carnivalBlockMembersService.UpdateAsync(id, updateRole.LoggedMemberId, updateRole.Role);
+            if (updated == null)
+                return NotFound();
+
+            return Ok(ToDTO(updated));
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(ex.Message);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteCarnivalBlockMember(int id, [FromHeader(Name = "X-Member-Id")] int loggedMemberId)
+    {
+        try
+        {
+            var deleted = await _carnivalBlockMembersService.DeleteAsync(id, loggedMemberId);
+            if (!deleted)
+                return NotFound();
+
+            return NoContent();
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(ex.Message);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    private static CarnivalBlockMemberDTO ToDTO(CarnivalBlockMembersEntity entity)
+    {
+        return new CarnivalBlockMemberDTO(
+            entity.Id,
+            entity.CarnivalBlockId,
+            entity.MemberId,
+            entity.Role,
+            entity.CreatedAt.GetValueOrDefault(),
+            entity.UpdatedAt.GetValueOrDefault()
+        );
+    }
 }

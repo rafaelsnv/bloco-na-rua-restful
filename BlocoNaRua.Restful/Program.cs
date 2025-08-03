@@ -40,6 +40,7 @@ builder.Services.AddRepositories();
 // Register application services
 builder.Services.AddScoped<ICarnivalBlockService, CarnivalBlockService>();
 builder.Services.AddScoped<IMembersService, MembersService>();
+builder.Services.AddScoped<ICarnivalBlockMembersService, CarnivalBlockMembersService>();
 
 var app = builder.Build();
 

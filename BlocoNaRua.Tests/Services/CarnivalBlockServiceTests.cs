@@ -8,37 +8,40 @@ using BlocoNaRua.Tests.Helpers;
 
 namespace BlocoNaRua.Tests.Services;
 
-public class CarnivalBlockServiceTests
+public class CarnivalBlockServiceTests : IDisposable
 {
-    private readonly AppDbContext _contextMock;
+    private readonly AppDbContext _context;
     private readonly ICarnivalBlocksRepository _carnivalBlocksRepository;
-    private readonly Mock<IMembersRepository> _membersRepositoryMock;
+    private readonly IMembersRepository _membersRepository;
     private readonly ICarnivalBlockMembersRepository _carnivalBlockMembersRepository;
     private readonly CarnivalBlockService _carnivalBlockService;
 
     public CarnivalBlockServiceTests()
     {
-        _contextMock = TestDbContextFactory.GetContext(Guid.NewGuid().ToString());
-        _membersRepositoryMock = new Mock<IMembersRepository>();
-        _carnivalBlocksRepository = new CarnivalBlocksRepository(_contextMock);
-        _carnivalBlockMembersRepository = new CarnivalBlockMembersRepository
-        (
-            _contextMock,
-            _membersRepositoryMock.Object,
-            _carnivalBlocksRepository
-        );
+        var dbName = Guid.NewGuid().ToString();
+        _context = TestDbContextFactory.GetContext(dbName);
+        _carnivalBlocksRepository = new CarnivalBlocksRepository(_context);
+        _membersRepository = new MembersRepository(_context);
+        _carnivalBlockMembersRepository = new CarnivalBlockMembersRepository(_context);
         _carnivalBlockService = new CarnivalBlockService
         (
             _carnivalBlocksRepository,
-            _carnivalBlockMembersRepository
+            _carnivalBlockMembersRepository,
+            _membersRepository
         );
+    }
+
+    public void Dispose()
+    {
+        _context.Database.EnsureDeleted();
+        _context.Dispose();
+        GC.SuppressFinalize(this);
     }
 
     private async Task AddData(int blockId, int ownerId, string blockName, int memberId, RolesEnum role)
     {
-        _membersRepositoryMock
-            .Setup(r => r.GetByIdAsync(ownerId))
-            .ReturnsAsync(new MemberEntity(
+        if (await _membersRepository.GetByIdAsync(ownerId) is null)
+            await _membersRepository.AddAsync(new MemberEntity(
                 id: ownerId,
                 name: "Owner Member",
                 email: "owner@test.com",
@@ -46,15 +49,16 @@ public class CarnivalBlockServiceTests
                 profileImage: "profile_image.jpg"
             ));
 
-        _membersRepositoryMock
-            .Setup(r => r.GetByIdAsync(memberId))
-            .ReturnsAsync(new MemberEntity(
+        if (ownerId != memberId && await _membersRepository.GetByIdAsync(memberId) is null)
+        {
+            await _membersRepository.AddAsync(new MemberEntity(
                 id: memberId,
                 name: "Test Member",
                 email: "test@test.com",
                 phone: "1234567890",
                 profileImage: "profile_image.jpg"
             ));
+        }
 
         var carnivalBlock = new CarnivalBlockEntity(
             id: blockId,
@@ -73,6 +77,63 @@ public class CarnivalBlockServiceTests
             role: role
         );
         await _carnivalBlockMembersRepository.AddAsync(carnivalBlockMember);
+    }
+
+    [Fact]
+    public async Task GetAllAsync_ShouldReturnAllCarnivalBlocks()
+    {
+        // Arrange
+        await AddData(1, 101, "Block 1", 101, RolesEnum.Owner);
+        await AddData(2, 201, "Block 2", 202, RolesEnum.Manager);
+
+        // Act
+        var result = await _carnivalBlockService.GetAllAsync();
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(2, result.Count);
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_ShouldReturnCarnivalBlock_WhenBlockExists()
+    {
+        // Arrange
+        await AddData(1, 101, "Block 1", 101, RolesEnum.Owner);
+
+        // Act
+        var result = await _carnivalBlockService.GetByIdAsync(1);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(1, result.Id);
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_ShouldReturnNull_WhenBlockDoesNotExist()
+    {
+        // Act
+        var result = await _carnivalBlockService.GetByIdAsync(999);
+
+        // Assert
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public async Task CreateAsync_ShouldCreateCarnivalBlock()
+    {
+        // Arrange
+        await _membersRepository.AddAsync(new MemberEntity(1, "owner", "owner@email.com", "123", "img"));
+        var newBlock = new CarnivalBlockEntity(0, 1, "New Block", "", "", "image.jpg");
+
+        // Act
+        var result = await _carnivalBlockService.CreateAsync(newBlock);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotEqual(0, result.Id);
+        Assert.Equal("New Block", result.Name);
+        Assert.False(string.IsNullOrEmpty(result.InviteCode));
+        Assert.False(string.IsNullOrEmpty(result.ManagersInviteCode));
     }
 
     [Fact]
@@ -141,26 +202,6 @@ public class CarnivalBlockServiceTests
     }
 
     [Fact]
-    public async Task UpdateAsync_ShouldReturnNull_WhenCarnivalBlockDoesNotExist()
-    {
-        // Arrange
-        var updatedModel = new CarnivalBlockEntity(
-            id: 999,
-            ownerId: 1,
-            name: "Non Existent Block",
-            inviteCode: "test",
-            managersInviteCode: "test",
-            carnivalBlockImage: "image.jpg"
-        );
-
-        // Act
-        var result = await _carnivalBlockService.UpdateAsync(999, 1, updatedModel);
-
-        // Assert
-        Assert.Null(result);
-    }
-
-    [Fact]
     public async Task DeleteAsync_ShouldDeleteCarnivalBlock_WhenMemberIsOwner()
     {
         // Arrange
@@ -198,12 +239,50 @@ public class CarnivalBlockServiceTests
     }
 
     [Fact]
-    public async Task DeleteAsync_ShouldReturnFalse_WhenCarnivalBlockDoesNotExist()
+    public async Task DeleteAsync_ShouldThrowKeyNotFoundException_WhenCarnivalBlockDoesNotExist()
     {
-        // Act
-        var result = await _carnivalBlockService.DeleteAsync(999, 1);
+        // Act & Assert
+        await Assert.ThrowsAsync<KeyNotFoundException>(() => _carnivalBlockService.DeleteAsync(999, 1));
+    }
 
-        // Assert
-        Assert.False(result);
+    [Fact]
+    public async Task CreateAsync_ShouldThrowKeyNotFoundException_WhenOwnerDoesNotExist()
+    {
+        // Arrange
+        var newBlock = new CarnivalBlockEntity(0, 999, "New Block", "", "", "image.jpg");
+
+        // Act & Assert
+        await Assert.ThrowsAsync<KeyNotFoundException>(() => _carnivalBlockService.CreateAsync(newBlock));
+    }
+
+    [Fact]
+    public async Task UpdateAsync_ShouldThrowKeyNotFoundException_WhenCarnivalBlockDoesNotExist()
+    {
+        // Arrange
+        var updatedModel = new CarnivalBlockEntity(999, 1, "Non Existent Block", "test", "test", "image.jpg");
+
+        // Act & Assert
+        await Assert.ThrowsAsync<KeyNotFoundException>(() => _carnivalBlockService.UpdateAsync(999, 1, updatedModel));
+    }
+
+    [Fact]
+    public async Task UpdateAsync_ShouldThrowKeyNotFoundException_WhenMemberDoesNotExist()
+    {
+        // Arrange
+        await AddData(1, 101, "Block 1", 101, RolesEnum.Owner);
+        var updatedModel = new CarnivalBlockEntity(1, 101, "Updated Block 1", "test", "test", "updated_image.jpg");
+
+        // Act & Assert
+        await Assert.ThrowsAsync<KeyNotFoundException>(() => _carnivalBlockService.UpdateAsync(1, 999, updatedModel));
+    }
+
+    [Fact]
+    public async Task DeleteAsync_ShouldThrowKeyNotFoundException_WhenMemberDoesNotExist()
+    {
+        // Arrange
+        await AddData(4, 401, "Block 4", 401, RolesEnum.Owner);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<KeyNotFoundException>(() => _carnivalBlockService.DeleteAsync(4, 999));
     }
 }

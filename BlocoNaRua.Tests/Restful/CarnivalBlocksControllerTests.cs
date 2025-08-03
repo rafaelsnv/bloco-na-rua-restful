@@ -95,7 +95,7 @@ public class CarnivalBlocksControllerTests
     [Fact]
     public async Task Update_ReturnsNotFound_WhenEntityDoesNotExist()
     {
-        _serviceMock.Setup(s => s.UpdateAsync(1, 1, It.IsAny<CarnivalBlockEntity>())).ReturnsAsync((CarnivalBlockEntity?)null);
+        _serviceMock.Setup(s => s.UpdateAsync(1, 1, It.IsAny<CarnivalBlockEntity>())).ThrowsAsync(new KeyNotFoundException());
 
         var controller = CreateController();
         var updateDto = new CarnivalBlockUpdate(
@@ -105,7 +105,7 @@ public class CarnivalBlocksControllerTests
         );
         var result = await controller.Update(1, updateDto);
 
-        Assert.IsType<NotFoundResult>(result);
+        Assert.IsType<NotFoundObjectResult>(result);
     }
 
     [Fact]
@@ -155,12 +155,12 @@ public class CarnivalBlocksControllerTests
     [Fact]
     public async Task Delete_ReturnsNotFound_WhenEntityDoesNotExist()
     {
-        _serviceMock.Setup(s => s.DeleteAsync(1, It.IsAny<int>())).ReturnsAsync(false);
+        _serviceMock.Setup(s => s.DeleteAsync(1, It.IsAny<int>())).ThrowsAsync(new KeyNotFoundException());
 
         var controller = CreateController();
         var result = await controller.Delete(1, 1);
 
-        Assert.IsType<NotFoundResult>(result);
+        Assert.IsType<NotFoundObjectResult>(result);
     }
 
     [Fact]

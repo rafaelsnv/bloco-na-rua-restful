@@ -34,7 +34,7 @@ public class MembersController(IMembersService service) : ControllerBase
     public async Task<IActionResult> Create([FromBody] MemberCreate model)
     {
         var entity = new MemberEntity(
-            id: 0, // Assuming ID is auto-generated
+            id: 0,
             name: model.Name,
             email: model.Email,
             phone: model.Phone,
@@ -48,27 +48,41 @@ public class MembersController(IMembersService service) : ControllerBase
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(int id, [FromBody] MemberUpdate model)
     {
-        var entity = new MemberEntity(
-            id: id, // Use the provided ID for update
-            name: model.Name,
-            email: model.Email,
-            phone: model.Phone,
-            profileImage: model.ProfileImage
-        );
-        var updated = await _service.UpdateAsync(id, entity);
-        if (updated is null)
-            return NotFound();
-        var result = ToDTO(updated);
-        return Ok(result);
+        try
+        {
+            var entity = new MemberEntity(
+                id: id, // Use the provided ID for update
+                name: model.Name,
+                email: model.Email,
+                phone: model.Phone,
+                profileImage: model.ProfileImage
+            );
+            var updated = await _service.UpdateAsync(id, model.RequesterId, entity);
+            if (updated is null)
+                return NotFound();
+            var result = ToDTO(updated);
+            return Ok(result);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(ex.Message);
+        }
     }
 
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> Delete(int id)
+    [HttpDelete("{id}/{requesterId}")]
+    public async Task<IActionResult> Delete(int id, int requesterId)
     {
-        var deleted = await _service.DeleteAsync(id);
-        if (!deleted)
-            return NotFound();
-        return NoContent();
+        try
+        {
+            var deleted = await _service.DeleteAsync(id, requesterId);
+            if (!deleted)
+                return NotFound();
+            return NoContent();
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(ex.Message);
+        }
     }
 
     private static MemberDTO ToDTO(MemberEntity entity)
@@ -78,7 +92,9 @@ public class MembersController(IMembersService service) : ControllerBase
             entity.Name,
             entity.Email,
             entity.Phone,
-            entity.ProfileImage
+            entity.ProfileImage,
+            entity.CreatedAt,
+            entity.UpdatedAt
         );
     }
 }

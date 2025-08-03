@@ -60,10 +60,12 @@ public class CarnivalBlocksController(ICarnivalBlockService service) : Controlle
         try
         {
             var updated = await _service.UpdateAsync(id, model.MemberId, entity);
-            if (updated is null)
-                return NotFound();
             var result = ToDTO(updated);
             return Ok(result);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
         }
         catch (UnauthorizedAccessException ex)
         {
@@ -76,10 +78,12 @@ public class CarnivalBlocksController(ICarnivalBlockService service) : Controlle
     {
         try
         {
-            var deleted = await _service.DeleteAsync(id, memberId);
-            if (!deleted)
-                return NotFound();
+            await _service.DeleteAsync(id, memberId);
             return NoContent();
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
         }
         catch (UnauthorizedAccessException ex)
         {
