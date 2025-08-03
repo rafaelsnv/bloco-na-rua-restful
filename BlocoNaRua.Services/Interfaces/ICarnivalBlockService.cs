@@ -1,13 +1,12 @@
-
-using BlocoNaRua.Restful.Models.CarnivalBlock;
+using BlocoNaRua.Domain.Entities;
 
 namespace BlocoNaRua.Services.Interfaces;
 
 public interface ICarnivalBlockService
 {
-    IEnumerable<CarnivalBlockDTO> GetAll();
-    CarnivalBlockDTO GetById(int id);
-    void Create(CarnivalBlockCreate model);
-    void Update(int id, CarnivalBlockUpdate model);
-    void Delete(int id);
+    Task<IList<CarnivalBlockEntity>> GetAllAsync();
+    Task<CarnivalBlockEntity?> GetByIdAsync(int id);
+    Task<CarnivalBlockEntity> CreateAsync(CarnivalBlockEntity entity);
+    Task<CarnivalBlockEntity?> UpdateAsync(int id, int memberId, CarnivalBlockEntity entity);
+    Task<bool> DeleteAsync(int id, int memberId);
 }

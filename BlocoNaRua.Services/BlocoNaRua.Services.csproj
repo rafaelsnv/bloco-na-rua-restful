@@ -7,7 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\BlocoNaRua.Restful\BlocoNaRua.Restful.csproj" />
     <ProjectReference Include="..\BlocoNaRua.Data\BlocoNaRua.Data.csproj" />
   </ItemGroup>
 

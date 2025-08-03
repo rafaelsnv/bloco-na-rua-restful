@@ -5,6 +5,4 @@ using BlocoNaRua.Domain.Entities;
 
 namespace BlocoNaRua.Data.Repositories;
 
-public class MeetingsRepository(AppDbContext appContext) : RepositoryBase<MeetingEntity>(appContext), IMeetingsRepository
-{
-}
+public class MeetingsRepository(AppDbContext appContext) : RepositoryBase<MeetingEntity>(appContext), IMeetingsRepository;
