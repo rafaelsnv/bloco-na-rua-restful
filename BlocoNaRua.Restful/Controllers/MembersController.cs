@@ -1,90 +1,84 @@
-using BlocoNaRua.Data.Repositories.Interfaces;
+using Asp.Versioning;
 using BlocoNaRua.Domain.Entities;
 using BlocoNaRua.Restful.Models.Member;
+using BlocoNaRua.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BlocoNaRua.Restful.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
-public class MembersController
-    (
-        ILogger<MembersController> logger,
-        IMembersRepository membersRepository
-    ) : ControllerBase
+[Route("api/v{version:apiVersion}/[controller]")]
+[ApiVersion("1.0")]
+public class MembersController(IMembersService service) : ControllerBase
 {
-    private readonly ILogger<MembersController> _logger = logger;
-    private readonly IMembersRepository _membersRepository = membersRepository;
+    private readonly IMembersService _service = service;
 
-    [HttpGet("Get")]
-    public async Task<IActionResult> GetAllMembers()
+    [HttpGet]
+    public async Task<IActionResult> GetAll()
     {
-        var membersList = await _membersRepository.GetAllAsync();
-        return Ok(membersList);
+        var list = await _service.GetAllAsync();
+        return Ok(list.Select(ToDTO).ToList());
     }
 
-    [HttpGet("Get/{id}")]
-    public async Task<IActionResult> GetMemberById(int id)
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetById(int id)
     {
-        var member = await _membersRepository.GetByIdAsync(id);
-        if (member == null)
+        var entity = await _service.GetByIdAsync(id);
+        if (entity is null)
             return NotFound();
-        return Ok(member);
+        var result = ToDTO(entity);
+        return Ok(result);
     }
 
-    [HttpPost("Create")]
-    public async Task<IActionResult> CreateMember([FromBody] MemberCreate member)
+    [HttpPost]
+    public async Task<IActionResult> Create([FromBody] MemberCreate model)
     {
-        if (member == null)
-            return BadRequest();
-
         var entity = new MemberEntity(
-            id: 0,
-            name: member.Name,
-            email: member.Email,
-            password: member.Password,
-            phone: member.Phone,
-            profileImage: member.ProfileImage
+            id: 0, // Assuming ID is auto-generated
+            name: model.Name,
+            email: model.Email,
+            phone: model.Phone,
+            profileImage: model.ProfileImage
         );
-
-        var result = await _membersRepository.AddAsync(entity);
-        return CreatedAtAction
-        (
-            nameof(GetMemberById),
-            new { id = result.Id },
-            result
-        );
+        var created = await _service.CreateAsync(entity);
+        var result = ToDTO(created);
+        return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 
-    [HttpPut("Update/{id}")]
-    public async Task<IActionResult> UpdateMember(int id, [FromBody] Member member)
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(int id, [FromBody] MemberUpdate model)
     {
-        if (member == null || member.Id != id)
-            return BadRequest();
-
-        var existingMember = await _membersRepository.GetByIdAsync(id);
-        if (existingMember == null)
+        var entity = new MemberEntity(
+            id: id, // Use the provided ID for update
+            name: model.Name,
+            email: model.Email,
+            phone: model.Phone,
+            profileImage: model.ProfileImage
+        );
+        var updated = await _service.UpdateAsync(id, entity);
+        if (updated is null)
             return NotFound();
-
-        existingMember.Name = member.Name ?? existingMember.Name;
-        existingMember.Email = member.Email ?? existingMember.Email;
-        existingMember.Phone = member.Phone ?? existingMember.Phone;
-        existingMember.ProfileImage = member.ProfileImage ?? existingMember.ProfileImage;
-        existingMember.Password = member.Password ?? existingMember.Password;
-
-        await _membersRepository.UpdateAsync(existingMember);
-        return Accepted();
+        var result = ToDTO(updated);
+        return Ok(result);
     }
 
-    [HttpDelete("Delete/{id}")]
-    public async Task<IActionResult> DeleteMember(int id)
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(int id)
     {
-        var member = await _membersRepository.GetByIdAsync(id);
-        if (member == null)
+        var deleted = await _service.DeleteAsync(id);
+        if (!deleted)
             return NotFound();
-
-        await _membersRepository.DeleteAsync(member);
         return NoContent();
     }
 
+    private static MemberDTO ToDTO(MemberEntity entity)
+    {
+        return new MemberDTO(
+            entity.Id,
+            entity.Name,
+            entity.Email,
+            entity.Phone,
+            entity.ProfileImage
+        );
+    }
 }

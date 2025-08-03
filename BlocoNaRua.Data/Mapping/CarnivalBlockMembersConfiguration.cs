@@ -27,7 +27,8 @@ public class CarnivalBlockMembersConfiguration : IEntityTypeConfiguration<Carniv
 
         builder.Property(e => e.Role)
                .HasColumnName("role")
-               .IsRequired();
+               .IsRequired()
+               .HasConversion<string>();
 
         builder.Property(e => e.CreatedAt)
                .HasColumnName("created_at")
@@ -40,7 +41,7 @@ public class CarnivalBlockMembersConfiguration : IEntityTypeConfiguration<Carniv
         builder.HasOne(e => e.CarnivalBlock)
                .WithMany(cb => cb.CarnivalBlockMembers)
                .HasForeignKey(e => e.CarnivalBlockId)
-               .OnDelete(DeleteBehavior.Restrict)
+               .OnDelete(DeleteBehavior.Cascade)
                .HasConstraintName("carnival_block_users_carnival_block_id_fkey");
 
         builder.HasOne(e => e.Member)

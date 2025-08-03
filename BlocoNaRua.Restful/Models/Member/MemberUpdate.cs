@@ -1,9 +1,8 @@
 namespace BlocoNaRua.Restful.Models.Member;
 
-public record MemberCreate(
+public record MemberUpdate(
     string Name,
     string Email,
-    string Password,
     string Phone,
     string ProfileImage
 );

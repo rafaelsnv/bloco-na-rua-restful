@@ -1,195 +1,189 @@
-using BlocoNaRua.Data.Repositories.Interfaces;
 using BlocoNaRua.Domain.Entities;
 using BlocoNaRua.Restful.Controllers;
 using BlocoNaRua.Restful.Models.CarnivalBlock;
+using BlocoNaRua.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 
 namespace BlocoNaRua.Tests.Restful;
 
 public class CarnivalBlocksControllerTests
 {
-    private readonly Mock<ILogger<CarnivalBlocksController>> _loggerMock = new();
-    private readonly Mock<ICarnivalBlocksRepository> _repoMock = new();
+    private readonly Mock<ICarnivalBlockService> _serviceMock = new();
 
-    private CarnivalBlocksController CreateController()
-        => new(_loggerMock.Object, _repoMock.Object);
+    private CarnivalBlocksController CreateController() => new(_serviceMock.Object);
 
     [Fact]
-    public async Task GetAllCarnivalBlocks_Success()
+    public async Task GetAll_ReturnsOkWithList()
     {
-        _repoMock.Setup(r => r.GetAllAsync())
-            .ReturnsAsync([
-                new
-                (
-                    id: 1,
-                    name: "Test Block",
-                    ownerId: 1,
-                    inviteCode: "invite123",
-                    managersInviteCode: "manager123",
-                    carnivalBlockImage: "block_image.jpg"
-                )
-            ]);
+        var entities = new List<CarnivalBlockEntity>
+        {
+            new(
+                id: 1,
+                ownerId: 1,
+                name: "Test Block",
+                inviteCode: "invite123",
+                managersInviteCode: "manager123",
+                carnivalBlockImage: "block_image.jpg"
+            )
+        };
+        _serviceMock.Setup(s => s.GetAllAsync()).ReturnsAsync(entities);
 
         var controller = CreateController();
-        var result = await controller.GetAllCarnivalBlocks();
+        var result = await controller.GetAll();
 
         var okResult = Assert.IsType<OkObjectResult>(result);
-        Assert.IsAssignableFrom<IEnumerable<CarnivalBlockEntity>>(okResult.Value);
+        Assert.IsAssignableFrom<IList<CarnivalBlockDTO>>(okResult.Value);
     }
 
     [Fact]
-    public async Task GetCarnivalBlockById_Success()
+    public async Task GetById_ReturnsOkWithEntity()
     {
-        var entity = new CarnivalBlockEntity
-        (
+        var entity = new CarnivalBlockEntity(
             id: 1,
-            name: "Test Block",
             ownerId: 1,
+            name: "Test Block",
             inviteCode: "invite123",
             managersInviteCode: "manager123",
             carnivalBlockImage: "block_image.jpg"
         );
-        _repoMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(entity);
+        _serviceMock.Setup(s => s.GetByIdAsync(1)).ReturnsAsync(entity);
 
         var controller = CreateController();
-        var result = await controller.GetCarnivalBlockById(1);
+        var result = await controller.GetById(1);
 
         var okResult = Assert.IsType<OkObjectResult>(result);
-        Assert.Equal(entity, okResult.Value);
+        Assert.IsType<CarnivalBlockDTO>(okResult.Value);
     }
 
     [Fact]
-    public async Task GetCarnivalBlockById_NotFound()
+    public async Task GetById_ReturnsNotFound()
     {
-        _repoMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync((CarnivalBlockEntity)null);
+        _serviceMock.Setup(s => s.GetByIdAsync(1)).ReturnsAsync((CarnivalBlockEntity?)null);
 
         var controller = CreateController();
-        var result = await controller.GetCarnivalBlockById(1);
+        var result = await controller.GetById(1);
 
         Assert.IsType<NotFoundResult>(result);
     }
 
     [Fact]
-    public async Task CreateCarnivalBlock_BadRequest()
+    public async Task Create_ReturnsCreatedAtAction()
     {
-        var controller = CreateController();
-        var result = await controller.CreateCarnivalBlock(null);
-
-        Assert.IsType<BadRequestResult>(result);
-    }
-
-    [Fact]
-    public async Task CreateCarnivalBlock_Success()
-    {
-        var createDto = new CarnivalBlockCreate
-        (
+        var createDto = new CarnivalBlockCreate(
             Name: "Test",
             OwnerId: 1,
             CarnivalBlockImage: "img"
         );
-        var entity = new CarnivalBlockEntity
-        (
+        var entity = new CarnivalBlockEntity(
             id: 1,
-            name: createDto.Name,
             ownerId: createDto.OwnerId,
+            name: createDto.Name,
             inviteCode: string.Empty,
             managersInviteCode: string.Empty,
             carnivalBlockImage: createDto.CarnivalBlockImage
         );
-        _repoMock.Setup(r => r.AddAsync(It.IsAny<CarnivalBlockEntity>())).ReturnsAsync(entity);
+        _serviceMock.Setup(s => s.CreateAsync(It.IsAny<CarnivalBlockEntity>())).ReturnsAsync(entity);
 
         var controller = CreateController();
-        var result = await controller.CreateCarnivalBlock(createDto);
+        var result = await controller.Create(createDto);
 
         var created = Assert.IsType<CreatedAtActionResult>(result);
-        Assert.Equal("GetCarnivalBlockById", created.ActionName);
-        Assert.Equal(entity, created.Value);
+        Assert.Equal("GetById", created.ActionName);
+        Assert.IsType<CarnivalBlockDTO>(created.Value);
     }
 
     [Fact]
-    public async Task UpdateCarnivalBlock_NotFound()
+    public async Task Update_ReturnsNotFound_WhenEntityDoesNotExist()
     {
-        _repoMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync((CarnivalBlockEntity)null);
+        _serviceMock.Setup(s => s.UpdateAsync(1, 1, It.IsAny<CarnivalBlockEntity>())).ReturnsAsync((CarnivalBlockEntity?)null);
 
         var controller = CreateController();
-        var updateDto = new CarnivalBlockUpdate
-        (
+        var updateDto = new CarnivalBlockUpdate(
             Name: "Test",
             MemberId: 1,
             CarnivalBlockImage: "img"
         );
-        var result = await controller.UpdateCarnivalBlock(1, updateDto);
+        var result = await controller.Update(1, updateDto);
 
         Assert.IsType<NotFoundResult>(result);
     }
 
     [Fact]
-    public async Task UpdateCarnivalBlock_BadRequest()
+    public async Task Update_ReturnsUnauthorized_WhenMemberIsNotAuthorized()
     {
-        var controller = CreateController();
-        var result = await controller.UpdateCarnivalBlock(1, null);
+        _serviceMock.Setup(s => s.UpdateAsync(1, 1, It.IsAny<CarnivalBlockEntity>()))
+            .ThrowsAsync(new UnauthorizedAccessException("Member is not authorized to update this carnival block."));
 
-        Assert.IsType<BadRequestResult>(result);
+        var controller = CreateController();
+        var updateDto = new CarnivalBlockUpdate(
+            Name: "Test",
+            MemberId: 1,
+            CarnivalBlockImage: "img"
+        );
+        var result = await controller.Update(1, updateDto);
+
+        var unauthorizedResult = Assert.IsType<UnauthorizedObjectResult>(result);
+        Assert.Equal("Member is not authorized to update this carnival block.", unauthorizedResult.Value);
     }
 
     [Fact]
-    public async Task UpdateCarnivalBlock_Success()
+    public async Task Update_ReturnsOk_WhenSuccess()
     {
-        var entity = new CarnivalBlockEntity
-        (
+        var updatedEntity = new CarnivalBlockEntity(
             id: 1,
-            name: "Name",
-            ownerId: 1,
+            ownerId: 2,
+            name: "Updated",
             inviteCode: string.Empty,
             managersInviteCode: string.Empty,
             carnivalBlockImage: "img"
         );
-        _repoMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(entity);
+        _serviceMock.Setup(s => s.UpdateAsync(1, 2, It.IsAny<CarnivalBlockEntity>())).ReturnsAsync(updatedEntity);
 
         var controller = CreateController();
-        var updateDto = new CarnivalBlockUpdate
-        (
+        var updateDto = new CarnivalBlockUpdate(
             Name: "Updated",
             MemberId: 2,
             CarnivalBlockImage: "img"
         );
 
-        var result = await controller.UpdateCarnivalBlock(1, updateDto);
+        var result = await controller.Update(1, updateDto);
 
-        Assert.IsType<NoContentResult>(result);
-        _repoMock.Verify(r => r.UpdateAsync(updateDto.MemberId, entity), Times.Once);
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        Assert.IsType<CarnivalBlockDTO>(okResult.Value);
     }
 
     [Fact]
-    public async Task DeleteCarnivalBlock_NotFound()
+    public async Task Delete_ReturnsNotFound_WhenEntityDoesNotExist()
     {
-        _repoMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync((CarnivalBlockEntity)null);
+        _serviceMock.Setup(s => s.DeleteAsync(1, It.IsAny<int>())).ReturnsAsync(false);
 
         var controller = CreateController();
-        var result = await controller.DeleteCarnivalBlock(1);
+        var result = await controller.Delete(1, 1);
 
         Assert.IsType<NotFoundResult>(result);
     }
 
     [Fact]
-    public async Task DeleteCarnivalBlock_Success()
+    public async Task Delete_ReturnsUnauthorized_WhenMemberIsNotAuthorized()
     {
-        var entity = new CarnivalBlockEntity
-        (
-            id: 1,
-            name: "Name",
-            ownerId: 1,
-            inviteCode: string.Empty,
-            managersInviteCode: string.Empty,
-            carnivalBlockImage: "img"
-        );
-        _repoMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(entity);
+        _serviceMock.Setup(s => s.DeleteAsync(1, It.IsAny<int>()))
+            .ThrowsAsync(new UnauthorizedAccessException("Member is not authorized to delete this carnival block."));
 
         var controller = CreateController();
-        var result = await controller.DeleteCarnivalBlock(1);
+        var result = await controller.Delete(1, 1);
+
+        var unauthorizedResult = Assert.IsType<UnauthorizedObjectResult>(result);
+        Assert.Equal("Member is not authorized to delete this carnival block.", unauthorizedResult.Value);
+    }
+
+    [Fact]
+    public async Task Delete_ReturnsNoContent_WhenSuccess()
+    {
+        _serviceMock.Setup(s => s.DeleteAsync(1, It.IsAny<int>())).ReturnsAsync(true);
+
+        var controller = CreateController();
+        var result = await controller.Delete(1, 1);
 
         Assert.IsType<NoContentResult>(result);
-        _repoMock.Verify(r => r.DeleteAsync(entity), Times.Once);
     }
 }

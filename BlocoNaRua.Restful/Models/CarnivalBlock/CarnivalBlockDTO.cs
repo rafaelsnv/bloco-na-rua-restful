@@ -1,9 +1,9 @@
 namespace BlocoNaRua.Restful.Models.CarnivalBlock;
 
-public record class CarnivalBlock(
+public record class CarnivalBlockDTO(
     int Id,
+    int OwnerId,
     string Name,
-    string OwnerId,
     string InviteCode,
     string ManagersInviteCode,
     string CarnivalBlockImage,

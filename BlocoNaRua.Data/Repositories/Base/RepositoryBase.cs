@@ -1,5 +1,4 @@
-﻿using System.Linq.Expressions;
-using BlocoNaRua.Core.Models;
+﻿using BlocoNaRua.Core.Models;
 using BlocoNaRua.Data.Context;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,14 +9,15 @@ public class RepositoryBase<TEntity>(AppDbContext appContext) : IRepositoryBase<
     protected readonly DbSet<TEntity> DbSet = appContext.Set<TEntity>();
     protected readonly AppDbContext AppDbContext = appContext;
 
-    public async Task<List<TEntity>> GetAllAsync()
+    public async Task<IList<TEntity>> GetAllAsync()
     {
         return await DbSet.AsNoTracking().ToListAsync();
     }
 
     public async Task<TEntity?> GetByIdAsync(int id)
     {
-        return await DbSet.FindAsync(id);
+        var entity = await DbSet.FindAsync(id);
+        return entity;
     }
 
     public async Task<TEntity> AddAsync(TEntity entity)
@@ -29,10 +29,10 @@ public class RepositoryBase<TEntity>(AppDbContext appContext) : IRepositoryBase<
         return result.Entity;
     }
 
-    public async Task DeleteAsync(TEntity entity)
+    public async Task<bool> DeleteAsync(TEntity entity)
     {
         DbSet.Remove(entity);
-        await AppDbContext.SaveChangesAsync();
+        return await AppDbContext.SaveChangesAsync() > 0;
     }
 
     public async Task<bool> UpdateAsync(TEntity entity)

@@ -8,7 +8,9 @@
       "label": "clean",
       "command": "dotnet",
       "type": "process",
-      "args": ["clean"],
+      "args": [
+        "clean"
+      ],
       "problemMatcher": "$msCompile",
       "presentation": {
         "reveal": "always",
@@ -23,10 +25,18 @@
       "dependsOrder": "sequence",
       "command": "dotnet",
       "type": "process",
-      "args": ["watch", "build", "-v:m", "--property", "WarningLevel=0"],
+      "args": [
+        "watch",
+        "build",
+        "-v:m",
+        "--property",
+        "WarningLevel=0"
+      ],
       "problemMatcher": {
         "owner": "csharp",
-        "fileLocation": ["absolute"],
+        "fileLocation": [
+          "absolute"
+        ],
         "pattern": {
           "regexp": "^(?!.*Exited with error code -1).\\s*(.*)\\((\\d+),(\\d+)\\):\\s*(error|warning)\\s*(\\w+):\\s*(.*)$",
           "file": 1,
@@ -55,7 +65,9 @@
       "label": "pre-deploy",
       "command": "dotnet",
       "type": "process",
-      "args": ["test"],
+      "args": [
+        "test"
+      ],
       "problemMatcher": "$msCompile",
       "presentation": {
         "reveal": "always",
@@ -66,16 +78,41 @@
     },
     {
       "label": "deploy",
-      // "dependsOn": "pre-deploy",
       "command": "dotnet",
       "type": "process",
-      "args": ["publish", "-c", "Release", "-o", "${workspaceFolder}/publish"],
+      "args": [
+        "publish",
+        "-c",
+        "Release",
+        "-o",
+        "${workspaceFolder}/publish"
+      ],
       "problemMatcher": "$msCompile",
       "presentation": {
         "reveal": "always",
         "panel": "shared",
         "clear": true,
         "revealProblems": "onProblem"
+      }
+    },
+    {
+      "label": "test",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "test",
+        "${workspaceFolder}/BlocoNaRua.Tests/BlocoNaRua.Tests.csproj"
+      ],
+      "problemMatcher": "$msCompile",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true,
+        "revealProblems": "onProblem"
+      },
+      "group": {
+        "kind": "test",
+        "isDefault": true
       }
     }
   ]

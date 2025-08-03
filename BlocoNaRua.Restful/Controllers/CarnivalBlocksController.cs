@@ -1,93 +1,103 @@
-using BlocoNaRua.Data.Repositories.Interfaces;
 using BlocoNaRua.Domain.Entities;
 using BlocoNaRua.Restful.Models.CarnivalBlock;
+using BlocoNaRua.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BlocoNaRua.Restful.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
-public class CarnivalBlocksController
-    (
-        ILogger<CarnivalBlocksController> logger,
-        ICarnivalBlocksRepository carnivalBlocksRepository
-    ) : ControllerBase
+[Route("api/v{version:apiVersion}/[controller]")]
+public class CarnivalBlocksController(ICarnivalBlockService service) : ControllerBase
 {
-    private readonly ILogger<CarnivalBlocksController> _logger = logger;
-    private readonly ICarnivalBlocksRepository _carnivalBlocksRepository = carnivalBlocksRepository;
+    private readonly ICarnivalBlockService _service = service;
 
-    [HttpGet("Get")]
-    public async Task<IActionResult> GetAllCarnivalBlocks()
+    [HttpGet]
+    public async Task<IActionResult> GetAll()
     {
-        var carnivalBlocksList = await _carnivalBlocksRepository.GetAllAsync();
-        return Ok(carnivalBlocksList);
+        var list = await _service.GetAllAsync();
+        return Ok(list.Select(ToDTO).ToList());
     }
 
-    [HttpGet("Get/{id}")]
-    public async Task<IActionResult> GetCarnivalBlockById(int id)
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetById(int id)
     {
-        var carnivalBlock = await _carnivalBlocksRepository.GetByIdAsync(id);
-        if (carnivalBlock == null)
+        var entity = await _service.GetByIdAsync(id);
+        if (entity is null)
             return NotFound();
-        return Ok(carnivalBlock);
+        var result = ToDTO(entity);
+        return Ok(result);
     }
 
-    [HttpPost("Create")]
-    public async Task<IActionResult> CreateCarnivalBlock([FromBody] CarnivalBlockCreate carnivalBlock)
+    [HttpPost]
+    public async Task<IActionResult> Create([FromBody] CarnivalBlockCreate model)
+    {
+        var entity = new CarnivalBlockEntity
+        (
+            id: 0,
+            ownerId: model.OwnerId,
+            name: model.Name,
+            inviteCode: string.Empty,
+            managersInviteCode: string.Empty,
+            carnivalBlockImage: model.CarnivalBlockImage
+        );
+        var created = await _service.CreateAsync(entity);
+        var result = ToDTO(created);
+        return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
+    }
+
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(int id, [FromBody] CarnivalBlockUpdate model)
+    {
+        var entity = new CarnivalBlockEntity
+        (
+            id: 0,
+            ownerId: model.MemberId,
+            name: model.Name,
+            inviteCode: string.Empty,
+            managersInviteCode: string.Empty,
+            carnivalBlockImage: model.CarnivalBlockImage
+        );
+        try
+        {
+            var updated = await _service.UpdateAsync(id, model.MemberId, entity);
+            if (updated is null)
+                return NotFound();
+            var result = ToDTO(updated);
+            return Ok(result);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(ex.Message);
+        }
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(int id, [FromHeader(Name = "X-Member-Id")] int memberId)
     {
         try
         {
-            if (carnivalBlock == null)
-                return BadRequest();
-
-            var entity = new CarnivalBlockEntity(
-                id: 0,
-                name: carnivalBlock.Name,
-                ownerId: carnivalBlock.OwnerId,
-                inviteCode: string.Empty,
-                managersInviteCode: string.Empty,
-                carnivalBlockImage: carnivalBlock.CarnivalBlockImage
-            );
-
-            var result = await _carnivalBlocksRepository.AddAsync(entity);
-            return CreatedAtAction
-            (
-                nameof(GetCarnivalBlockById),
-                new { id = result.Id },
-                result
-            );
+            var deleted = await _service.DeleteAsync(id, memberId);
+            if (!deleted)
+                return NotFound();
+            return NoContent();
         }
-        catch (ArgumentException ex)
+        catch (UnauthorizedAccessException ex)
         {
-            return BadRequest(ex.Message);
+            return Unauthorized(ex.Message);
         }
     }
 
-    [HttpPut("Update/{id}")]
-    public async Task<IActionResult> UpdateCarnivalBlock(int id, [FromBody] CarnivalBlockUpdate carnivalBlock)
+    private static CarnivalBlockDTO ToDTO(CarnivalBlockEntity entity)
     {
-        if (carnivalBlock == null)
-            return BadRequest();
-
-        var existingCarnivalBlock = await _carnivalBlocksRepository.GetByIdAsync(id);
-        if (existingCarnivalBlock == null)
-            return NotFound();
-
-        existingCarnivalBlock.Name = carnivalBlock.Name;
-        existingCarnivalBlock.CarnivalBlockImage = carnivalBlock.CarnivalBlockImage;
-
-        await _carnivalBlocksRepository.UpdateAsync(carnivalBlock.MemberId, existingCarnivalBlock);
-        return NoContent();
-    }
-
-    [HttpDelete("Delete/{id}")]
-    public async Task<IActionResult> DeleteCarnivalBlock(int id)
-    {
-        var member = await _carnivalBlocksRepository.GetByIdAsync(id);
-        if (member == null)
-            return NotFound();
-
-        await _carnivalBlocksRepository.DeleteAsync(member);
-        return NoContent();
+        return new CarnivalBlockDTO(
+            entity.Id,
+            entity.OwnerId,
+            entity.Name,
+            entity.InviteCode,
+            entity.ManagersInviteCode,
+            entity.CarnivalBlockImage,
+            entity.CreatedAt,
+            entity.UpdatedAt
+        );
     }
 }

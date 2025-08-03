@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace BlocoNaRua.Restful.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/v{version:apiVersion}/[controller]")]
 public class MeetingPresencesController
     (
         ILogger<MeetingPresencesController> logger,
@@ -14,7 +14,7 @@ public class MeetingPresencesController
     private readonly ILogger<MeetingPresencesController> _logger = logger;
     private readonly IMeetingPresencesRepository _meetingPresencesRepo = meetingPresencesRepo;
 
-    [HttpGet("GetAll")]
+    [HttpGet]
     public async Task<IActionResult> GetMeetingPresences()
     {
         var presencesList = await _meetingPresencesRepo.GetAllAsync();

@@ -1,9 +1,9 @@
 namespace BlocoNaRua.Restful.Models.Member;
 
-public record MemberCreate(
+public record MemberDTO(
+    int Id,
     string Name,
     string Email,
-    string Password,
     string Phone,
     string ProfileImage
 );
