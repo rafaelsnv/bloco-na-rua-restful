@@ -1,6 +1,7 @@
 using BlocoNaRua.Data.Repositories.Interfaces;
 using BlocoNaRua.Domain.Entities;
 using BlocoNaRua.Restful.Models.CarnivalBlockMember;
+using BlocoNaRua.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BlocoNaRua.Restful.Controllers;
@@ -10,23 +11,23 @@ namespace BlocoNaRua.Restful.Controllers;
 public class CarnivalBlockMembersController
     (
         ILogger<CarnivalBlockMembersController> logger,
-        ICarnivalBlockMembersRepository carnivalBlockMembersRepo
+        ICarnivalBlockMembersService carnivalBlockMembersService
     ) : ControllerBase
 {
     private readonly ILogger<CarnivalBlockMembersController> _logger = logger;
-    private readonly ICarnivalBlockMembersRepository _carnivalBlockMembersRepo = carnivalBlockMembersRepo;
+    private readonly ICarnivalBlockMembersService _carnivalBlockMembersService = carnivalBlockMembersService;
 
     [HttpGet]
     public async Task<IActionResult> GetAllBlocksMembers()
     {
-        var blocksMembersList = await _carnivalBlockMembersRepo.GetAllAsync();
+        var blocksMembersList = await _carnivalBlockMembersService.GetAllAsync();
         return Ok(blocksMembersList);
     }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetBlocksMembersById(int id)
     {
-        var blockMember = await _carnivalBlockMembersRepo.GetByIdAsync(id);
+        var blockMember = await _carnivalBlockMembersService.GetByIdAsync(id);
         if (blockMember == null)
             return NotFound();
         return Ok(blockMember);
@@ -47,20 +48,21 @@ public class CarnivalBlockMembersController
                 role: blockMember.Role
             );
 
-            var result = await _carnivalBlockMembersRepo.AddAsync(entity);
+            await _carnivalBlockMembersService.CreateAsync(entity);
             return CreatedAtAction
             (
                 nameof(GetBlocksMembersById),
-                new { id = result.Id },
-                result
+                new { id = entity.Id },
+                entity
             );
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
         }
         catch (Exception ex)
         {
             return BadRequest(ex.Message);
         }
     }
-
-    // [HttpPut("Update/{memberId}")] // TODO?
-
 }
