@@ -33,7 +33,7 @@ public class CarnivalBlockMembersControllerTests
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        Assert.IsAssignableFrom<List<CarnivalBlockMembersEntity>>(okResult.Value);
+        Assert.IsAssignableFrom<List<CarnivalBlockMemberDTO>>(okResult.Value);
     }
 
     [Fact]
@@ -50,7 +50,7 @@ public class CarnivalBlockMembersControllerTests
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        Assert.IsType<CarnivalBlockMembersEntity>(okResult.Value);
+        Assert.IsType<CarnivalBlockMemberDTO>(okResult.Value);
     }
 
     [Fact]
@@ -86,7 +86,7 @@ public class CarnivalBlockMembersControllerTests
         // Assert
         var created = Assert.IsType<CreatedAtActionResult>(result);
         Assert.Equal("GetBlocksMembersById", created.ActionName);
-        Assert.IsType<CarnivalBlockMembersEntity>(created.Value);
+        Assert.IsType<CarnivalBlockMemberDTO>(created.Value);
     }
 
     [Fact]
@@ -169,5 +169,176 @@ public class CarnivalBlockMembersControllerTests
         // Assert
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
         Assert.Equal("Something went wrong", badRequestResult.Value);
+    }
+
+    [Fact]
+    public async Task UpdateCarnivalBlockMember_ReturnsOk_WhenSuccess()
+    {
+        // Arrange
+        var updateDto = new CarnivalBlockMemberUpdate(
+             1,
+             1,
+             RolesEnum.Manager
+        );
+
+        var updatedEntity = new CarnivalBlockMembersEntity(1, 1, 2, RolesEnum.Manager);
+        _serviceMock.Setup(s => s.UpdateAsync(1, 1, RolesEnum.Manager)).ReturnsAsync(updatedEntity);
+
+        var controller = CreateController();
+
+        // Act
+        var result = await controller.UpdateCarnivalBlockMember(1, updateDto);
+
+        // Assert
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        Assert.IsType<CarnivalBlockMemberDTO>(okResult.Value);
+    }
+
+    [Fact]
+    public async Task UpdateCarnivalBlockMember_ReturnsBadRequest_WhenDtoIsNull()
+    {
+        // Arrange
+        var controller = CreateController();
+
+        // Act
+        var result = await controller.UpdateCarnivalBlockMember(1, null as CarnivalBlockMemberUpdate);
+
+        // Assert
+        Assert.IsType<BadRequestResult>(result);
+    }
+
+    [Fact]
+    public async Task UpdateCarnivalBlockMember_ReturnsNotFound_WhenMemberDoesNotExist()
+    {
+        // Arrange
+        var updateDto = new CarnivalBlockMemberUpdate(
+             1,
+             1,
+             RolesEnum.Manager
+        );
+
+        _serviceMock.Setup(s => s.UpdateAsync(999, 1, RolesEnum.Manager))
+            .ThrowsAsync(new KeyNotFoundException("Carnival block member does not exist."));
+
+        var controller = CreateController();
+
+        // Act
+        var result = await controller.UpdateCarnivalBlockMember(999, updateDto);
+
+        // Assert
+        var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
+        Assert.Equal("Carnival block member does not exist.", notFoundResult.Value);
+    }
+
+    [Fact]
+    public async Task UpdateCarnivalBlockMember_ReturnsUnauthorized_WhenMemberNotAuthorized()
+    {
+        // Arrange
+        var updateDto = new CarnivalBlockMemberUpdate(
+             1,
+             2,
+             RolesEnum.Manager
+        );
+
+        _serviceMock.Setup(s => s.UpdateAsync(1, 2, RolesEnum.Manager))
+            .ThrowsAsync(new UnauthorizedAccessException("Member is not authorized to update member roles."));
+
+        var controller = CreateController();
+
+        // Act
+        var result = await controller.UpdateCarnivalBlockMember(1, updateDto);
+
+        // Assert
+        var unauthorizedResult = Assert.IsType<UnauthorizedObjectResult>(result);
+        Assert.Equal("Member is not authorized to update member roles.", unauthorizedResult.Value);
+    }
+
+    [Fact]
+    public async Task UpdateCarnivalBlockMember_ReturnsBadRequest_WhenTryingToUpdateOwner()
+    {
+        // Arrange
+        var updateDto = new CarnivalBlockMemberUpdate(
+             1,
+             1,
+             RolesEnum.Manager
+        );
+
+        _serviceMock.Setup(s => s.UpdateAsync(1, 1, RolesEnum.Manager))
+            .ThrowsAsync(new InvalidOperationException("Cannot change the owner's role."));
+
+        var controller = CreateController();
+
+        // Act
+        var result = await controller.UpdateCarnivalBlockMember(1, updateDto);
+
+        // Assert
+        var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+        Assert.Equal("Cannot change the owner's role.", badRequestResult.Value);
+    }
+
+    [Fact]
+    public async Task DeleteCarnivalBlockMember_ReturnsNoContent_WhenSuccess()
+    {
+        // Arrange
+        _serviceMock.Setup(s => s.DeleteAsync(1, 1)).ReturnsAsync(true);
+
+        var controller = CreateController();
+
+        // Act
+        var result = await controller.DeleteCarnivalBlockMember(1, 1);
+
+        // Assert
+        Assert.IsType<NoContentResult>(result);
+    }
+
+    [Fact]
+    public async Task DeleteCarnivalBlockMember_ReturnsNotFound_WhenMemberDoesNotExist()
+    {
+        // Arrange
+        _serviceMock.Setup(s => s.DeleteAsync(999, 1))
+            .ThrowsAsync(new KeyNotFoundException("Carnival block member does not exist."));
+
+        var controller = CreateController();
+
+        // Act
+        var result = await controller.DeleteCarnivalBlockMember(999, 1);
+
+        // Assert
+        var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
+        Assert.Equal("Carnival block member does not exist.", notFoundResult.Value);
+    }
+
+    [Fact]
+    public async Task DeleteCarnivalBlockMember_ReturnsUnauthorized_WhenMemberNotAuthorized()
+    {
+        // Arrange
+        _serviceMock.Setup(s => s.DeleteAsync(1, 2))
+            .ThrowsAsync(new UnauthorizedAccessException("Member is not authorized to remove members."));
+
+        var controller = CreateController();
+
+        // Act
+        var result = await controller.DeleteCarnivalBlockMember(1, 2);
+
+        // Assert
+        var unauthorizedResult = Assert.IsType<UnauthorizedObjectResult>(result);
+        Assert.Equal("Member is not authorized to remove members.", unauthorizedResult.Value);
+    }
+
+    [Fact]
+    public async Task DeleteCarnivalBlockMember_ReturnsBadRequest_WhenTryingToDeleteOwner()
+    {
+        // Arrange
+        _serviceMock.Setup(s => s.DeleteAsync(1, 1))
+            .ThrowsAsync(new InvalidOperationException("Cannot remove the owner from the carnival block."));
+
+        var controller = CreateController();
+
+        // Act
+        var result = await controller.DeleteCarnivalBlockMember(1, 1);
+
+        // Assert
+        var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+        Assert.Equal("Cannot remove the owner from the carnival block.", badRequestResult.Value);
     }
 }

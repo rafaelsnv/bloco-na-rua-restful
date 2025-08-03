@@ -92,7 +92,9 @@ public class MembersController(IMembersService service) : ControllerBase
             entity.Name,
             entity.Email,
             entity.Phone,
-            entity.ProfileImage
+            entity.ProfileImage,
+            entity.CreatedAt,
+            entity.UpdatedAt
         );
     }
 }

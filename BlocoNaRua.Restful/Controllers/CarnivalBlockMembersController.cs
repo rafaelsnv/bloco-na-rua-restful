@@ -21,7 +21,8 @@ public class CarnivalBlockMembersController
     public async Task<IActionResult> GetAllBlocksMembers()
     {
         var blocksMembersList = await _carnivalBlockMembersService.GetAllAsync();
-        return Ok(blocksMembersList);
+        var response = blocksMembersList.Select(ToDTO).ToList();
+        return Ok(response);
     }
 
     [HttpGet("{id}")]
@@ -30,7 +31,8 @@ public class CarnivalBlockMembersController
         var blockMember = await _carnivalBlockMembersService.GetByIdAsync(id);
         if (blockMember == null)
             return NotFound();
-        return Ok(blockMember);
+        var response = ToDTO(blockMember);
+        return Ok(response);
     }
 
     [HttpPost]
@@ -53,7 +55,7 @@ public class CarnivalBlockMembersController
             (
                 nameof(GetBlocksMembersById),
                 new { id = entity.Id },
-                entity
+                ToDTO(entity)
             );
         }
         catch (KeyNotFoundException ex)
@@ -64,5 +66,78 @@ public class CarnivalBlockMembersController
         {
             return BadRequest(ex.Message);
         }
+    }
+
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdateCarnivalBlockMember(int id, [FromBody] CarnivalBlockMemberUpdate updateRole)
+    {
+        try
+        {
+            if (updateRole == null)
+                return BadRequest();
+
+            var updated = await _carnivalBlockMembersService.UpdateAsync(id, updateRole.LoggedMemberId, updateRole.Role);
+            if (updated == null)
+                return NotFound();
+
+            return Ok(ToDTO(updated));
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(ex.Message);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteCarnivalBlockMember(int id, [FromHeader(Name = "X-Member-Id")] int loggedMemberId)
+    {
+        try
+        {
+            var deleted = await _carnivalBlockMembersService.DeleteAsync(id, loggedMemberId);
+            if (!deleted)
+                return NotFound();
+
+            return NoContent();
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(ex.Message);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    private static CarnivalBlockMemberDTO ToDTO(CarnivalBlockMembersEntity entity)
+    {
+        return new CarnivalBlockMemberDTO(
+            entity.Id,
+            entity.CarnivalBlockId,
+            entity.MemberId,
+            entity.Role,
+            entity.CreatedAt.GetValueOrDefault(),
+            entity.UpdatedAt.GetValueOrDefault()
+        );
     }
 }

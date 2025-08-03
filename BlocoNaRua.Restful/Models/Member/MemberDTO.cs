@@ -5,5 +5,7 @@ public record MemberDTO(
     string Name,
     string Email,
     string Phone,
-    string ProfileImage
+    string ProfileImage,
+    DateTime? CreatedAt,
+    DateTime? UpdatedAt
 );

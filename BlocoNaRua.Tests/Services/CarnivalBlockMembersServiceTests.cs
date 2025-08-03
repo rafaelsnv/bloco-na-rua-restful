@@ -60,23 +60,33 @@ public class CarnivalBlockMembersServiceTests : IDisposable
             ));
         }
 
-        var carnivalBlock = new CarnivalBlockEntity(
-            id: blockId,
-            ownerId: ownerId,
-            name: blockName,
-            inviteCode: "test",
-            managersInviteCode: "test",
-            carnivalBlockImage: "image.jpg"
-        );
-        await _carnivalBlocksRepository.AddAsync(carnivalBlock);
+        if (await _carnivalBlocksRepository.GetByIdAsync(blockId) is null)
+        {
+            var carnivalBlock = new CarnivalBlockEntity(
+                id: blockId,
+                ownerId: ownerId,
+                name: blockName,
+                inviteCode: "test",
+                managersInviteCode: "test",
+                carnivalBlockImage: "image.jpg"
+            );
+            await _carnivalBlocksRepository.AddAsync(carnivalBlock);
+        }
 
-        var carnivalBlockMember = new CarnivalBlockMembersEntity(
-            id: 0,
-            carnivalBlockId: blockId,
-            memberId: memberId,
-            role: role
-        );
-        await _carnivalBlockMembersRepository.AddAsync(carnivalBlockMember);
+        // Check if the carnival block member relationship already exists
+        var existingMembers = await _carnivalBlockMembersRepository.GetAllAsync();
+        var existingMember = existingMembers.FirstOrDefault(m => m.CarnivalBlockId == blockId && m.MemberId == memberId);
+        
+        if (existingMember is null)
+        {
+            var carnivalBlockMember = new CarnivalBlockMembersEntity(
+                id: 0,
+                carnivalBlockId: blockId,
+                memberId: memberId,
+                role: role
+            );
+            await _carnivalBlockMembersRepository.AddAsync(carnivalBlockMember);
+        }
     }
 
     [Fact]
@@ -159,5 +169,149 @@ public class CarnivalBlockMembersServiceTests : IDisposable
 
         // Act & Assert
         await Assert.ThrowsAsync<KeyNotFoundException>(() => _carnivalBlockMembersService.CreateAsync(newBlockMember));
+    }
+
+    [Fact]
+    public async Task UpdateAsync_ShouldUpdateMemberRole_WhenLoggedMemberIsOwner()
+    {
+        // Arrange
+        await AddData(1, 101, "Block 1", 101, RolesEnum.Owner);
+        await AddData(1, 101, "Block 1", 102, RolesEnum.Member);
+        var blockMembers = await _carnivalBlockMembersRepository.GetAllAsync();
+        var memberToUpdate = blockMembers.First(m => m.MemberId == 102);
+
+        // Act
+        var result = await _carnivalBlockMembersService.UpdateAsync(memberToUpdate.Id, 101, RolesEnum.Manager);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(RolesEnum.Manager, result.Role);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_ShouldUpdateMemberRole_WhenLoggedMemberIsManager()
+    {
+        // Arrange
+        await AddData(1, 101, "Block 1", 101, RolesEnum.Owner);
+        await AddData(1, 101, "Block 1", 102, RolesEnum.Manager);
+        await AddData(1, 101, "Block 1", 103, RolesEnum.Member);
+        var blockMembers = await _carnivalBlockMembersRepository.GetAllAsync();
+        var memberToUpdate = blockMembers.First(m => m.MemberId == 103);
+
+        // Act
+        var result = await _carnivalBlockMembersService.UpdateAsync(memberToUpdate.Id, 102, RolesEnum.Manager);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(RolesEnum.Manager, result.Role);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_ShouldThrowUnauthorizedAccessException_WhenLoggedMemberIsRegularMember()
+    {
+        // Arrange
+        await AddData(1, 101, "Block 1", 101, RolesEnum.Owner);
+        await AddData(1, 101, "Block 1", 102, RolesEnum.Member);
+        await AddData(1, 101, "Block 1", 103, RolesEnum.Member);
+        var blockMembers = await _carnivalBlockMembersRepository.GetAllAsync();
+        var memberToUpdate = blockMembers.First(m => m.MemberId == 103);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+            _carnivalBlockMembersService.UpdateAsync(memberToUpdate.Id, 102, RolesEnum.Manager));
+    }
+
+    [Fact]
+    public async Task UpdateAsync_ShouldThrowInvalidOperationException_WhenTryingToUpdateOwner()
+    {
+        // Arrange
+        await AddData(1, 101, "Block 1", 101, RolesEnum.Owner);
+        var blockMembers = await _carnivalBlockMembersRepository.GetAllAsync();
+        var ownerMember = blockMembers.First(m => m.MemberId == 101);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            _carnivalBlockMembersService.UpdateAsync(ownerMember.Id, 101, RolesEnum.Manager));
+    }
+
+    [Fact]
+    public async Task UpdateAsync_ShouldThrowKeyNotFoundException_WhenMemberDoesNotExist()
+    {
+        // Act & Assert
+        await Assert.ThrowsAsync<KeyNotFoundException>(() =>
+            _carnivalBlockMembersService.UpdateAsync(999, 101, RolesEnum.Manager));
+    }
+
+    [Fact]
+    public async Task DeleteAsync_ShouldDeleteMember_WhenLoggedMemberIsOwner()
+    {
+        // Arrange
+        await AddData(1, 101, "Block 1", 101, RolesEnum.Owner);
+        await AddData(1, 101, "Block 1", 102, RolesEnum.Member);
+        var blockMembers = await _carnivalBlockMembersRepository.GetAllAsync();
+        var memberToDelete = blockMembers.First(m => m.MemberId == 102);
+
+        // Act
+        var result = await _carnivalBlockMembersService.DeleteAsync(memberToDelete.Id, 101);
+
+        // Assert
+        Assert.True(result);
+        var deletedMember = await _carnivalBlockMembersRepository.GetByIdAsync(memberToDelete.Id);
+        Assert.Null(deletedMember);
+    }
+
+    [Fact]
+    public async Task DeleteAsync_ShouldDeleteMember_WhenLoggedMemberIsManager()
+    {
+        // Arrange
+        await AddData(1, 101, "Block 1", 101, RolesEnum.Owner);
+        await AddData(1, 101, "Block 1", 102, RolesEnum.Manager);
+        await AddData(1, 101, "Block 1", 103, RolesEnum.Member);
+        var blockMembers = await _carnivalBlockMembersRepository.GetAllAsync();
+        var memberToDelete = blockMembers.First(m => m.MemberId == 103);
+
+        // Act
+        var result = await _carnivalBlockMembersService.DeleteAsync(memberToDelete.Id, 102);
+
+        // Assert
+        Assert.True(result);
+        var deletedMember = await _carnivalBlockMembersRepository.GetByIdAsync(memberToDelete.Id);
+        Assert.Null(deletedMember);
+    }
+
+    [Fact]
+    public async Task DeleteAsync_ShouldThrowUnauthorizedAccessException_WhenLoggedMemberIsRegularMember()
+    {
+        // Arrange
+        await AddData(1, 101, "Block 1", 101, RolesEnum.Owner);
+        await AddData(1, 101, "Block 1", 102, RolesEnum.Member);
+        await AddData(1, 101, "Block 1", 103, RolesEnum.Member);
+        var blockMembers = await _carnivalBlockMembersRepository.GetAllAsync();
+        var memberToDelete = blockMembers.First(m => m.MemberId == 103);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+            _carnivalBlockMembersService.DeleteAsync(memberToDelete.Id, 102));
+    }
+
+    [Fact]
+    public async Task DeleteAsync_ShouldThrowInvalidOperationException_WhenTryingToDeleteOwner()
+    {
+        // Arrange
+        await AddData(1, 101, "Block 1", 101, RolesEnum.Owner);
+        var blockMembers = await _carnivalBlockMembersRepository.GetAllAsync();
+        var ownerMember = blockMembers.First(m => m.MemberId == 101);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            _carnivalBlockMembersService.DeleteAsync(ownerMember.Id, 101));
+    }
+
+    [Fact]
+    public async Task DeleteAsync_ShouldThrowKeyNotFoundException_WhenMemberDoesNotExist()
+    {
+        // Act & Assert
+        await Assert.ThrowsAsync<KeyNotFoundException>(() =>
+            _carnivalBlockMembersService.DeleteAsync(999, 101));
     }
 }
