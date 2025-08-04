@@ -4,6 +4,7 @@ using BlocoNaRua.Data.Extensions;
 using BlocoNaRua.Services.Implementations;
 using BlocoNaRua.Services.Interfaces;
 using Microsoft.AspNetCore.Diagnostics;
+using Swashbuckle.AspNetCore.SwaggerUI;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,12 +13,6 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddEnvironmentVariables();
 
 IConfiguration configuration = builder.Configuration;
-
-// Validate required environment variables
-if (string.IsNullOrEmpty(configuration.GetConnectionString("DefaultConnection")))
-{
-    throw new InvalidOperationException("DefaultConnection string is not configured");
-}
 
 builder.Services.AddControllers();
 builder.Services.AddApiVersioning(options =>
@@ -58,6 +53,8 @@ if (app.Environment.IsDevelopment())
         options.ConfigObject.ShowExtensions = true;
         options.ConfigObject.ShowCommonExtensions = true;
         options.ConfigObject.DisplayRequestDuration = true;
+        options.ConfigObject.DeepLinking = true;
+        options.ConfigObject.DocExpansion = DocExpansion.None;
     });
 }
 
