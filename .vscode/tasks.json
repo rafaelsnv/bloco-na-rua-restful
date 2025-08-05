@@ -1,16 +1,17 @@
 {
   "version": "2.0.0",
   "options": {
-    "cwd": "${workspaceFolder}/BlocoNaRua.Restful"
+    "cwd": "${workspaceFolder}/BlocoNaRua.Restful",
+    "env": {
+      "ASPNETCORE_ENVIRONMENT": "Development"
+    }
   },
   "tasks": [
     {
       "label": "clean",
       "command": "dotnet",
       "type": "process",
-      "args": [
-        "clean"
-      ],
+      "args": ["clean"],
       "problemMatcher": "$msCompile",
       "presentation": {
         "reveal": "always",
@@ -20,23 +21,21 @@
       }
     },
     {
-      "label": "watch build",
+      "label": "watch",
       "dependsOn": "clean",
       "dependsOrder": "sequence",
       "command": "dotnet",
       "type": "process",
       "args": [
         "watch",
-        "build",
         "-v:m",
         "--property",
-        "WarningLevel=0"
+        "WarningLevel=0",
+        "--no-hot-reload"
       ],
       "problemMatcher": {
         "owner": "csharp",
-        "fileLocation": [
-          "absolute"
-        ],
+        "fileLocation": ["absolute"],
         "pattern": {
           "regexp": "^(?!.*Exited with error code -1).\\s*(.*)\\((\\d+),(\\d+)\\):\\s*(error|warning)\\s*(\\w+):\\s*(.*)$",
           "file": 1,
@@ -49,7 +48,7 @@
         "background": {
           "activeOnStart": true,
           "beginsPattern": "Executing task:.*watch",
-          "endsPattern": "^\\s*(Compilação com êxito.*|Build succeeded.*)$"
+          "endsPattern": "^.*Now listening on:.*$"
         },
         "applyTo": "allDocuments"
       },
@@ -59,60 +58,6 @@
         "panel": "new",
         "clear": true,
         "revealProblems": "onProblem"
-      }
-    },
-    {
-      "label": "pre-deploy",
-      "command": "dotnet",
-      "type": "process",
-      "args": [
-        "test"
-      ],
-      "problemMatcher": "$msCompile",
-      "presentation": {
-        "reveal": "always",
-        "panel": "shared",
-        "clear": true,
-        "revealProblems": "onProblem"
-      }
-    },
-    {
-      "label": "deploy",
-      "command": "dotnet",
-      "type": "process",
-      "args": [
-        "publish",
-        "-c",
-        "Release",
-        "-o",
-        "${workspaceFolder}/publish"
-      ],
-      "problemMatcher": "$msCompile",
-      "presentation": {
-        "reveal": "always",
-        "panel": "shared",
-        "clear": true,
-        "revealProblems": "onProblem"
-      }
-    },
-    {
-      "label": "test",
-      "command": "dotnet",
-      "type": "process",
-      "args": [
-        "test",
-        "${workspaceFolder}/BlocoNaRua.Tests/BlocoNaRua.Tests.csproj"
-      ],
-      "problemMatcher": "$msCompile",
-      "presentation": {
-        "reveal": "always",
-        "panel": "shared",
-        "clear": true,
-        "revealProblems": "onProblem"
-      },
-      "group": {
-        "kind": "test",
-        "isDefault": true
       }
     }
   ]
