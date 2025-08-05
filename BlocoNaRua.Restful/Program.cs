@@ -36,17 +36,20 @@ builder.Services.AddRepositories();
 builder.Services.AddScoped<ICarnivalBlockService, CarnivalBlockService>();
 builder.Services.AddScoped<IMembersService, MembersService>();
 builder.Services.AddScoped<ICarnivalBlockMembersService, CarnivalBlockMembersService>();
+builder.Services.AddScoped<IMeetingService, MeetingService>();
+builder.Services.AddScoped<IMeetingPresenceService, MeetingPresenceService>();
 
 var app = builder.Build();
 
 
-app.MapGet("/", () => Results.Redirect("/swagger/index.html"))
-   .ExcludeFromDescription();
 
 // Configure the HTTP request pipeline.
 app.UseSwagger();
 if (app.Environment.IsDevelopment())
 {
+    app.MapGet("/", () => Results.Redirect("/swagger/index.html"))
+       .ExcludeFromDescription();
+
     app.UseSwaggerUI(options =>
     {
         options.DocumentTitle = "BlocoNaRua API";
@@ -57,8 +60,12 @@ if (app.Environment.IsDevelopment())
         options.ConfigObject.DocExpansion = DocExpansion.None;
     });
 }
-
-app.UseHttpsRedirection();
+else
+{
+    app.MapGet("/", () => Results.Content("Welcome to BlocoNaRua API!"))
+   .ExcludeFromDescription();
+    app.UseHttpsRedirection();
+}
 
 app.UseAuthorization();
 
