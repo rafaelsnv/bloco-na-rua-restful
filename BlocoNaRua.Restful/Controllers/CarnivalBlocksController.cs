@@ -60,6 +60,9 @@ public class CarnivalBlocksController(ICarnivalBlockService service) : Controlle
         try
         {
             var updated = await _service.UpdateAsync(id, model.MemberId, entity);
+            if (updated is null)
+                return NotFound();
+
             var result = ToDTO(updated);
             return Ok(result);
         }
