@@ -29,6 +29,8 @@ public class CarnivalBlockMembersController
     public async Task<IActionResult> GetBlocksMembersByBlockId(int blockId)
     {
         var blockMembers = await _carnivalBlockMembersService.GetByBlockIdAsync(blockId);
+        if (blockMembers == null || !blockMembers.Any())
+            return NotFound();
         var response = blockMembers.Select(ToDTO).ToList();
         return Ok(response);
     }
