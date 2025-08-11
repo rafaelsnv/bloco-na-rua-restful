@@ -31,8 +31,6 @@ public class MeetingPresenceServiceTests : IDisposable
         _meetingPresenceService = new MeetingPresenceService
         (
             _meetingPresencesRepository,
-            _carnivalBlocksRepository,
-            _carnivalBlockMembersRepository,
             _authorizationServiceMock.Object
         );
     }

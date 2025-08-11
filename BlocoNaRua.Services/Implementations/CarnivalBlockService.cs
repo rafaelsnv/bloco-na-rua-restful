@@ -8,13 +8,11 @@ namespace BlocoNaRua.Services.Implementations;
 public class CarnivalBlockService
 (
     ICarnivalBlocksRepository repository,
-    ICarnivalBlockMembersRepository carnivalBlockMembersRepository,
     IMembersRepository membersRepository,
     IAuthorizationService authorizationService
 ) : ICarnivalBlockService
 {
     private readonly ICarnivalBlocksRepository _repository = repository;
-    private readonly ICarnivalBlockMembersRepository _carnivalBlockMembersRepository = carnivalBlockMembersRepository;
     private readonly IMembersRepository _membersRepository = membersRepository;
     private readonly IAuthorizationService _authorizationService = authorizationService;
 

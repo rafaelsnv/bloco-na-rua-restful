@@ -8,14 +8,10 @@ namespace BlocoNaRua.Services.Implementations;
 public class MeetingPresenceService
 (
     IMeetingPresencesRepository repository,
-    ICarnivalBlocksRepository carnivalBlocksRepository,
-    ICarnivalBlockMembersRepository carnivalBlockMembersRepository,
     IAuthorizationService authorizationService
 ) : IMeetingPresenceService
 {
     private readonly IMeetingPresencesRepository _repository = repository;
-    private readonly ICarnivalBlocksRepository _carnivalBlocksRepository = carnivalBlocksRepository;
-    private readonly ICarnivalBlockMembersRepository _carnivalBlockMembersRepository = carnivalBlockMembersRepository;
     private readonly IAuthorizationService _authorizationService = authorizationService;
 
     public async Task<IList<MeetingPresenceEntity>> GetAllAsync()

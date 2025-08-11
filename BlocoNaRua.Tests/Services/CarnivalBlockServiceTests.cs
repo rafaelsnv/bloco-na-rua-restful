@@ -29,7 +29,6 @@ public class CarnivalBlockServiceTests : IDisposable
         _carnivalBlockService = new CarnivalBlockService
         (
             _carnivalBlocksRepository,
-            _carnivalBlockMembersRepository,
             _membersRepository,
             _authorizationServiceMock.Object
         );

@@ -22,6 +22,8 @@ public class MeetingsController(IMeetingService service) : ControllerBase
     public async Task<IActionResult> GetAllByBlockId(int blockId)
     {
         var list = await _service.GetAllByBlockIdAsync(blockId);
+        if (list == null || !list.Any())
+            return NotFound();
         return Ok(list.Select(ToDTO).ToList());
     }
 
