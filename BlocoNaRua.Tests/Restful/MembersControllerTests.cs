@@ -92,11 +92,11 @@ public class MembersControllerTests
     {
         // Arrange
         _serviceMock.Setup(s => s.UpdateAsync(1, 1, It.IsAny<MemberEntity>())).ReturnsAsync((MemberEntity?)null);
-        var updateDto = new MemberUpdate(1, "Test", "test@test.com", "123", "img.jpg");
+        var updateDto = new MemberUpdate("Test", "test@test.com", "123", "img.jpg");
         var controller = CreateController();
 
         // Act
-        var result = await controller.Update(1, updateDto);
+        var result = await controller.Update(1, updateDto, 1);
 
         // Assert
         Assert.IsType<NotFoundResult>(result);
@@ -108,11 +108,11 @@ public class MembersControllerTests
         // Arrange
         _serviceMock.Setup(s => s.UpdateAsync(1, 2, It.IsAny<MemberEntity>()))
             .ThrowsAsync(new UnauthorizedAccessException("Member is not authorized to update this resource."));
-        var updateDto = new MemberUpdate(2, "Test", "test@test.com", "123", "img.jpg");
+        var updateDto = new MemberUpdate("Test", "test@test.com", "123", "img.jpg");
         var controller = CreateController();
 
         // Act
-        var result = await controller.Update(1, updateDto);
+        var result = await controller.Update(1, updateDto, 2);
 
         // Assert
         var unauthorizedResult = Assert.IsType<UnauthorizedObjectResult>(result);
@@ -125,11 +125,11 @@ public class MembersControllerTests
         // Arrange
         var updatedEntity = new MemberEntity(1, "Updated", "updated@test.com", "321", "updated.jpg");
         _serviceMock.Setup(s => s.UpdateAsync(1, 1, It.IsAny<MemberEntity>())).ReturnsAsync(updatedEntity);
-        var updateDto = new MemberUpdate(1, "Updated", "updated@test.com", "321", "updated.jpg");
+        var updateDto = new MemberUpdate("Updated", "updated@test.com", "321", "updated.jpg");
         var controller = CreateController();
 
         // Act
-        var result = await controller.Update(1, updateDto);
+        var result = await controller.Update(1, updateDto, 1);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);

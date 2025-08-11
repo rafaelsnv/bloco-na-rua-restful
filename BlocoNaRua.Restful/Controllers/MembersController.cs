@@ -46,18 +46,18 @@ public class MembersController(IMembersService service) : ControllerBase
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> Update(int id, [FromBody] MemberUpdate model)
+    public async Task<IActionResult> Update(int id, [FromBody] MemberUpdate model, [FromHeader(Name = "X-Logged-Member")] int loggedMember)
     {
         try
         {
             var entity = new MemberEntity(
-                id: id, // Use the provided ID for update
+                id: id,
                 name: model.Name,
                 email: model.Email,
                 phone: model.Phone,
                 profileImage: model.ProfileImage
             );
-            var updated = await _service.UpdateAsync(id, model.RequesterId, entity);
+            var updated = await _service.UpdateAsync(id, loggedMember, entity);
             if (updated is null)
                 return NotFound();
             var result = ToDTO(updated);
@@ -69,12 +69,12 @@ public class MembersController(IMembersService service) : ControllerBase
         }
     }
 
-    [HttpDelete("{id}/{requesterId}")]
-    public async Task<IActionResult> Delete(int id, int requesterId)
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(int id, [FromHeader(Name = "X-Logged-Member")] int loggedMember)
     {
         try
         {
-            var deleted = await _service.DeleteAsync(id, requesterId);
+            var deleted = await _service.DeleteAsync(id, loggedMember);
             if (!deleted)
                 return NotFound();
             return NoContent();
