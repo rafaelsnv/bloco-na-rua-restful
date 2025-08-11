@@ -46,12 +46,12 @@ public class CarnivalBlocksController(ICarnivalBlockService service) : Controlle
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> Update(int id, [FromBody] CarnivalBlockUpdate model)
+    public async Task<IActionResult> Update(int id, [FromBody] CarnivalBlockUpdate model, [FromHeader(Name = "X-Logged-Member")] int loggedMember)
     {
         var entity = new CarnivalBlockEntity
         (
-            id: 0,
-            ownerId: model.MemberId,
+            id: id,
+            ownerId: 0,
             name: model.Name,
             inviteCode: string.Empty,
             managersInviteCode: string.Empty,
@@ -59,7 +59,7 @@ public class CarnivalBlocksController(ICarnivalBlockService service) : Controlle
         );
         try
         {
-            var updated = await _service.UpdateAsync(id, model.MemberId, entity);
+            var updated = await _service.UpdateAsync(id, loggedMember, entity);
             if (updated is null)
                 return NotFound();
 
@@ -77,11 +77,11 @@ public class CarnivalBlocksController(ICarnivalBlockService service) : Controlle
     }
 
     [HttpDelete("{id}")]
-    public async Task<IActionResult> Delete(int id, [FromHeader(Name = "X-Member-Id")] int memberId)
+    public async Task<IActionResult> Delete(int id, [FromHeader(Name = "X-Logged-Member")] int loggedMember)
     {
         try
         {
-            await _service.DeleteAsync(id, memberId);
+            await _service.DeleteAsync(id, loggedMember);
             return NoContent();
         }
         catch (KeyNotFoundException ex)

@@ -29,7 +29,7 @@ public class CarnivalBlockService
     public async Task<CarnivalBlockEntity> CreateAsync(CarnivalBlockEntity model)
     {
         var owner = await _membersRepository.GetByIdAsync(model.OwnerId)
-            ?? throw new KeyNotFoundException("Owner does not exist.");
+            ?? throw new KeyNotFoundException("Member does not exist.");
 
         var entity = new CarnivalBlockEntity
         (
@@ -43,15 +43,15 @@ public class CarnivalBlockService
         return await _repository.AddAsync(entity);
     }
 
-    public async Task<CarnivalBlockEntity?> UpdateAsync(int id, int memberId, CarnivalBlockEntity model)
+    public async Task<CarnivalBlockEntity?> UpdateAsync(int id, int loggedMember, CarnivalBlockEntity model)
     {
         var entity = await _repository.GetByIdAsync(id)
             ?? throw new KeyNotFoundException("Carnival block does not exist.");
 
-        var member = await _membersRepository.GetByIdAsync(memberId)
+        var member = await _membersRepository.GetByIdAsync(loggedMember)
             ?? throw new KeyNotFoundException("Member does not exist.");
 
-        var memberRole = await GetMemberRole(id, memberId);
+        var memberRole = await GetMemberRole(id, loggedMember);
 
         if (memberRole != RolesEnum.Owner && memberRole != RolesEnum.Manager)
         {
@@ -64,15 +64,15 @@ public class CarnivalBlockService
         return entity;
     }
 
-    public async Task<bool> DeleteAsync(int id, int memberId)
+    public async Task<bool> DeleteAsync(int id, int loggedMember)
     {
         var entity = await _repository.GetByIdAsync(id)
             ?? throw new KeyNotFoundException("Carnival block does not exist.");
 
-        var member = await _membersRepository.GetByIdAsync(memberId)
+        var member = await _membersRepository.GetByIdAsync(loggedMember)
             ?? throw new KeyNotFoundException("Member does not exist.");
 
-        var memberRole = await GetMemberRole(id, memberId);
+        var memberRole = await GetMemberRole(id, loggedMember);
 
         if (memberRole != RolesEnum.Owner)
         {
