@@ -1,4 +1,4 @@
-using BlocoNaRua.Domain.Entities;
+﻿using BlocoNaRua.Domain.Entities;
 using BlocoNaRua.Restful.Controllers;
 using BlocoNaRua.Restful.Models.Meeting;
 using BlocoNaRua.Services.Interfaces;
@@ -40,41 +40,30 @@ public class MeetingsControllerTests
     }
 
     [Fact]
-    public async Task GetById_ReturnsOkWithEntity()
+    public async Task GetAllByBlockId_ReturnsOkWithList()
     {
         // Arrange
-        var entity = new MeetingEntity(
-            id: 1,
-            name: "Test Meeting",
-            description: "Description",
-            location: "Location",
-            meetingCode: "code123",
-            meetingDateTime: DateTime.Now,
-            carnivalBlockId: 1
-        );
-        _serviceMock.Setup(s => s.GetByIdAsync(1)).ReturnsAsync(entity);
+        var entities = new List<MeetingEntity>
+        {
+            new(
+                id: 1,
+                name: "Test Meeting",
+                description: "Description",
+                location: "Location",
+                meetingCode: "code123",
+                meetingDateTime: DateTime.Now,
+                carnivalBlockId: 1
+            )
+        };
+        _serviceMock.Setup(s => s.GetAllByBlockIdAsync(1)).ReturnsAsync(entities);
 
         // Act
         var controller = CreateController();
-        var result = await controller.GetById(1);
+        var result = await controller.GetAllByBlockId(1);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        Assert.IsType<MeetingDTO>(okResult.Value);
-    }
-
-    [Fact]
-    public async Task GetById_ReturnsNotFound()
-    {
-        // Arrange
-        _serviceMock.Setup(s => s.GetByIdAsync(1)).ReturnsAsync((MeetingEntity?)null);
-
-        // Act
-        var controller = CreateController();
-        var result = await controller.GetById(1);
-
-        // Assert
-        Assert.IsType<NotFoundResult>(result);
+        Assert.IsAssignableFrom<IList<MeetingDTO>>(okResult.Value);
     }
 
     [Fact]
@@ -105,7 +94,7 @@ public class MeetingsControllerTests
 
         // Assert
         var created = Assert.IsType<CreatedAtActionResult>(result);
-        Assert.Equal("GetById", created.ActionName);
+        Assert.Equal("GetAllByBlockId", created.ActionName);
         Assert.IsType<MeetingDTO>(created.Value);
     }
 

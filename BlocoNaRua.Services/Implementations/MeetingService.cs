@@ -1,4 +1,4 @@
-using BlocoNaRua.Data.Repositories.Interfaces;
+﻿using BlocoNaRua.Data.Repositories.Interfaces;
 using BlocoNaRua.Domain.Entities;
 using BlocoNaRua.Domain.Enums;
 using BlocoNaRua.Services.Interfaces;
@@ -8,14 +8,10 @@ namespace BlocoNaRua.Services.Implementations;
 public class MeetingService
 (
     IMeetingsRepository repository,
-    ICarnivalBlocksRepository carnivalBlocksRepository,
-    ICarnivalBlockMembersRepository carnivalBlockMembersRepository,
     IAuthorizationService authorizationService
 ) : IMeetingService
 {
     private readonly IMeetingsRepository _repository = repository;
-    private readonly ICarnivalBlocksRepository _carnivalBlocksRepository = carnivalBlocksRepository;
-    private readonly ICarnivalBlockMembersRepository _carnivalBlockMembersRepository = carnivalBlockMembersRepository;
     private readonly IAuthorizationService _authorizationService = authorizationService;
 
     public async Task<IList<MeetingEntity>> GetAllAsync()
@@ -26,6 +22,11 @@ public class MeetingService
     public async Task<MeetingEntity?> GetByIdAsync(int id)
     {
         return await _repository.GetByIdAsync(id);
+    }
+
+    public async Task<IList<MeetingEntity>> GetAllByBlockIdAsync(int blockId)
+    {
+        return await _repository.GetAllByBlockIdAsync(blockId);
     }
 
     public async Task<MeetingEntity> CreateAsync(MeetingEntity model, int loggedMember)
