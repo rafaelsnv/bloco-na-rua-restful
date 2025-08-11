@@ -1,6 +1,4 @@
-using System;
-
-namespace BlocoNaRua.Restful.Models.MeetingPresence;
+﻿namespace BlocoNaRua.Restful.Models.MeetingPresence;
 
 public record MeetingPresenceDTO(
     int Id,

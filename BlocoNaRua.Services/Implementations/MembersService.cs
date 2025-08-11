@@ -1,4 +1,4 @@
-using BlocoNaRua.Data.Repositories.Interfaces;
+﻿using BlocoNaRua.Data.Repositories.Interfaces;
 using BlocoNaRua.Domain.Entities;
 using BlocoNaRua.Services.Interfaces;
 
@@ -21,7 +21,7 @@ public class MembersService(IMembersRepository repository) : IMembersService
     public async Task<MemberEntity> CreateAsync(MemberEntity entity)
     {
         var newMember = new MemberEntity(
-            0, // Assuming ID is auto-generated
+            0,
             entity.Name,
             entity.Email,
             entity.Phone,
@@ -30,9 +30,9 @@ public class MembersService(IMembersRepository repository) : IMembersService
         return await _repository.AddAsync(newMember);
     }
 
-    public async Task<MemberEntity?> UpdateAsync(int id, int requesterId, MemberEntity model)
+    public async Task<MemberEntity?> UpdateAsync(int id, int loggedMember, MemberEntity model)
     {
-        if (id != requesterId)
+        if (id != loggedMember)
             throw new UnauthorizedAccessException("Member is not authorized to update this resource.");
 
         var entity = await _repository.GetByIdAsync(id);
@@ -49,9 +49,9 @@ public class MembersService(IMembersRepository repository) : IMembersService
         return entity;
     }
 
-    public async Task<bool> DeleteAsync(int id, int requesterId)
+    public async Task<bool> DeleteAsync(int id, int loggedMember)
     {
-        if (id != requesterId)
+        if (id != loggedMember)
             throw new UnauthorizedAccessException("Member is not authorized to delete this resource.");
 
         var entity = await _repository.GetByIdAsync(id);

@@ -1,4 +1,4 @@
-namespace BlocoNaRua.Restful.Models.MeetingPresence;
+﻿namespace BlocoNaRua.Restful.Models.MeetingPresence;
 
 public record MeetingPresenceCreate(
     int MemberId,

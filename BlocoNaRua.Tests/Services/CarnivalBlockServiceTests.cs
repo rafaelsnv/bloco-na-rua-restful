@@ -1,9 +1,10 @@
-using BlocoNaRua.Data.Context;
+﻿using BlocoNaRua.Data.Context;
 using BlocoNaRua.Data.Repositories;
 using BlocoNaRua.Data.Repositories.Interfaces;
 using BlocoNaRua.Domain.Entities;
 using BlocoNaRua.Domain.Enums;
 using BlocoNaRua.Services.Implementations;
+using BlocoNaRua.Services.Interfaces;
 using BlocoNaRua.Tests.Helpers;
 
 namespace BlocoNaRua.Tests.Services;
@@ -14,6 +15,7 @@ public class CarnivalBlockServiceTests : IDisposable
     private readonly ICarnivalBlocksRepository _carnivalBlocksRepository;
     private readonly IMembersRepository _membersRepository;
     private readonly ICarnivalBlockMembersRepository _carnivalBlockMembersRepository;
+    private readonly Mock<IAuthorizationService> _authorizationServiceMock;
     private readonly CarnivalBlockService _carnivalBlockService;
 
     public CarnivalBlockServiceTests()
@@ -23,11 +25,12 @@ public class CarnivalBlockServiceTests : IDisposable
         _carnivalBlocksRepository = new CarnivalBlocksRepository(_context);
         _membersRepository = new MembersRepository(_context);
         _carnivalBlockMembersRepository = new CarnivalBlockMembersRepository(_context);
+        _authorizationServiceMock = new Mock<IAuthorizationService>();
         _carnivalBlockService = new CarnivalBlockService
         (
             _carnivalBlocksRepository,
-            _carnivalBlockMembersRepository,
-            _membersRepository
+            _membersRepository,
+            _authorizationServiceMock.Object
         );
     }
 
@@ -151,6 +154,7 @@ public class CarnivalBlockServiceTests : IDisposable
         );
 
         // Act
+        _authorizationServiceMock.Setup(s => s.GetMemberRole(1, 101)).ReturnsAsync(RolesEnum.Owner);
         var result = await _carnivalBlockService.UpdateAsync(1, 101, updatedModel);
 
         // Assert
@@ -174,6 +178,7 @@ public class CarnivalBlockServiceTests : IDisposable
         );
 
         // Act
+        _authorizationServiceMock.Setup(s => s.GetMemberRole(2, 202)).ReturnsAsync(RolesEnum.Manager);
         var result = await _carnivalBlockService.UpdateAsync(2, 202, updatedModel);
 
         // Assert
@@ -197,6 +202,7 @@ public class CarnivalBlockServiceTests : IDisposable
         );
 
         // Act & Assert
+        _authorizationServiceMock.Setup(s => s.GetMemberRole(3, 302)).ReturnsAsync(RolesEnum.Member);
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
             _carnivalBlockService.UpdateAsync(3, 302, updatedModel));
     }
@@ -208,6 +214,7 @@ public class CarnivalBlockServiceTests : IDisposable
         await AddData(4, 401, "Block 4", 401, RolesEnum.Owner);
 
         // Act
+        _authorizationServiceMock.Setup(s => s.GetMemberRole(4, 401)).ReturnsAsync(RolesEnum.Owner);
         var result = await _carnivalBlockService.DeleteAsync(4, 401);
 
         // Assert
@@ -223,6 +230,7 @@ public class CarnivalBlockServiceTests : IDisposable
         await AddData(5, 501, "Block 5", 502, RolesEnum.Manager);
 
         // Act & Assert
+        _authorizationServiceMock.Setup(s => s.GetMemberRole(5, 502)).ReturnsAsync(RolesEnum.Manager);
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
             _carnivalBlockService.DeleteAsync(5, 502));
     }
@@ -234,6 +242,7 @@ public class CarnivalBlockServiceTests : IDisposable
         await AddData(6, 601, "Block 6", 602, RolesEnum.Member);
 
         // Act & Assert
+        _authorizationServiceMock.Setup(s => s.GetMemberRole(6, 602)).ReturnsAsync(RolesEnum.Member);
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
             _carnivalBlockService.DeleteAsync(6, 602));
     }
@@ -242,6 +251,7 @@ public class CarnivalBlockServiceTests : IDisposable
     public async Task DeleteAsync_ShouldThrowKeyNotFoundException_WhenCarnivalBlockDoesNotExist()
     {
         // Act & Assert
+        _authorizationServiceMock.Setup(s => s.GetMemberRole(999, 1)).ThrowsAsync(new KeyNotFoundException());
         await Assert.ThrowsAsync<KeyNotFoundException>(() => _carnivalBlockService.DeleteAsync(999, 1));
     }
 
@@ -262,6 +272,7 @@ public class CarnivalBlockServiceTests : IDisposable
         var updatedModel = new CarnivalBlockEntity(999, 1, "Non Existent Block", "test", "test", "image.jpg");
 
         // Act & Assert
+        _authorizationServiceMock.Setup(s => s.GetMemberRole(999, 1)).ThrowsAsync(new KeyNotFoundException());
         await Assert.ThrowsAsync<KeyNotFoundException>(() => _carnivalBlockService.UpdateAsync(999, 1, updatedModel));
     }
 
@@ -273,6 +284,7 @@ public class CarnivalBlockServiceTests : IDisposable
         var updatedModel = new CarnivalBlockEntity(1, 101, "Updated Block 1", "test", "test", "updated_image.jpg");
 
         // Act & Assert
+        _authorizationServiceMock.Setup(s => s.GetMemberRole(1, 999)).ThrowsAsync(new KeyNotFoundException());
         await Assert.ThrowsAsync<KeyNotFoundException>(() => _carnivalBlockService.UpdateAsync(1, 999, updatedModel));
     }
 
@@ -283,6 +295,7 @@ public class CarnivalBlockServiceTests : IDisposable
         await AddData(4, 401, "Block 4", 401, RolesEnum.Owner);
 
         // Act & Assert
+        _authorizationServiceMock.Setup(s => s.GetMemberRole(4, 999)).ThrowsAsync(new KeyNotFoundException());
         await Assert.ThrowsAsync<KeyNotFoundException>(() => _carnivalBlockService.DeleteAsync(4, 999));
     }
 }

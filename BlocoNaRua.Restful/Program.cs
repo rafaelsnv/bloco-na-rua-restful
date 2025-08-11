@@ -1,9 +1,9 @@
 ﻿using System.Text.Json;
 using Asp.Versioning;
 using BlocoNaRua.Data.Extensions;
-using BlocoNaRua.Services.Implementations;
-using BlocoNaRua.Services.Interfaces;
+using BlocoNaRua.Services.Extensions;
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.HttpOverrides;
 using Swashbuckle.AspNetCore.SwaggerUI;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,6 +11,12 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Configuration.AddEnvironmentVariables();
+
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders =
+        ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+});
 
 IConfiguration configuration = builder.Configuration;
 
@@ -31,17 +37,11 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddEntityFramework(configuration);
 builder.Services.AddRepositories();
-
-// Register application services
-builder.Services.AddScoped<ICarnivalBlockService, CarnivalBlockService>();
-builder.Services.AddScoped<IMembersService, MembersService>();
-builder.Services.AddScoped<ICarnivalBlockMembersService, CarnivalBlockMembersService>();
-builder.Services.AddScoped<IMeetingService, MeetingService>();
-builder.Services.AddScoped<IMeetingPresenceService, MeetingPresenceService>();
+builder.Services.AddServices();
 
 var app = builder.Build();
 
-
+app.UseForwardedHeaders();
 
 // Configure the HTTP request pipeline.
 app.UseSwagger();
@@ -62,8 +62,6 @@ if (app.Environment.IsDevelopment())
 }
 else
 {
-    app.MapGet("/", () => Results.Content("Welcome to BlocoNaRua API!"))
-   .ExcludeFromDescription();
     app.UseHttpsRedirection();
 }
 
@@ -91,5 +89,11 @@ app.UseExceptionHandler(appBuilder =>
 });
 
 app.MapControllers();
+
+if (!app.Environment.IsDevelopment())
+{
+    app.MapGet("/", () => Results.Content("Welcome to BlocoNaRua API!"))
+       .ExcludeFromDescription();
+}
 
 app.Run();

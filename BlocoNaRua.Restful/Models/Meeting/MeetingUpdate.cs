@@ -1,6 +1,4 @@
-using System;
-
-namespace BlocoNaRua.Restful.Models.Meeting;
+﻿namespace BlocoNaRua.Restful.Models.Meeting;
 
 public record MeetingUpdate(
     string Name,

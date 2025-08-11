@@ -48,7 +48,7 @@ public class MeetingConfiguration : IEntityTypeConfiguration<MeetingEntity>
         builder.Property(m => m.UpdatedAt)
                .HasColumnName("updated_at")
                .IsRequired(false);
-               
+
         builder.HasOne(m => m.CarnivalBlock)
                .WithMany(cb => cb.Meetings)
                .HasForeignKey(m => m.CarnivalBlockId)

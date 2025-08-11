@@ -1,9 +1,8 @@
-using BlocoNaRua.Domain.Entities;
+﻿using BlocoNaRua.Domain.Entities;
 using BlocoNaRua.Restful.Controllers;
 using BlocoNaRua.Restful.Models.MeetingPresence;
 using BlocoNaRua.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using Moq;
 
 namespace BlocoNaRua.Tests.Restful;
 

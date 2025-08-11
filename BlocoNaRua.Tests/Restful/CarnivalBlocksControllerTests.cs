@@ -1,4 +1,4 @@
-using BlocoNaRua.Domain.Entities;
+﻿using BlocoNaRua.Domain.Entities;
 using BlocoNaRua.Restful.Controllers;
 using BlocoNaRua.Restful.Models.CarnivalBlock;
 using BlocoNaRua.Services.Interfaces;
@@ -100,10 +100,9 @@ public class CarnivalBlocksControllerTests
         var controller = CreateController();
         var updateDto = new CarnivalBlockUpdate(
             Name: "Test",
-            MemberId: 1,
             CarnivalBlockImage: "img"
         );
-        var result = await controller.Update(1, updateDto);
+        var result = await controller.Update(1, updateDto, 1);
 
         Assert.IsType<NotFoundObjectResult>(result);
     }
@@ -117,10 +116,9 @@ public class CarnivalBlocksControllerTests
         var controller = CreateController();
         var updateDto = new CarnivalBlockUpdate(
             Name: "Test",
-            MemberId: 1,
             CarnivalBlockImage: "img"
         );
-        var result = await controller.Update(1, updateDto);
+        var result = await controller.Update(1, updateDto, 1);
 
         var unauthorizedResult = Assert.IsType<UnauthorizedObjectResult>(result);
         Assert.Equal("Member is not authorized to update this carnival block.", unauthorizedResult.Value);
@@ -142,11 +140,10 @@ public class CarnivalBlocksControllerTests
         var controller = CreateController();
         var updateDto = new CarnivalBlockUpdate(
             Name: "Updated",
-            MemberId: 2,
             CarnivalBlockImage: "img"
         );
 
-        var result = await controller.Update(1, updateDto);
+        var result = await controller.Update(1, updateDto, 2);
 
         var okResult = Assert.IsType<OkObjectResult>(result);
         Assert.IsType<CarnivalBlockDTO>(okResult.Value);

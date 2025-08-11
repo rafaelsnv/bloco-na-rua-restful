@@ -1,4 +1,4 @@
-using BlocoNaRua.Domain.Entities;
+﻿using BlocoNaRua.Domain.Entities;
 using BlocoNaRua.Restful.Models.Meeting;
 using BlocoNaRua.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -18,14 +18,13 @@ public class MeetingsController(IMeetingService service) : ControllerBase
         return Ok(list.Select(ToDTO).ToList());
     }
 
-    [HttpGet("{id}")]
-    public async Task<IActionResult> GetById(int id)
+    [HttpGet("block/{blockId}")]
+    public async Task<IActionResult> GetAllByBlockId(int blockId)
     {
-        var entity = await _service.GetByIdAsync(id);
-        if (entity is null)
+        var list = await _service.GetAllByBlockIdAsync(blockId);
+        if (list == null || !list.Any())
             return NotFound();
-        var result = ToDTO(entity);
-        return Ok(result);
+        return Ok(list.Select(ToDTO).ToList());
     }
 
     [HttpPost]
@@ -45,7 +44,7 @@ public class MeetingsController(IMeetingService service) : ControllerBase
         {
             var created = await _service.CreateAsync(entity, loggedMember);
             var result = ToDTO(created);
-            return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
+            return CreatedAtAction(nameof(GetAllByBlockId), new { blockId = result.CarnivalBlockId }, result);
         }
         catch (KeyNotFoundException ex)
         {
