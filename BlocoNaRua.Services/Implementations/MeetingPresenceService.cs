@@ -9,12 +9,14 @@ public class MeetingPresenceService
 (
     IMeetingPresencesRepository repository,
     ICarnivalBlocksRepository carnivalBlocksRepository,
-    ICarnivalBlockMembersRepository carnivalBlockMembersRepository
+    ICarnivalBlockMembersRepository carnivalBlockMembersRepository,
+    IAuthorizationService authorizationService
 ) : IMeetingPresenceService
 {
     private readonly IMeetingPresencesRepository _repository = repository;
     private readonly ICarnivalBlocksRepository _carnivalBlocksRepository = carnivalBlocksRepository;
     private readonly ICarnivalBlockMembersRepository _carnivalBlockMembersRepository = carnivalBlockMembersRepository;
+    private readonly IAuthorizationService _authorizationService = authorizationService;
 
     public async Task<IList<MeetingPresenceEntity>> GetAllAsync()
     {
@@ -34,7 +36,7 @@ public class MeetingPresenceService
             return await _repository.AddAsync(model);
         }
 
-        var memberRole = await GetMemberRole(model.CarnivalBlockId, loggedMember);
+        var memberRole = await _authorizationService.GetMemberRole(model.CarnivalBlockId, loggedMember);
         if (memberRole == RolesEnum.Owner || memberRole == RolesEnum.Manager)
         {
             return await _repository.AddAsync(model);
@@ -55,7 +57,7 @@ public class MeetingPresenceService
             return entity;
         }
 
-        var memberRole = await GetMemberRole(entity.CarnivalBlockId, loggedMember);
+        var memberRole = await _authorizationService.GetMemberRole(entity.CarnivalBlockId, loggedMember);
         if (memberRole == RolesEnum.Owner || memberRole == RolesEnum.Manager)
         {
             entity.IsPresent = model.IsPresent;
@@ -76,7 +78,7 @@ public class MeetingPresenceService
             return await _repository.DeleteAsync(entity);
         }
 
-        var memberRole = await GetMemberRole(entity.CarnivalBlockId, loggedMember);
+        var memberRole = await _authorizationService.GetMemberRole(entity.CarnivalBlockId, loggedMember);
         if (memberRole == RolesEnum.Owner || memberRole == RolesEnum.Manager)
         {
             return await _repository.DeleteAsync(entity);
@@ -85,16 +87,4 @@ public class MeetingPresenceService
         throw new UnauthorizedAccessException("You are not authorized to delete this meeting presence.");
     }
 
-    private async Task<RolesEnum?> GetMemberRole(int carnivalBlockId, int memberId)
-    {
-        var carnivalBlock = await _carnivalBlocksRepository.GetByIdAsync(carnivalBlockId)
-            ?? throw new KeyNotFoundException("Carnival block does not exist.");
-
-        if (carnivalBlock.OwnerId == memberId)
-        {
-            return RolesEnum.Owner;
-        }
-
-        return await _carnivalBlockMembersRepository.GetMemberRole(carnivalBlockId, memberId);
-    }
 }

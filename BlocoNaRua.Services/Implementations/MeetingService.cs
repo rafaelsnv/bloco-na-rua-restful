@@ -9,12 +9,14 @@ public class MeetingService
 (
     IMeetingsRepository repository,
     ICarnivalBlocksRepository carnivalBlocksRepository,
-    ICarnivalBlockMembersRepository carnivalBlockMembersRepository
+    ICarnivalBlockMembersRepository carnivalBlockMembersRepository,
+    IAuthorizationService authorizationService
 ) : IMeetingService
 {
     private readonly IMeetingsRepository _repository = repository;
     private readonly ICarnivalBlocksRepository _carnivalBlocksRepository = carnivalBlocksRepository;
     private readonly ICarnivalBlockMembersRepository _carnivalBlockMembersRepository = carnivalBlockMembersRepository;
+    private readonly IAuthorizationService _authorizationService = authorizationService;
 
     public async Task<IList<MeetingEntity>> GetAllAsync()
     {
@@ -28,7 +30,7 @@ public class MeetingService
 
     public async Task<MeetingEntity> CreateAsync(MeetingEntity model, int loggedMember)
     {
-        var memberRole = await GetMemberRole(model.CarnivalBlockId, loggedMember);
+        var memberRole = await _authorizationService.GetMemberRole(model.CarnivalBlockId, loggedMember);
 
         if (memberRole != RolesEnum.Owner && memberRole != RolesEnum.Manager)
         {
@@ -53,7 +55,7 @@ public class MeetingService
         var entity = await _repository.GetByIdAsync(id)
             ?? throw new KeyNotFoundException("Meeting does not exist.");
 
-        var memberRole = await GetMemberRole(entity.CarnivalBlockId, loggedMember);
+        var memberRole = await _authorizationService.GetMemberRole(entity.CarnivalBlockId, loggedMember);
 
         if (memberRole != RolesEnum.Owner && memberRole != RolesEnum.Manager)
         {
@@ -74,7 +76,7 @@ public class MeetingService
         var entity = await _repository.GetByIdAsync(id)
             ?? throw new KeyNotFoundException("Meeting does not exist.");
 
-        var memberRole = await GetMemberRole(entity.CarnivalBlockId, loggedMember);
+        var memberRole = await _authorizationService.GetMemberRole(entity.CarnivalBlockId, loggedMember);
 
         if (memberRole != RolesEnum.Owner && memberRole != RolesEnum.Manager)
         {
@@ -84,18 +86,6 @@ public class MeetingService
         return await _repository.DeleteAsync(entity);
     }
 
-    private async Task<RolesEnum?> GetMemberRole(int carnivalBlockId, int loggedMember)
-    {
-        var carnivalBlock = await _carnivalBlocksRepository.GetByIdAsync(carnivalBlockId)
-            ?? throw new KeyNotFoundException("Carnival block does not exist.");
-
-        if (carnivalBlock.OwnerId == loggedMember)
-        {
-            return RolesEnum.Owner;
-        }
-
-        return await _carnivalBlockMembersRepository.GetMemberRole(carnivalBlockId, loggedMember);
-    }
 
     private static string GenerateMeetingCode()
     {

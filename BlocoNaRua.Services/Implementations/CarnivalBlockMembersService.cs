@@ -9,12 +9,14 @@ public class CarnivalBlockMembersService
 (
     ICarnivalBlockMembersRepository repository,
     IMembersRepository membersRepository,
-    ICarnivalBlocksRepository carnivalBlocksRepository
+    ICarnivalBlocksRepository carnivalBlocksRepository,
+    IAuthorizationService authorizationService
 ) : ICarnivalBlockMembersService
 {
     private readonly ICarnivalBlockMembersRepository _repository = repository;
     private readonly IMembersRepository _membersRepository = membersRepository;
     private readonly ICarnivalBlocksRepository _carnivalBlocksRepository = carnivalBlocksRepository;
+    private readonly IAuthorizationService _authorizationService = authorizationService;
 
     public async Task<List<CarnivalBlockMembersEntity>> GetAllAsync()
     {
@@ -34,7 +36,7 @@ public class CarnivalBlockMembersService
         var carnivalBlock = await _carnivalBlocksRepository.GetByIdAsync(carnivalBlockMember.CarnivalBlockId)
             ?? throw new KeyNotFoundException("Carnival block does not exist.");
         
-        var loggedMemberRole = await GetMemberRole(carnivalBlockMember.CarnivalBlockId, loggedMemberId);
+        var loggedMemberRole = await _authorizationService.GetMemberRole(carnivalBlockMember.CarnivalBlockId, loggedMemberId);
 
         if (loggedMemberRole != RolesEnum.Owner && loggedMemberRole != RolesEnum.Manager)
         {
@@ -55,7 +57,7 @@ public class CarnivalBlockMembersService
         var loggedMember = await _membersRepository.GetByIdAsync(loggedMemberId)
             ?? throw new KeyNotFoundException("Logged member does not exist.");
 
-        var loggedMemberRole = await GetMemberRole(carnivalBlockMember.CarnivalBlockId, loggedMemberId);
+        var loggedMemberRole = await _authorizationService.GetMemberRole(carnivalBlockMember.CarnivalBlockId, loggedMemberId);
 
         if (loggedMemberRole != RolesEnum.Owner && loggedMemberRole != RolesEnum.Manager)
         {
@@ -83,7 +85,7 @@ public class CarnivalBlockMembersService
         var loggedMember = await _membersRepository.GetByIdAsync(loggedMemberId)
             ?? throw new KeyNotFoundException("Logged member does not exist.");
 
-        var loggedMemberRole = await GetMemberRole(carnivalBlockMember.CarnivalBlockId, loggedMemberId);
+        var loggedMemberRole = await _authorizationService.GetMemberRole(carnivalBlockMember.CarnivalBlockId, loggedMemberId);
 
         if (loggedMemberRole != RolesEnum.Owner && loggedMemberRole != RolesEnum.Manager)
         {
@@ -98,16 +100,4 @@ public class CarnivalBlockMembersService
         return await _repository.DeleteAsync(carnivalBlockMember);
     }
 
-    private async Task<RolesEnum?> GetMemberRole(int carnivalBlockId, int memberId)
-    {
-        var carnivalBlock = await _carnivalBlocksRepository.GetByIdAsync(carnivalBlockId)
-            ?? throw new KeyNotFoundException("Carnival block does not exist.");
-
-        if (carnivalBlock.OwnerId == memberId)
-        {
-            return RolesEnum.Owner;
-        }
-
-        return await _repository.GetMemberRole(carnivalBlockId, memberId);
-    }
 }

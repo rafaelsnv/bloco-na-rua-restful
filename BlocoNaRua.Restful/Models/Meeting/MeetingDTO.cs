@@ -1,5 +1,3 @@
-using System;
-
 namespace BlocoNaRua.Restful.Models.Meeting;
 
 public record MeetingDTO(

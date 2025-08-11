@@ -4,6 +4,7 @@ using BlocoNaRua.Data.Repositories.Interfaces;
 using BlocoNaRua.Domain.Entities;
 using BlocoNaRua.Domain.Enums;
 using BlocoNaRua.Services.Implementations;
+using BlocoNaRua.Services.Interfaces;
 using BlocoNaRua.Tests.Helpers;
 
 namespace BlocoNaRua.Tests.Services;
@@ -15,6 +16,7 @@ public class MeetingPresenceServiceTests : IDisposable
     private readonly IMembersRepository _membersRepository;
     private readonly ICarnivalBlocksRepository _carnivalBlocksRepository;
     private readonly ICarnivalBlockMembersRepository _carnivalBlockMembersRepository;
+    private readonly Mock<IAuthorizationService> _authorizationServiceMock;
     private readonly MeetingPresenceService _meetingPresenceService;
 
     public MeetingPresenceServiceTests()
@@ -25,11 +27,13 @@ public class MeetingPresenceServiceTests : IDisposable
         _membersRepository = new MembersRepository(_context);
         _carnivalBlocksRepository = new CarnivalBlocksRepository(_context);
         _carnivalBlockMembersRepository = new CarnivalBlockMembersRepository(_context);
+        _authorizationServiceMock = new Mock<IAuthorizationService>();
         _meetingPresenceService = new MeetingPresenceService
         (
             _meetingPresencesRepository,
             _carnivalBlocksRepository,
-            _carnivalBlockMembersRepository
+            _carnivalBlockMembersRepository,
+            _authorizationServiceMock.Object
         );
     }
 
@@ -111,6 +115,7 @@ public class MeetingPresenceServiceTests : IDisposable
         var newPresence = new MeetingPresenceEntity(0) { MemberId = 102, MeetingId = 1, CarnivalBlockId = 1, IsPresent = true };
 
         // Act
+        _authorizationServiceMock.Setup(s => s.GetMemberRole(1, 101)).ReturnsAsync(RolesEnum.Owner);
         var result = await _meetingPresenceService.CreateAsync(newPresence, 101);
 
         // Assert
@@ -127,6 +132,7 @@ public class MeetingPresenceServiceTests : IDisposable
         var newPresence = new MeetingPresenceEntity(0) { MemberId = 102, MeetingId = 1, CarnivalBlockId = 1, IsPresent = true };
 
         // Act & Assert
+        _authorizationServiceMock.Setup(s => s.GetMemberRole(1, 103)).ReturnsAsync(RolesEnum.Member);
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() => _meetingPresenceService.CreateAsync(newPresence, 103));
     }
 
@@ -155,6 +161,7 @@ public class MeetingPresenceServiceTests : IDisposable
         var updatedModel = new MeetingPresenceEntity(presence.Id) { MemberId = 102, MeetingId = 1, CarnivalBlockId = 1, IsPresent = true };
 
         // Act
+        _authorizationServiceMock.Setup(s => s.GetMemberRole(1, 101)).ReturnsAsync(RolesEnum.Owner);
         var result = await _meetingPresenceService.UpdateAsync(presence.Id, updatedModel, 101);
 
         // Assert
@@ -171,6 +178,7 @@ public class MeetingPresenceServiceTests : IDisposable
         var updatedModel = new MeetingPresenceEntity(presence.Id) { MemberId = 102, MeetingId = 1, CarnivalBlockId = 1, IsPresent = true };
 
         // Act & Assert
+        _authorizationServiceMock.Setup(s => s.GetMemberRole(1, 103)).ReturnsAsync(RolesEnum.Member);
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() => _meetingPresenceService.UpdateAsync(presence.Id, updatedModel, 103));
     }
 
@@ -198,6 +206,7 @@ public class MeetingPresenceServiceTests : IDisposable
         var presence = await _meetingPresencesRepository.AddAsync(new MeetingPresenceEntity(0) { MemberId = 102, MeetingId = 1, CarnivalBlockId = 1, IsPresent = true });
 
         // Act
+        _authorizationServiceMock.Setup(s => s.GetMemberRole(1, 101)).ReturnsAsync(RolesEnum.Owner);
         var result = await _meetingPresenceService.DeleteAsync(presence.Id, 101);
 
         // Assert
@@ -214,6 +223,7 @@ public class MeetingPresenceServiceTests : IDisposable
         var presence = await _meetingPresencesRepository.AddAsync(new MeetingPresenceEntity(0) { MemberId = 102, MeetingId = 1, CarnivalBlockId = 1, IsPresent = true });
 
         // Act & Assert
+        _authorizationServiceMock.Setup(s => s.GetMemberRole(1, 103)).ReturnsAsync(RolesEnum.Member);
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() => _meetingPresenceService.DeleteAsync(presence.Id, 103));
     }
 }

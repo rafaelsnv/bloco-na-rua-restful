@@ -4,6 +4,7 @@ using BlocoNaRua.Data.Repositories.Interfaces;
 using BlocoNaRua.Domain.Entities;
 using BlocoNaRua.Domain.Enums;
 using BlocoNaRua.Services.Implementations;
+using BlocoNaRua.Services.Interfaces;
 using BlocoNaRua.Tests.Helpers;
 
 namespace BlocoNaRua.Tests.Services;
@@ -15,6 +16,7 @@ public class MeetingServiceTests : IDisposable
     private readonly IMembersRepository _membersRepository;
     private readonly ICarnivalBlocksRepository _carnivalBlocksRepository;
     private readonly ICarnivalBlockMembersRepository _carnivalBlockMembersRepository;
+    private readonly Mock<IAuthorizationService> _authorizationServiceMock;
     private readonly MeetingService _meetingService;
 
     public MeetingServiceTests()
@@ -25,11 +27,13 @@ public class MeetingServiceTests : IDisposable
         _membersRepository = new MembersRepository(_context);
         _carnivalBlocksRepository = new CarnivalBlocksRepository(_context);
         _carnivalBlockMembersRepository = new CarnivalBlockMembersRepository(_context);
+        _authorizationServiceMock = new Mock<IAuthorizationService>();
         _meetingService = new MeetingService
         (
             _meetingsRepository,
             _carnivalBlocksRepository,
-            _carnivalBlockMembersRepository
+            _carnivalBlockMembersRepository,
+            _authorizationServiceMock.Object
         );
     }
 
@@ -93,6 +97,7 @@ public class MeetingServiceTests : IDisposable
         var newMeeting = new MeetingEntity(0, "New Meeting", "Desc", "Location", "", DateTime.Now, 1);
 
         // Act
+        _authorizationServiceMock.Setup(s => s.GetMemberRole(1, 101)).ReturnsAsync(RolesEnum.Owner);
         var result = await _meetingService.CreateAsync(newMeeting, 101);
 
         // Assert
@@ -109,6 +114,7 @@ public class MeetingServiceTests : IDisposable
         var updatedModel = new MeetingEntity(1, "Updated Meeting", "New Desc", "New Location", "", DateTime.Now, 1);
 
         // Act
+        _authorizationServiceMock.Setup(s => s.GetMemberRole(1, 102)).ReturnsAsync(RolesEnum.Manager);
         var result = await _meetingService.UpdateAsync(1, updatedModel, 102);
 
         // Assert
@@ -123,6 +129,7 @@ public class MeetingServiceTests : IDisposable
         await AddData(1, 101, 101, RolesEnum.Owner);
 
         // Act
+        _authorizationServiceMock.Setup(s => s.GetMemberRole(1, 101)).ReturnsAsync(RolesEnum.Owner);
         var result = await _meetingService.DeleteAsync(1, 101);
 
         // Assert
@@ -139,6 +146,7 @@ public class MeetingServiceTests : IDisposable
         var newMeeting = new MeetingEntity(0, "New Meeting", "Desc", "Location", "", DateTime.Now, 1);
 
         // Act & Assert
+        _authorizationServiceMock.Setup(s => s.GetMemberRole(1, 102)).ReturnsAsync(RolesEnum.Member);
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() => _meetingService.CreateAsync(newMeeting, 102));
     }
 }

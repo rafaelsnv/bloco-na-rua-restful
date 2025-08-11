@@ -1,4 +1,3 @@
-using BlocoNaRua.Data.Repositories.Interfaces;
 using BlocoNaRua.Domain.Entities;
 using BlocoNaRua.Restful.Models.CarnivalBlockMember;
 using BlocoNaRua.Services.Interfaces;
