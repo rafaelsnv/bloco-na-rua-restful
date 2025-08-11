@@ -1,4 +1,4 @@
-using BlocoNaRua.Data.Repositories.Interfaces;
+﻿using BlocoNaRua.Data.Repositories.Interfaces;
 using BlocoNaRua.Domain.Enums;
 using BlocoNaRua.Services.Interfaces;
 

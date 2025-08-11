@@ -1,4 +1,4 @@
-using BlocoNaRua.Data.Context;
+﻿using BlocoNaRua.Data.Context;
 using BlocoNaRua.Data.Repositories;
 using BlocoNaRua.Data.Repositories.Interfaces;
 using BlocoNaRua.Domain.Entities;

@@ -1,4 +1,4 @@
-using BlocoNaRua.Domain.Entities;
+﻿using BlocoNaRua.Domain.Entities;
 using BlocoNaRua.Restful.Models.MeetingPresence;
 using BlocoNaRua.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;

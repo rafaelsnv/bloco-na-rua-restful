@@ -1,4 +1,4 @@
-using BlocoNaRua.Domain.Entities;
+﻿using BlocoNaRua.Domain.Entities;
 using BlocoNaRua.Domain.Enums;
 using BlocoNaRua.Restful.Controllers;
 using BlocoNaRua.Restful.Models.CarnivalBlockMember;
@@ -86,7 +86,7 @@ public class CarnivalBlockMembersControllerTests
         var controller = CreateController();
 
         // Act
-        var result = await controller.CreateCarnivalBlockMember(null, 1);
+        var result = await controller.CreateCarnivalBlockMember(null!, 1);
 
         // Assert
         Assert.IsType<BadRequestResult>(result);
@@ -191,7 +191,7 @@ public class CarnivalBlockMembersControllerTests
         var controller = CreateController();
 
         // Act
-        var result = await controller.UpdateCarnivalBlockMember(1, null as CarnivalBlockMemberUpdate, 1);
+        var result = await controller.UpdateCarnivalBlockMember(1, null!, 1);
 
         // Assert
         Assert.IsType<BadRequestResult>(result);

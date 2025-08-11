@@ -1,4 +1,4 @@
-using BlocoNaRua.Data.Context;
+﻿using BlocoNaRua.Data.Context;
 using Microsoft.EntityFrameworkCore;
 
 namespace BlocoNaRua.Tests.Helpers;

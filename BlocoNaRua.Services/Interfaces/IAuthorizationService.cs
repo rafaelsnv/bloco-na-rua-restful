@@ -1,4 +1,4 @@
-using BlocoNaRua.Domain.Enums;
+﻿using BlocoNaRua.Domain.Enums;
 
 namespace BlocoNaRua.Services.Interfaces;
 

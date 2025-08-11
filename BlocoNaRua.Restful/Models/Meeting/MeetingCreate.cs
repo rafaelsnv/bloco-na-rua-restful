@@ -1,4 +1,4 @@
-namespace BlocoNaRua.Restful.Models.Meeting;
+﻿namespace BlocoNaRua.Restful.Models.Meeting;
 
 public record MeetingCreate(
     string Name,

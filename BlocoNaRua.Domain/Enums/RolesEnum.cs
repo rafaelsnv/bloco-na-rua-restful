@@ -1,4 +1,4 @@
-namespace BlocoNaRua.Domain.Enums;
+﻿namespace BlocoNaRua.Domain.Enums;
 
 public enum RolesEnum
 {

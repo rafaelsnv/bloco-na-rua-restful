@@ -1,4 +1,4 @@
-using Asp.Versioning;
+﻿using Asp.Versioning;
 using BlocoNaRua.Domain.Entities;
 using BlocoNaRua.Restful.Models.Member;
 using BlocoNaRua.Services.Interfaces;

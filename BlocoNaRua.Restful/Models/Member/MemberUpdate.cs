@@ -1,4 +1,4 @@
-namespace BlocoNaRua.Restful.Models.Member;
+﻿namespace BlocoNaRua.Restful.Models.Member;
 
 public record MemberUpdate(
     string Name,

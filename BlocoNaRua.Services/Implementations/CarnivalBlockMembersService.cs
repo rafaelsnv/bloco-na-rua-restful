@@ -1,4 +1,4 @@
-using BlocoNaRua.Data.Repositories.Interfaces;
+﻿using BlocoNaRua.Data.Repositories.Interfaces;
 using BlocoNaRua.Domain.Entities;
 using BlocoNaRua.Domain.Enums;
 using BlocoNaRua.Services.Interfaces;
@@ -35,7 +35,7 @@ public class CarnivalBlockMembersService
 
         var carnivalBlock = await _carnivalBlocksRepository.GetByIdAsync(carnivalBlockMember.CarnivalBlockId)
             ?? throw new KeyNotFoundException("Carnival block does not exist.");
-        
+
         var loggedMemberRole = await _authorizationService.GetMemberRole(carnivalBlockMember.CarnivalBlockId, loggedMemberId);
 
         if (loggedMemberRole != RolesEnum.Owner && loggedMemberRole != RolesEnum.Manager)
