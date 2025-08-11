@@ -25,18 +25,16 @@ public class CarnivalBlockMembersController
         return Ok(response);
     }
 
-    [HttpGet("{id}")]
-    public async Task<IActionResult> GetBlocksMembersById(int id)
+    [HttpGet("block/{blockId}")]
+    public async Task<IActionResult> GetBlocksMembersByBlockId(int blockId)
     {
-        var blockMember = await _carnivalBlockMembersService.GetByIdAsync(id);
-        if (blockMember == null)
-            return NotFound();
-        var response = ToDTO(blockMember);
+        var blockMembers = await _carnivalBlockMembersService.GetByBlockIdAsync(blockId);
+        var response = blockMembers.Select(ToDTO).ToList();
         return Ok(response);
     }
 
     [HttpPost]
-    public async Task<IActionResult> CreateCarnivalBlockMember([FromBody] CarnivalBlockMemberCreate blockMember)
+    public async Task<IActionResult> CreateCarnivalBlockMember([FromBody] CarnivalBlockMemberCreate blockMember, [FromHeader(Name = "X-Logged-Member")] int loggedMember)
     {
         try
         {
@@ -50,11 +48,11 @@ public class CarnivalBlockMembersController
                 role: blockMember.Role
             );
 
-            await _carnivalBlockMembersService.CreateAsync(entity);
+            await _carnivalBlockMembersService.CreateAsync(entity, loggedMember);
             return CreatedAtAction
             (
-                nameof(GetBlocksMembersById),
-                new { id = entity.Id },
+                nameof(GetBlocksMembersByBlockId),
+                new { blockId = entity.CarnivalBlockId },
                 ToDTO(entity)
             );
         }
@@ -69,14 +67,14 @@ public class CarnivalBlockMembersController
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateCarnivalBlockMember(int id, [FromBody] CarnivalBlockMemberUpdate updateRole)
+    public async Task<IActionResult> UpdateCarnivalBlockMember(int id, [FromBody] CarnivalBlockMemberUpdate updateRole, [FromHeader(Name = "X-Logged-Member")] int loggedMember)
     {
         try
         {
             if (updateRole == null)
                 return BadRequest();
 
-            var updated = await _carnivalBlockMembersService.UpdateAsync(id, updateRole.LoggedMemberId, updateRole.Role);
+            var updated = await _carnivalBlockMembersService.UpdateAsync(id, loggedMember, updateRole.Role);
             if (updated == null)
                 return NotFound();
 
@@ -101,11 +99,11 @@ public class CarnivalBlockMembersController
     }
 
     [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteCarnivalBlockMember(int id, [FromHeader(Name = "X-Member-Id")] int loggedMemberId)
+    public async Task<IActionResult> DeleteCarnivalBlockMember(int id, [FromHeader(Name = "X-Logged-Member")] int loggedMember)
     {
         try
         {
-            var deleted = await _carnivalBlockMembersService.DeleteAsync(id, loggedMemberId);
+            var deleted = await _carnivalBlockMembersService.DeleteAsync(id, loggedMember);
             if (!deleted)
                 return NotFound();
 

@@ -37,35 +37,25 @@ public class CarnivalBlockMembersControllerTests
     }
 
     [Fact]
-    public async Task GetBlocksMembersById_ReturnsOkWithEntity()
+    public async Task GetBlocksMembersByBlockId_ReturnsOkWithListOfEntities()
     {
         // Arrange
-        var entity = new CarnivalBlockMembersEntity(1, 1, 1, RolesEnum.Owner);
-        _serviceMock.Setup(s => s.GetByIdAsync(1)).ReturnsAsync(entity);
+        var entities = new List<CarnivalBlockMembersEntity>
+        {
+            new(1, 1, 1, RolesEnum.Owner),
+            new(2, 1, 2, RolesEnum.Manager)
+        };
+        _serviceMock.Setup(s => s.GetByBlockIdAsync(1)).ReturnsAsync(entities);
 
         var controller = CreateController();
 
         // Act
-        var result = await controller.GetBlocksMembersById(1);
+        var result = await controller.GetBlocksMembersByBlockId(1);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        Assert.IsType<CarnivalBlockMemberDTO>(okResult.Value);
-    }
-
-    [Fact]
-    public async Task GetBlocksMembersById_ReturnsNotFound()
-    {
-        // Arrange
-        _serviceMock.Setup(s => s.GetByIdAsync(1)).ReturnsAsync((CarnivalBlockMembersEntity?)null);
-
-        var controller = CreateController();
-
-        // Act
-        var result = await controller.GetBlocksMembersById(1);
-
-        // Assert
-        Assert.IsType<NotFoundResult>(result);
+        var dtoList = Assert.IsAssignableFrom<List<CarnivalBlockMemberDTO>>(okResult.Value);
+        Assert.Equal(2, dtoList.Count);
     }
 
     [Fact]
@@ -81,11 +71,11 @@ public class CarnivalBlockMembersControllerTests
         var controller = CreateController();
 
         // Act
-        var result = await controller.CreateCarnivalBlockMember(createDto);
+        var result = await controller.CreateCarnivalBlockMember(createDto, 1);
 
         // Assert
         var created = Assert.IsType<CreatedAtActionResult>(result);
-        Assert.Equal("GetBlocksMembersById", created.ActionName);
+        Assert.Equal("GetBlocksMembersByBlockId", created.ActionName);
         Assert.IsType<CarnivalBlockMemberDTO>(created.Value);
     }
 
@@ -96,7 +86,7 @@ public class CarnivalBlockMembersControllerTests
         var controller = CreateController();
 
         // Act
-        var result = await controller.CreateCarnivalBlockMember(null);
+        var result = await controller.CreateCarnivalBlockMember(null, 1);
 
         // Assert
         Assert.IsType<BadRequestResult>(result);
@@ -112,13 +102,13 @@ public class CarnivalBlockMembersControllerTests
             Role: RolesEnum.Member
         );
 
-        _serviceMock.Setup(s => s.CreateAsync(It.IsAny<CarnivalBlockMembersEntity>()))
+        _serviceMock.Setup(s => s.CreateAsync(It.IsAny<CarnivalBlockMembersEntity>(), It.IsAny<int>()))
             .ThrowsAsync(new KeyNotFoundException("Member does not exist."));
 
         var controller = CreateController();
 
         // Act
-        var result = await controller.CreateCarnivalBlockMember(createDto);
+        var result = await controller.CreateCarnivalBlockMember(createDto, 1);
 
         // Assert
         var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
@@ -135,13 +125,13 @@ public class CarnivalBlockMembersControllerTests
             Role: RolesEnum.Member
         );
 
-        _serviceMock.Setup(s => s.CreateAsync(It.IsAny<CarnivalBlockMembersEntity>()))
+        _serviceMock.Setup(s => s.CreateAsync(It.IsAny<CarnivalBlockMembersEntity>(), It.IsAny<int>()))
             .ThrowsAsync(new KeyNotFoundException("Carnival block does not exist."));
 
         var controller = CreateController();
 
         // Act
-        var result = await controller.CreateCarnivalBlockMember(createDto);
+        var result = await controller.CreateCarnivalBlockMember(createDto, 1);
 
         // Assert
         var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
@@ -158,13 +148,13 @@ public class CarnivalBlockMembersControllerTests
             Role: RolesEnum.Member
         );
 
-        _serviceMock.Setup(s => s.CreateAsync(It.IsAny<CarnivalBlockMembersEntity>()))
+        _serviceMock.Setup(s => s.CreateAsync(It.IsAny<CarnivalBlockMembersEntity>(), It.IsAny<int>()))
             .ThrowsAsync(new InvalidOperationException("Something went wrong"));
 
         var controller = CreateController();
 
         // Act
-        var result = await controller.CreateCarnivalBlockMember(createDto);
+        var result = await controller.CreateCarnivalBlockMember(createDto, 1);
 
         // Assert
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
@@ -176,9 +166,9 @@ public class CarnivalBlockMembersControllerTests
     {
         // Arrange
         var updateDto = new CarnivalBlockMemberUpdate(
-             1,
-             1,
-             RolesEnum.Manager
+            1,
+            2,
+            RolesEnum.Manager
         );
 
         var updatedEntity = new CarnivalBlockMembersEntity(1, 1, 2, RolesEnum.Manager);
@@ -187,7 +177,7 @@ public class CarnivalBlockMembersControllerTests
         var controller = CreateController();
 
         // Act
-        var result = await controller.UpdateCarnivalBlockMember(1, updateDto);
+        var result = await controller.UpdateCarnivalBlockMember(1, updateDto, 1);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
@@ -201,7 +191,7 @@ public class CarnivalBlockMembersControllerTests
         var controller = CreateController();
 
         // Act
-        var result = await controller.UpdateCarnivalBlockMember(1, null as CarnivalBlockMemberUpdate);
+        var result = await controller.UpdateCarnivalBlockMember(1, null as CarnivalBlockMemberUpdate, 1);
 
         // Assert
         Assert.IsType<BadRequestResult>(result);
@@ -212,9 +202,9 @@ public class CarnivalBlockMembersControllerTests
     {
         // Arrange
         var updateDto = new CarnivalBlockMemberUpdate(
-             1,
-             1,
-             RolesEnum.Manager
+            1,
+            2,
+            RolesEnum.Manager
         );
 
         _serviceMock.Setup(s => s.UpdateAsync(999, 1, RolesEnum.Manager))
@@ -223,7 +213,7 @@ public class CarnivalBlockMembersControllerTests
         var controller = CreateController();
 
         // Act
-        var result = await controller.UpdateCarnivalBlockMember(999, updateDto);
+        var result = await controller.UpdateCarnivalBlockMember(999, updateDto, 1);
 
         // Assert
         var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
@@ -235,9 +225,9 @@ public class CarnivalBlockMembersControllerTests
     {
         // Arrange
         var updateDto = new CarnivalBlockMemberUpdate(
-             1,
-             2,
-             RolesEnum.Manager
+            1,
+            2,
+            RolesEnum.Manager
         );
 
         _serviceMock.Setup(s => s.UpdateAsync(1, 2, RolesEnum.Manager))
@@ -246,7 +236,7 @@ public class CarnivalBlockMembersControllerTests
         var controller = CreateController();
 
         // Act
-        var result = await controller.UpdateCarnivalBlockMember(1, updateDto);
+        var result = await controller.UpdateCarnivalBlockMember(1, updateDto, 2);
 
         // Assert
         var unauthorizedResult = Assert.IsType<UnauthorizedObjectResult>(result);
@@ -258,9 +248,9 @@ public class CarnivalBlockMembersControllerTests
     {
         // Arrange
         var updateDto = new CarnivalBlockMemberUpdate(
-             1,
-             1,
-             RolesEnum.Manager
+            1,
+            1,
+            RolesEnum.Manager
         );
 
         _serviceMock.Setup(s => s.UpdateAsync(1, 1, RolesEnum.Manager))
@@ -269,7 +259,7 @@ public class CarnivalBlockMembersControllerTests
         var controller = CreateController();
 
         // Act
-        var result = await controller.UpdateCarnivalBlockMember(1, updateDto);
+        var result = await controller.UpdateCarnivalBlockMember(1, updateDto, 1);
 
         // Assert
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);

@@ -21,18 +21,25 @@ public class CarnivalBlockMembersService
         return (await _repository.GetAllAsync()).ToList();
     }
 
-    public async Task<CarnivalBlockMembersEntity?> GetByIdAsync(int id)
+    public async Task<IEnumerable<CarnivalBlockMembersEntity>> GetByBlockIdAsync(int blockId)
     {
-        return await _repository.GetByIdAsync(id);
+        return await _repository.GetByBlockIdAsync(blockId);
     }
 
-    public async Task CreateAsync(CarnivalBlockMembersEntity carnivalBlockMember)
+    public async Task CreateAsync(CarnivalBlockMembersEntity carnivalBlockMember, int loggedMemberId)
     {
         var member = await _membersRepository.GetByIdAsync(carnivalBlockMember.MemberId)
             ?? throw new KeyNotFoundException("Member does not exist.");
 
         var carnivalBlock = await _carnivalBlocksRepository.GetByIdAsync(carnivalBlockMember.CarnivalBlockId)
             ?? throw new KeyNotFoundException("Carnival block does not exist.");
+        
+        var loggedMemberRole = await GetMemberRole(carnivalBlockMember.CarnivalBlockId, loggedMemberId);
+
+        if (loggedMemberRole != RolesEnum.Owner && loggedMemberRole != RolesEnum.Manager)
+        {
+            throw new UnauthorizedAccessException("Member is not authorized to add members.");
+        }
 
         await _repository.AddAsync(carnivalBlockMember);
     }
