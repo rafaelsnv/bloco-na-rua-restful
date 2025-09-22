@@ -4,5 +4,6 @@ public record MemberCreate(
     string Name,
     string Email,
     string Phone,
-    string ProfileImage
+    string ProfileImage,
+    string Uuid
 );

@@ -49,7 +49,8 @@ public class CarnivalBlockServiceTests : IDisposable
                 name: "Owner Member",
                 email: "owner@test.com",
                 phone: "1234567890",
-                profileImage: "profile_image.jpg"
+                profileImage: "profile_image.jpg",
+                uuid: new Guid()
             ));
 
         if (ownerId != memberId && await _membersRepository.GetByIdAsync(memberId) is null)
@@ -59,7 +60,8 @@ public class CarnivalBlockServiceTests : IDisposable
                 name: "Test Member",
                 email: "test@test.com",
                 phone: "1234567890",
-                profileImage: "profile_image.jpg"
+                profileImage: "profile_image.jpg",
+                uuid: new Guid()
             ));
         }
 
@@ -125,7 +127,7 @@ public class CarnivalBlockServiceTests : IDisposable
     public async Task CreateAsync_ShouldCreateCarnivalBlock()
     {
         // Arrange
-        await _membersRepository.AddAsync(new MemberEntity(1, "owner", "owner@email.com", "123", "img"));
+        await _membersRepository.AddAsync(new MemberEntity(1, "owner", "owner@email.com", "123", "img", new Guid()));
         var newBlock = new CarnivalBlockEntity(0, 1, "New Block", "", "", "image.jpg");
 
         // Act

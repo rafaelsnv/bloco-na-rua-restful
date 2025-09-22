@@ -21,8 +21,8 @@ public class MembersServiceTests
         // Arrange
         var members = new List<MemberEntity>
         {
-            new(1, "Member 1", "member1@test.com", "111", "img1.jpg"),
-            new(2, "Member 2", "member2@test.com", "222", "img2.jpg")
+            new(1, "Member 1", "member1@test.com", "111", "img1.jpg", new Guid()),
+            new(2, "Member 2", "member2@test.com", "222", "img2.jpg", new Guid())
         };
         _repositoryMock.Setup(r => r.GetAllAsync()).ReturnsAsync(members);
 
@@ -38,7 +38,7 @@ public class MembersServiceTests
     public async Task GetByIdAsync_ShouldReturnMember_WhenMemberExists()
     {
         // Arrange
-        var member = new MemberEntity(1, "Test Member", "test@test.com", "123", "img.jpg");
+        var member = new MemberEntity(1, "Test Member", "test@test.com", "123", "img.jpg", new Guid());
         _repositoryMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(member);
 
         // Act
@@ -66,8 +66,8 @@ public class MembersServiceTests
     public async Task CreateAsync_ShouldCreateMember()
     {
         // Arrange
-        var newMember = new MemberEntity(0, "New Member", "new@test.com", "456", "new.jpg");
-        var createdMember = new MemberEntity(1, "New Member", "new@test.com", "456", "new.jpg");
+        var newMember = new MemberEntity(0, "New Member", "new@test.com", "456", "new.jpg", new Guid());
+        var createdMember = new MemberEntity(1, "New Member", "new@test.com", "456", "new.jpg", new Guid());
         _repositoryMock.Setup(r => r.AddAsync(It.IsAny<MemberEntity>())).ReturnsAsync(createdMember);
 
         // Act
@@ -83,8 +83,8 @@ public class MembersServiceTests
     public async Task UpdateAsync_ShouldUpdateMember_WhenRequesterIsTarget()
     {
         // Arrange
-        var existingMember = new MemberEntity(1, "Old Name", "old@test.com", "123", "old.jpg");
-        var updatedModel = new MemberEntity(1, "Updated Name", "updated@test.com", "321", "updated.jpg");
+        var existingMember = new MemberEntity(1, "Old Name", "old@test.com", "123", "old.jpg", new Guid());
+        var updatedModel = new MemberEntity(1, "Updated Name", "updated@test.com", "321", "updated.jpg", new Guid());
 
         _repositoryMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(existingMember);
         _repositoryMock.Setup(r => r.UpdateAsync(It.IsAny<MemberEntity>())).ReturnsAsync(true);
@@ -102,7 +102,7 @@ public class MembersServiceTests
     public async Task UpdateAsync_ShouldThrowUnauthorized_WhenRequesterIsNotTarget()
     {
         // Arrange
-        var updatedModel = new MemberEntity(1, "Updated Name", "updated@test.com", "321", "updated.jpg");
+        var updatedModel = new MemberEntity(1, "Updated Name", "updated@test.com", "321", "updated.jpg", new Guid());
 
         // Act & Assert
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() => _service.UpdateAsync(1, 2, updatedModel));
@@ -113,7 +113,7 @@ public class MembersServiceTests
     {
         // Arrange
         _repositoryMock.Setup(r => r.GetByIdAsync(It.IsAny<int>())).ReturnsAsync((MemberEntity?)null);
-        var memberModel = new MemberEntity(999, "Non Existent", "none@test.com", "000", "none.jpg");
+        var memberModel = new MemberEntity(999, "Non Existent", "none@test.com", "000", "none.jpg", new Guid());
 
         // Act
         var result = await _service.UpdateAsync(999, 999, memberModel);
@@ -126,7 +126,7 @@ public class MembersServiceTests
     public async Task DeleteAsync_ShouldDeleteMember_WhenRequesterIsTarget()
     {
         // Arrange
-        var member = new MemberEntity(1, "Test Member", "test@test.com", "123", "img.jpg");
+        var member = new MemberEntity(1, "Test Member", "test@test.com", "123", "img.jpg", new Guid());
         _repositoryMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(member);
         _repositoryMock.Setup(r => r.DeleteAsync(member)).ReturnsAsync(true);
 

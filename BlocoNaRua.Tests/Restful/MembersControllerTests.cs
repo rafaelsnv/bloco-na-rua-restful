@@ -18,8 +18,8 @@ public class MembersControllerTests
         // Arrange
         var entities = new List<MemberEntity>
         {
-            new(1, "Member 1", "member1@test.com", "111", "img1.jpg"),
-            new(2, "Member 2", "member2@test.com", "222", "img2.jpg")
+            new(1, "Member 1", "member1@test.com", "111", "img1.jpg", new Guid()),
+            new(2, "Member 2", "member2@test.com", "222", "img2.jpg", new Guid())
         };
         _serviceMock.Setup(s => s.GetAllAsync()).ReturnsAsync(entities);
 
@@ -38,7 +38,7 @@ public class MembersControllerTests
     public async Task GetById_ReturnsOkWithEntity()
     {
         // Arrange
-        var entity = new MemberEntity(1, "Test Member", "test@test.com", "123", "img.jpg");
+        var entity = new MemberEntity(1, "Test Member", "test@test.com", "123", "img.jpg", new Guid());
         _serviceMock.Setup(s => s.GetByIdAsync(1)).ReturnsAsync(entity);
 
         var controller = CreateController();
@@ -71,8 +71,8 @@ public class MembersControllerTests
     public async Task Create_ReturnsCreatedAtAction()
     {
         // Arrange
-        var createDto = new MemberCreate("Test", "test@test.com", "123", "img.jpg");
-        var entity = new MemberEntity(1, createDto.Name, createDto.Email, createDto.Phone, createDto.ProfileImage);
+        var createDto = new MemberCreate("Test", "test@test.com", "123", "img.jpg", new Guid().ToString());
+        var entity = new MemberEntity(1, createDto.Name, createDto.Email, createDto.Phone, createDto.ProfileImage, new Guid(createDto.Uuid));
         _serviceMock.Setup(s => s.CreateAsync(It.IsAny<MemberEntity>())).ReturnsAsync(entity);
 
         var controller = CreateController();
@@ -123,7 +123,7 @@ public class MembersControllerTests
     public async Task Update_ReturnsOk_WhenSuccess()
     {
         // Arrange
-        var updatedEntity = new MemberEntity(1, "Updated", "updated@test.com", "321", "updated.jpg");
+        var updatedEntity = new MemberEntity(1, "Updated", "updated@test.com", "321", "updated.jpg", new Guid());
         _serviceMock.Setup(s => s.UpdateAsync(1, 1, It.IsAny<MemberEntity>())).ReturnsAsync(updatedEntity);
         var updateDto = new MemberUpdate("Updated", "updated@test.com", "321", "updated.jpg");
         var controller = CreateController();

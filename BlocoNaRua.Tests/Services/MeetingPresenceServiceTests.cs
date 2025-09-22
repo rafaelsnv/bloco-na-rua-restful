@@ -45,10 +45,10 @@ public class MeetingPresenceServiceTests : IDisposable
     private async Task AddData(int blockId, int ownerId, int memberId, RolesEnum role, int meetingId)
     {
         if (await _membersRepository.GetByIdAsync(ownerId) is null)
-            await _membersRepository.AddAsync(new MemberEntity(ownerId, "Owner", "owner@test.com", "1", "img"));
+            await _membersRepository.AddAsync(new MemberEntity(ownerId, "Owner", "owner@test.com", "1", "img", new Guid()));
 
         if (ownerId != memberId && await _membersRepository.GetByIdAsync(memberId) is null)
-            await _membersRepository.AddAsync(new MemberEntity(memberId, "Member", "member@test.com", "2", "img"));
+            await _membersRepository.AddAsync(new MemberEntity(memberId, "Member", "member@test.com", "2", "img", new Guid()));
 
         await _carnivalBlocksRepository.AddAsync(new CarnivalBlockEntity(blockId, ownerId, "Block", "code", "mcode", "img"));
 

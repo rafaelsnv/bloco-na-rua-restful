@@ -18,6 +18,11 @@ public class MembersService(IMembersRepository repository) : IMembersService
         return await _repository.GetByIdAsync(id);
     }
 
+    public async Task<MemberEntity?> GetByUuidAsync(Guid uuid)
+    {
+        return await _repository.GetByUuidAsync(uuid);
+    }
+
     public async Task<MemberEntity> CreateAsync(MemberEntity entity)
     {
         var newMember = new MemberEntity(
@@ -25,7 +30,8 @@ public class MembersService(IMembersRepository repository) : IMembersService
             entity.Name,
             entity.Email,
             entity.Phone,
-            entity.ProfileImage
+            entity.ProfileImage,
+            entity.Uuid
         );
         return await _repository.AddAsync(newMember);
     }
