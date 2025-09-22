@@ -3,4 +3,7 @@ using BlocoNaRua.Domain.Entities;
 
 namespace BlocoNaRua.Data.Repositories.Interfaces;
 
-public interface IMembersRepository : IRepositoryBase<MemberEntity>;
+public interface IMembersRepository : IRepositoryBase<MemberEntity>
+{
+    Task<MemberEntity?> GetByUuidAsync(Guid uuid);
+}

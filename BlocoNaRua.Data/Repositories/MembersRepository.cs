@@ -2,7 +2,14 @@
 using BlocoNaRua.Data.Repositories.Base;
 using BlocoNaRua.Data.Repositories.Interfaces;
 using BlocoNaRua.Domain.Entities;
+using Microsoft.EntityFrameworkCore;
 
 namespace BlocoNaRua.Data.Repositories;
 
-public class MembersRepository(AppDbContext appContext) : RepositoryBase<MemberEntity>(appContext), IMembersRepository;
+public class MembersRepository(AppDbContext appContext) : RepositoryBase<MemberEntity>(appContext), IMembersRepository
+{
+    public async Task<MemberEntity?> GetByUuidAsync(Guid uuid)
+    {
+        return await DbSet.AsNoTracking().FirstOrDefaultAsync(m => m.Uuid == uuid);
+    }
+}

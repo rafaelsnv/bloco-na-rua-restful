@@ -30,6 +30,16 @@ public class MembersController(IMembersService service) : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("uuid/{uuid}")]
+    public async Task<IActionResult> GetByUuid(Guid uuid)
+    {
+        var entity = await _service.GetByUuidAsync(uuid);
+        if (entity is null)
+            return NotFound();
+        var result = ToDTO(entity);
+        return Ok(result);
+    }
+
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] MemberCreate model)
     {
@@ -38,7 +48,8 @@ public class MembersController(IMembersService service) : ControllerBase
             name: model.Name,
             email: model.Email,
             phone: model.Phone,
-            profileImage: model.ProfileImage
+            profileImage: model.ProfileImage,
+            uuid: new Guid(model.Uuid)
         );
         var created = await _service.CreateAsync(entity);
         var result = ToDTO(created);
@@ -55,7 +66,8 @@ public class MembersController(IMembersService service) : ControllerBase
                 name: model.Name,
                 email: model.Email,
                 phone: model.Phone,
-                profileImage: model.ProfileImage
+                profileImage: model.ProfileImage,
+                uuid: new Guid()
             );
             var updated = await _service.UpdateAsync(id, loggedMember, entity);
             if (updated is null)
@@ -93,6 +105,7 @@ public class MembersController(IMembersService service) : ControllerBase
             entity.Email,
             entity.Phone,
             entity.ProfileImage,
+            entity.Uuid,
             entity.CreatedAt,
             entity.UpdatedAt
         );

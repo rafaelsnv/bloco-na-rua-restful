@@ -50,7 +50,8 @@ public class CarnivalBlockMembersServiceTests : IDisposable
                 name: "Owner Member",
                 email: "owner@test.com",
                 phone: "1234567890",
-                profileImage: "profile_image.jpg"
+                profileImage: "profile_image.jpg",
+                uuid: new Guid()
             ));
 
         if (ownerId != memberId && await _membersRepository.GetByIdAsync(memberId) is null)
@@ -60,7 +61,8 @@ public class CarnivalBlockMembersServiceTests : IDisposable
                 name: "Test Member",
                 email: "test@test.com",
                 phone: "1234567890",
-                profileImage: "profile_image.jpg"
+                profileImage: "profile_image.jpg",
+                uuid: new Guid()
             ));
         }
 

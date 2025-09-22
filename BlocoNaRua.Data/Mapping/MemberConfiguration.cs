@@ -40,5 +40,9 @@ public class MemberConfiguration : IEntityTypeConfiguration<MemberEntity>
         builder.Property(u => u.UpdatedAt)
                .HasColumnName("updated_at")
                .IsRequired(false);
+
+        builder.Property(u => u.Uuid)
+               .HasColumnName("uuid")
+               .IsRequired();
     }
 }
