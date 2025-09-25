@@ -23,11 +23,19 @@ public class CarnivalBlockMembersRepository
         return carnivalBlockMember?.Role;
     }
 
-    public async Task<IEnumerable<CarnivalBlockMembersEntity>> GetByBlockIdAsync(int blockId)
+    public async Task<IList<CarnivalBlockMembersEntity>> GetByBlockIdAsync(int blockId)
     {
         return await DbSet
             .AsNoTracking()
             .Where(cbMember => cbMember.CarnivalBlockId == blockId)
+            .ToListAsync();
+    }
+
+    public async Task<IList<CarnivalBlockMembersEntity>> GetByMemberIdAsync(int memberId)
+    {
+        return await DbSet
+            .AsNoTracking()
+            .Where(cbMember => cbMember.MemberId == memberId)
             .ToListAsync();
     }
 }

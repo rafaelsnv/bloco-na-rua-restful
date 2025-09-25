@@ -23,9 +23,14 @@ public class CarnivalBlockMembersService
         return (await _repository.GetAllAsync()).ToList();
     }
 
-    public async Task<IEnumerable<CarnivalBlockMembersEntity>> GetByBlockIdAsync(int blockId)
+    public async Task<IList<CarnivalBlockMembersEntity>> GetByBlockIdAsync(int blockId)
     {
         return await _repository.GetByBlockIdAsync(blockId);
+    }
+
+    public async Task<IList<CarnivalBlockMembersEntity>> GetByMemberIdAsync(int memberId)
+    {
+        return await _repository.GetByMemberIdAsync(memberId);
     }
 
     public async Task CreateAsync(CarnivalBlockMembersEntity carnivalBlockMember, int loggedMemberId)

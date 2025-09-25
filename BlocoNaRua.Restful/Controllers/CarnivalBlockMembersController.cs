@@ -34,6 +34,16 @@ public class CarnivalBlockMembersController
         return Ok(response);
     }
 
+    [HttpGet("member/{memberId}")]
+    public async Task<IActionResult> GetBlocksMembersByMemberId(int memberId)
+    {
+        var blockMembers = await _carnivalBlockMembersService.GetByMemberIdAsync(memberId);
+        if (blockMembers == null || !blockMembers.Any())
+            return NotFound();
+        var response = blockMembers.Select(ToDTO).ToList();
+        return Ok(response);
+    }
+
     [HttpPost]
     public async Task<IActionResult> CreateCarnivalBlockMember([FromBody] CarnivalBlockMemberCreate blockMember, [FromHeader(Name = "X-Logged-Member")] int loggedMember)
     {
