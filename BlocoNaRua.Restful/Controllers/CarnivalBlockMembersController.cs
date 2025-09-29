@@ -156,6 +156,8 @@ public class CarnivalBlockMembersController
         return new CarnivalBlockMemberResponseDTO
         {
             Id = entity.Id,
+            MemberId = entity.MemberId,
+            CarnivalBlockId = entity.CarnivalBlockId,
             Role = entity.Role,
             CreatedAt = entity.CreatedAt.GetValueOrDefault(),
             CarnivalBlock = new CarnivalBlockDTO(
