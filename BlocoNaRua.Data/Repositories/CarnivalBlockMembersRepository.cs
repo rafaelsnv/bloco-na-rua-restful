@@ -35,6 +35,7 @@ public class CarnivalBlockMembersRepository
     {
         return await DbSet
             .AsNoTracking()
+            .Include(cbMember => cbMember.CarnivalBlock)
             .Where(cbMember => cbMember.MemberId == memberId)
             .ToListAsync();
     }
