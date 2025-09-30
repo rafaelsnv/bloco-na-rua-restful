@@ -1,12 +1,14 @@
 ﻿using BlocoNaRua.Data.Repositories.Interfaces;
 using BlocoNaRua.Domain.Entities;
 using BlocoNaRua.Services.Interfaces;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace BlocoNaRua.Services.Implementations;
 
-public class MembersService(IMembersRepository repository) : IMembersService
+public class MembersService(IMembersRepository repository, IMemoryCache cache) : IMembersService
 {
     private readonly IMembersRepository _repository = repository;
+    private readonly IMemoryCache _cache = cache;
 
     public async Task<IList<MemberEntity>> GetAllAsync()
     {
@@ -20,7 +22,18 @@ public class MembersService(IMembersRepository repository) : IMembersService
 
     public async Task<MemberEntity?> GetByUuidAsync(Guid uuid)
     {
-        return await _repository.GetByUuidAsync(uuid);
+        var cacheKey = $"Member_{uuid}";
+        if (_cache.TryGetValue(cacheKey, out MemberEntity? member))
+        {
+            return member;
+        }
+
+        member = await _repository.GetByUuidAsync(uuid);
+        if (member != null)
+        {
+            _cache.Set(cacheKey, member, TimeSpan.FromMinutes(5)); // Cache por 5 minutos
+        }
+        return member;
     }
 
     public async Task<MemberEntity> CreateAsync(MemberEntity entity)
@@ -33,7 +46,12 @@ public class MembersService(IMembersRepository repository) : IMembersService
             entity.ProfileImage,
             entity.Uuid
         );
-        return await _repository.AddAsync(newMember);
+        var createdMember = await _repository.AddAsync(newMember);
+        if (createdMember != null)
+        {
+            _cache.Remove($"Member_{createdMember.Uuid}"); // Invalida o cache após a criação
+        }
+        return createdMember;
     }
 
     public async Task<MemberEntity?> UpdateAsync(int id, int loggedMember, MemberEntity model)
@@ -52,6 +70,7 @@ public class MembersService(IMembersRepository repository) : IMembersService
         entity.ProfileImage = model.ProfileImage;
 
         await _repository.UpdateAsync(entity);
+        _cache.Remove($"Member_{entity.Uuid}"); // Invalida o cache após a atualização
         return entity;
     }
 
@@ -63,6 +82,11 @@ public class MembersService(IMembersRepository repository) : IMembersService
         var entity = await _repository.GetByIdAsync(id);
         if (entity is null)
             return false;
-        return await _repository.DeleteAsync(entity);
+        var deleted = await _repository.DeleteAsync(entity);
+        if (deleted)
+        {
+            _cache.Remove($"Member_{entity.Uuid}"); // Invalida o cache após a exclusão
+        }
+        return deleted;
     }
 }

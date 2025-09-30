@@ -49,5 +49,7 @@ public class CarnivalBlockMembersConfiguration : IEntityTypeConfiguration<Carniv
                .HasForeignKey(e => e.MemberId)
                .OnDelete(DeleteBehavior.Restrict)
                .HasConstraintName("carnival_block_users_user_id_fkey");
-    }
+
+       builder.HasIndex(e => e.MemberId);
+   }
 }

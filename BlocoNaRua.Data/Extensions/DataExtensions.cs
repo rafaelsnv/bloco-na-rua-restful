@@ -6,12 +6,13 @@ using BlocoNaRua.Data.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 namespace BlocoNaRua.Data.Extensions;
 
 public static class DataExtensions
 {
-    public static IServiceCollection AddEntityFramework(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddEntityFramework(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
     {
         var connectionString = configuration.GetConnectionString("DefaultConnection")
         ?? Environment.GetEnvironmentVariable("POSTGRESQLCONNSTR_SupabaseDB")
@@ -20,11 +21,16 @@ public static class DataExtensions
         return services.AddDbContext<AppDbContext>(options =>
         {
             options.UseNpgsql(connectionString)
-                   .EnableDetailedErrors()
-                   .EnableServiceProviderCaching()
-                   .EnableThreadSafetyChecks();
-        });
+                   .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
+                   .EnableServiceProviderCaching();
 
+            if (environment.IsDevelopment())
+            {
+                options.EnableDetailedErrors()
+                       .EnableSensitiveDataLogging()
+                       .EnableThreadSafetyChecks();
+            }
+        });
     }
 
     public static IServiceCollection AddRepositories(this IServiceCollection services)
