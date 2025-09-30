@@ -1,18 +1,21 @@
 ﻿using BlocoNaRua.Data.Repositories.Interfaces;
 using BlocoNaRua.Domain.Entities;
 using BlocoNaRua.Services.Implementations;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace BlocoNaRua.Tests.Services;
 
 public class MembersServiceTests
 {
     private readonly Mock<IMembersRepository> _repositoryMock;
+    private readonly Mock<IMemoryCache> _cacheMock;
     private readonly MembersService _service;
 
     public MembersServiceTests()
     {
         _repositoryMock = new Mock<IMembersRepository>();
-        _service = new MembersService(_repositoryMock.Object);
+        _cacheMock = new Mock<IMemoryCache>();
+        _service = new MembersService(_repositoryMock.Object, _cacheMock.Object);
     }
 
     [Fact]

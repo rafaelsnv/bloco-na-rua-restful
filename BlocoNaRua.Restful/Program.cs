@@ -35,7 +35,8 @@ builder.Services.AddApiVersioning(options =>
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddEntityFramework(configuration);
+builder.Services.AddMemoryCache(); // Adiciona o serviço de cache em memória
+builder.Services.AddEntityFramework(configuration, builder.Environment);
 builder.Services.AddRepositories();
 builder.Services.AddServices();
 

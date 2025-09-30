@@ -44,5 +44,7 @@ public class MemberConfiguration : IEntityTypeConfiguration<MemberEntity>
         builder.Property(u => u.Uuid)
                .HasColumnName("uuid")
                .IsRequired();
+
+        builder.HasIndex(u => u.Uuid).IsUnique();
     }
 }
