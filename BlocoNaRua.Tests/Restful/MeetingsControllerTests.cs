@@ -36,7 +36,7 @@ public class MeetingsControllerTests
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        Assert.IsAssignableFrom<IList<MeetingDTO>>(okResult.Value);
+        Assert.IsAssignableFrom<IList<MeetingResponse>>(okResult.Value);
     }
 
     [Fact]
@@ -63,7 +63,7 @@ public class MeetingsControllerTests
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        Assert.IsAssignableFrom<IList<MeetingDTO>>(okResult.Value);
+        Assert.IsAssignableFrom<IList<MeetingResponse>>(okResult.Value);
     }
 
     [Fact]
@@ -95,7 +95,7 @@ public class MeetingsControllerTests
         // Assert
         var created = Assert.IsType<CreatedAtActionResult>(result);
         Assert.Equal("GetAllByBlockId", created.ActionName);
-        Assert.IsType<MeetingDTO>(created.Value);
+        Assert.IsType<MeetingResponse>(created.Value);
     }
 
     [Fact]
@@ -169,7 +169,7 @@ public class MeetingsControllerTests
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        Assert.IsType<MeetingDTO>(okResult.Value);
+        Assert.IsType<MeetingResponse>(okResult.Value);
     }
 
     [Fact]

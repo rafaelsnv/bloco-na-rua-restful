@@ -1,6 +1,6 @@
 ﻿namespace BlocoNaRua.Restful.Models.MeetingPresence;
 
-public record MeetingPresenceDTO(
+public record MeetingPresenceResponse(
     int Id,
     int MemberId,
     int MeetingId,

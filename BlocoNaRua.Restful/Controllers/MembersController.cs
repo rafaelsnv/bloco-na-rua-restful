@@ -18,7 +18,7 @@ public class MembersController(IMembersService service) : ControllerBase
     public async Task<IActionResult> GetAll()
     {
         var list = await _service.GetAllAsync();
-        return Ok(list.Select(ToDTO).ToList());
+        return Ok(list.Select(MemberMapper.ToDTO).ToList());
     }
 
     [HttpGet("{id}")]
@@ -27,7 +27,7 @@ public class MembersController(IMembersService service) : ControllerBase
         var entity = await _service.GetByIdAsync(id);
         if (entity is null)
             return NotFound();
-        var result = ToDTO(entity);
+        var result = MemberMapper.ToDTO(entity);
         return Ok(result);
     }
 
@@ -37,7 +37,7 @@ public class MembersController(IMembersService service) : ControllerBase
         var entity = await _service.GetByUuidAsync(uuid);
         if (entity is null)
             return NotFound();
-        var result = ToDTO(entity);
+        var result = MemberMapper.ToDTO(entity);
         return Ok(result);
     }
 
@@ -75,7 +75,7 @@ public class MembersController(IMembersService service) : ControllerBase
             uuid: new Guid(model.Uuid)
         );
         var created = await _service.CreateAsync(entity);
-        var result = ToDTO(created);
+        var result = MemberMapper.ToDTO(created);
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 
@@ -95,7 +95,7 @@ public class MembersController(IMembersService service) : ControllerBase
             var updated = await _service.UpdateAsync(id, loggedMember, entity);
             if (updated is null)
                 return NotFound();
-            var result = ToDTO(updated);
+            var result = MemberMapper.ToDTO(updated);
             return Ok(result);
         }
         catch (UnauthorizedAccessException ex)
@@ -120,17 +120,4 @@ public class MembersController(IMembersService service) : ControllerBase
         }
     }
 
-    private static MemberDTO ToDTO(MemberEntity entity)
-    {
-        return new MemberDTO(
-            entity.Id,
-            entity.Name,
-            entity.Email,
-            entity.Phone,
-            entity.ProfileImage,
-            entity.Uuid,
-            entity.CreatedAt,
-            entity.UpdatedAt
-        );
-    }
 }
