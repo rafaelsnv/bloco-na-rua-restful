@@ -1,7 +1,7 @@
 ﻿using BlocoNaRua.Domain.Entities;
 using BlocoNaRua.Domain.Enums;
 using BlocoNaRua.Restful.Controllers;
-using BlocoNaRua.Restful.Models.CarnivalBlockMember;
+using BlocoNaRua.Restful.Models.CarnivalBlock;
 using BlocoNaRua.Restful.Models.Meeting;
 using BlocoNaRua.Restful.Models.Member;
 using BlocoNaRua.Services.Interfaces;
@@ -110,9 +110,9 @@ public class MembersControllerTests
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var dtoList = Assert.IsAssignableFrom<IList<CarnivalBlockMemberResponseDTO>>(okResult.Value);
+        var dtoList = Assert.IsAssignableFrom<IList<CarnivalBlockDTO>>(okResult.Value);
         Assert.Single(dtoList);
-        Assert.Equal(10, dtoList[0].CarnivalBlockId);
+        Assert.Equal(10, dtoList[0].Id);
     }
 
     [Fact]

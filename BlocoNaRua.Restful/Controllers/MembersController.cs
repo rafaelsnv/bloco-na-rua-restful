@@ -1,7 +1,6 @@
 ﻿using Asp.Versioning;
 using BlocoNaRua.Domain.Entities;
 using BlocoNaRua.Restful.Mappers;
-using BlocoNaRua.Restful.Models.Meeting;
 using BlocoNaRua.Restful.Models.Member;
 using BlocoNaRua.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -49,7 +48,7 @@ public class MembersController(IMembersService service) : ControllerBase
         if (blockMembers == null || !blockMembers.Any())
             return NotFound();
 
-        var response = blockMembers.Select(CarnivalBlockMemberMapper.ToCarnivalBlockMemberResponseDTO).ToList();
+        var response = blockMembers.Select(bm => CarnivalBlockMapper.ToDTO(bm.CarnivalBlock)).ToList();
         return Ok(response);
     }
 
