@@ -1,4 +1,5 @@
 ﻿using BlocoNaRua.Domain.Entities;
+using BlocoNaRua.Restful.Mappers;
 using BlocoNaRua.Restful.Models.CarnivalBlock;
 using BlocoNaRua.Restful.Models.CarnivalBlockMember;
 using BlocoNaRua.Services.Interfaces;
@@ -32,16 +33,6 @@ public class CarnivalBlockMembersController
         if (blockMembers == null || !blockMembers.Any())
             return NotFound();
         var response = blockMembers.Select(ToDTO).ToList();
-        return Ok(response);
-    }
-
-    [HttpGet("member/{memberId}")]
-    public async Task<IActionResult> GetBlocksMembersByMemberId(int memberId)
-    {
-        var blockMembers = await _carnivalBlockMembersService.GetByMemberIdAsync(memberId);
-        if (blockMembers == null || !blockMembers.Any())
-            return NotFound();
-        var response = blockMembers.Select(ToCarnivalBlockMemberResponseDTO).ToList();
         return Ok(response);
     }
 
@@ -151,25 +142,4 @@ public class CarnivalBlockMembersController
         );
     }
 
-    private static CarnivalBlockMemberResponseDTO ToCarnivalBlockMemberResponseDTO(CarnivalBlockMembersEntity entity)
-    {
-        return new CarnivalBlockMemberResponseDTO
-        {
-            Id = entity.Id,
-            MemberId = entity.MemberId,
-            CarnivalBlockId = entity.CarnivalBlockId,
-            Role = entity.Role,
-            CreatedAt = entity.CreatedAt.GetValueOrDefault(),
-            CarnivalBlock = new CarnivalBlockDTO(
-                entity.CarnivalBlock.Id,
-                entity.CarnivalBlock.OwnerId,
-                entity.CarnivalBlock.Name,
-                entity.CarnivalBlock.InviteCode,
-                entity.CarnivalBlock.ManagersInviteCode,
-                entity.CarnivalBlock.CarnivalBlockImage,
-                entity.CarnivalBlock.CreatedAt.GetValueOrDefault(),
-                entity.CarnivalBlock.UpdatedAt.GetValueOrDefault()
-            )
-        };
-    }
 }
