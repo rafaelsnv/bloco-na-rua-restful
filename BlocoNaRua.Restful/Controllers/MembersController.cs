@@ -1,5 +1,7 @@
 ﻿using Asp.Versioning;
 using BlocoNaRua.Domain.Entities;
+using BlocoNaRua.Restful.Mappers;
+using BlocoNaRua.Restful.Models.Meeting;
 using BlocoNaRua.Restful.Models.Member;
 using BlocoNaRua.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -38,6 +40,28 @@ public class MembersController(IMembersService service) : ControllerBase
             return NotFound();
         var result = ToDTO(entity);
         return Ok(result);
+    }
+
+    [HttpGet("{id}/blocks")]
+    public async Task<IActionResult> GetMemberCarnivalBlocks(int id)
+    {
+        var blockMembers = await _service.GetMemberBlocksAsync(id);
+        if (blockMembers == null || !blockMembers.Any())
+            return NotFound();
+
+        var response = blockMembers.Select(CarnivalBlockMemberMapper.ToCarnivalBlockMemberResponseDTO).ToList();
+        return Ok(response);
+    }
+
+    [HttpGet("{id}/meetings")]
+    public async Task<IActionResult> GetMemberMeetings(int id)
+    {
+        var meetings = await _service.GetMemberMeetingsAsync(id);
+        if (meetings == null || !meetings.Any())
+            return NotFound();
+
+        var response = meetings.Select(MeetingMapper.ToDTO).ToList();
+        return Ok(response);
     }
 
     [HttpPost]

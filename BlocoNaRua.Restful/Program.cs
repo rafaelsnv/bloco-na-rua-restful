@@ -8,7 +8,6 @@ using Swashbuckle.AspNetCore.SwaggerUI;
 
 var builder = WebApplication.CreateBuilder(args);
 
-
 // Add services to the container.
 builder.Configuration.AddEnvironmentVariables();
 
@@ -35,7 +34,7 @@ builder.Services.AddApiVersioning(options =>
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddMemoryCache(); // Adiciona o serviço de cache em memória
+builder.Services.AddMemoryCache();
 builder.Services.AddEntityFramework(configuration, builder.Environment);
 builder.Services.AddRepositories();
 builder.Services.AddServices();
@@ -45,9 +44,9 @@ var app = builder.Build();
 app.UseForwardedHeaders();
 
 // Configure the HTTP request pipeline.
-app.UseSwagger();
 if (app.Environment.IsDevelopment())
 {
+    app.UseSwagger();
     app.MapGet("/", () => Results.Redirect("/swagger/index.html"))
        .ExcludeFromDescription();
 

@@ -1,5 +1,8 @@
 ﻿using BlocoNaRua.Domain.Entities;
+using BlocoNaRua.Domain.Enums;
 using BlocoNaRua.Restful.Controllers;
+using BlocoNaRua.Restful.Models.CarnivalBlockMember;
+using BlocoNaRua.Restful.Models.Meeting;
 using BlocoNaRua.Restful.Models.Member;
 using BlocoNaRua.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -85,6 +88,68 @@ public class MembersControllerTests
         Assert.Equal("GetById", created.ActionName);
         var dto = Assert.IsType<MemberDTO>(created.Value);
         Assert.Equal(1, dto.Id);
+    }
+
+    [Fact]
+    public async Task GetMemberCarnivalBlocks_ReturnsOkWithBlocks()
+    {
+        // Arrange
+        var memberId = 1;
+        var blockMembers = new List<CarnivalBlockMembersEntity>
+        {
+            new(1, 10, memberId, RolesEnum.Member)
+            {
+                CarnivalBlock = new CarnivalBlockEntity(10, 1, "Bloco Teste", "", "", "")
+            }
+        };
+        _serviceMock.Setup(s => s.GetMemberBlocksAsync(memberId)).ReturnsAsync(blockMembers);
+        var controller = CreateController();
+
+        // Act
+        var result = await controller.GetMemberCarnivalBlocks(memberId);
+
+        // Assert
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        var dtoList = Assert.IsAssignableFrom<IList<CarnivalBlockMemberResponseDTO>>(okResult.Value);
+        Assert.Single(dtoList);
+        Assert.Equal(10, dtoList[0].CarnivalBlockId);
+    }
+
+    [Fact]
+    public async Task GetMemberCarnivalBlocks_ReturnsNotFound_WhenNoBlocks()
+    {
+        // Arrange
+        var memberId = 1;
+        _serviceMock.Setup(s => s.GetMemberBlocksAsync(memberId)).ReturnsAsync(new List<CarnivalBlockMembersEntity>());
+        var controller = CreateController();
+
+        // Act
+        var result = await controller.GetMemberCarnivalBlocks(memberId);
+
+        // Assert
+        Assert.IsType<NotFoundResult>(result);
+    }
+
+    [Fact]
+    public async Task GetMemberMeetings_ReturnsOkWithMeetings()
+    {
+        // Arrange
+        var memberId = 1;
+        var meetings = new List<MeetingEntity>
+        {
+            new(1, "Meeting 1", "", "", "", DateTime.Now, 10)
+        };
+        _serviceMock.Setup(s => s.GetMemberMeetingsAsync(memberId)).ReturnsAsync(meetings);
+        var controller = CreateController();
+
+        // Act
+        var result = await controller.GetMemberMeetings(memberId);
+
+        // Assert
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        var dtoList = Assert.IsAssignableFrom<IList<MeetingDTO>>(okResult.Value);
+        Assert.Single(dtoList);
+        Assert.Equal("Meeting 1", dtoList[0].Name);
     }
 
     [Fact]

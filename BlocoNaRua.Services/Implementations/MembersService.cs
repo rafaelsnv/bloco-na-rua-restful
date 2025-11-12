@@ -5,9 +5,15 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace BlocoNaRua.Services.Implementations;
 
-public class MembersService(IMembersRepository repository, IMemoryCache cache) : IMembersService
+public class MembersService(
+    IMembersRepository repository,
+    ICarnivalBlockMembersRepository carnivalBlockMembersRepository,
+    IMeetingsRepository meetingsRepository,
+    IMemoryCache cache) : IMembersService
 {
     private readonly IMembersRepository _repository = repository;
+    private readonly ICarnivalBlockMembersRepository _carnivalBlockMembersRepository = carnivalBlockMembersRepository;
+    private readonly IMeetingsRepository _meetingsRepository = meetingsRepository;
     private readonly IMemoryCache _cache = cache;
 
     public async Task<IList<MemberEntity>> GetAllAsync()
@@ -36,6 +42,22 @@ public class MembersService(IMembersRepository repository, IMemoryCache cache) :
         return member;
     }
 
+    public async Task<IList<CarnivalBlockMembersEntity>> GetMemberBlocksAsync(int memberId)
+    {
+        return await _carnivalBlockMembersRepository.GetByMemberIdAsync(memberId);
+    }
+
+    public async Task<IList<MeetingEntity>> GetMemberMeetingsAsync(int memberId)
+    {
+        var memberBlocks = await _carnivalBlockMembersRepository.GetByMemberIdAsync(memberId);
+        if (memberBlocks == null || !memberBlocks.Any())
+            return new List<MeetingEntity>();
+
+        var blockIds = memberBlocks.Select(mb => mb.CarnivalBlockId).ToList();
+
+        return await _meetingsRepository.GetByBlockIdsAsync(blockIds);
+    }
+
     public async Task<MemberEntity> CreateAsync(MemberEntity entity)
     {
         var newMember = new MemberEntity(
@@ -51,7 +73,7 @@ public class MembersService(IMembersRepository repository, IMemoryCache cache) :
         {
             _cache.Remove($"Member_{createdMember.Uuid}"); // Invalida o cache após a criação
         }
-        return createdMember;
+        return createdMember!;
     }
 
     public async Task<MemberEntity?> UpdateAsync(int id, int loggedMember, MemberEntity model)
@@ -90,3 +112,4 @@ public class MembersService(IMembersRepository repository, IMemoryCache cache) :
         return deleted;
     }
 }
+

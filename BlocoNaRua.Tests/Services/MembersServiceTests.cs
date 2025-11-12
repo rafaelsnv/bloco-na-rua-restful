@@ -8,14 +8,18 @@ namespace BlocoNaRua.Tests.Services;
 public class MembersServiceTests
 {
     private readonly Mock<IMembersRepository> _repositoryMock;
+    private readonly Mock<ICarnivalBlockMembersRepository> _carnivalBlockMembersRepositoryMock;
+    private readonly Mock<IMeetingsRepository> _meetingsRepositoryMock;
     private readonly Mock<IMemoryCache> _cacheMock;
     private readonly MembersService _service;
 
     public MembersServiceTests()
     {
         _repositoryMock = new Mock<IMembersRepository>();
+        _carnivalBlockMembersRepositoryMock = new Mock<ICarnivalBlockMembersRepository>();
+        _meetingsRepositoryMock = new Mock<IMeetingsRepository>();
         _cacheMock = new Mock<IMemoryCache>();
-        _service = new MembersService(_repositoryMock.Object, _cacheMock.Object);
+        _service = new MembersService(_repositoryMock.Object, _carnivalBlockMembersRepositoryMock.Object, _meetingsRepositoryMock.Object, _cacheMock.Object);
     }
 
     [Fact]
