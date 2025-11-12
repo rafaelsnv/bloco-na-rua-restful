@@ -1,6 +1,4 @@
 ﻿using BlocoNaRua.Domain.Entities;
-using BlocoNaRua.Restful.Mappers;
-using BlocoNaRua.Restful.Models.CarnivalBlock;
 using BlocoNaRua.Restful.Models.CarnivalBlockMember;
 using BlocoNaRua.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;

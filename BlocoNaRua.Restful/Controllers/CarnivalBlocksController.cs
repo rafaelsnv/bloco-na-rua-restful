@@ -1,4 +1,5 @@
 ﻿using BlocoNaRua.Domain.Entities;
+using BlocoNaRua.Restful.Mappers;
 using BlocoNaRua.Restful.Models.CarnivalBlock;
 using BlocoNaRua.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -15,7 +16,7 @@ public class CarnivalBlocksController(ICarnivalBlockService service) : Controlle
     public async Task<IActionResult> GetAll()
     {
         var list = await _service.GetAllAsync();
-        return Ok(list.Select(ToDTO).ToList());
+        return Ok(list.Select(CarnivalBlockMapper.ToDTO).ToList());
     }
 
     [HttpGet("{id}")]
@@ -24,7 +25,7 @@ public class CarnivalBlocksController(ICarnivalBlockService service) : Controlle
         var entity = await _service.GetByIdAsync(id);
         if (entity is null)
             return NotFound();
-        var result = ToDTO(entity);
+        var result = CarnivalBlockMapper.ToDTO(entity);
         return Ok(result);
     }
 
@@ -41,7 +42,7 @@ public class CarnivalBlocksController(ICarnivalBlockService service) : Controlle
             carnivalBlockImage: model.CarnivalBlockImage
         );
         var created = await _service.CreateAsync(entity);
-        var result = ToDTO(created);
+        var result = CarnivalBlockMapper.ToDTO(created);
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 
@@ -63,7 +64,7 @@ public class CarnivalBlocksController(ICarnivalBlockService service) : Controlle
             if (updated is null)
                 return NotFound();
 
-            var result = ToDTO(updated);
+            var result = CarnivalBlockMapper.ToDTO(updated);
             return Ok(result);
         }
         catch (KeyNotFoundException ex)
@@ -94,17 +95,4 @@ public class CarnivalBlocksController(ICarnivalBlockService service) : Controlle
         }
     }
 
-    private static CarnivalBlockDTO ToDTO(CarnivalBlockEntity entity)
-    {
-        return new CarnivalBlockDTO(
-            entity.Id,
-            entity.OwnerId,
-            entity.Name,
-            entity.InviteCode,
-            entity.ManagersInviteCode,
-            entity.CarnivalBlockImage,
-            entity.CreatedAt,
-            entity.UpdatedAt
-        );
-    }
 }
