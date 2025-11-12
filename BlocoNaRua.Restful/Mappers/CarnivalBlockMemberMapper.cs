@@ -5,9 +5,9 @@ namespace BlocoNaRua.Restful.Mappers;
 
 public static class CarnivalBlockMemberMapper
 {
-    public static CarnivalBlockMemberDTO ToDTO(CarnivalBlockMembersEntity entity)
+    public static CarnivalBlockMemberResponse ToDTO(CarnivalBlockMembersEntity entity)
     {
-        return new CarnivalBlockMemberDTO(
+        return new CarnivalBlockMemberResponse(
             entity.Id,
             entity.CarnivalBlockId,
             entity.MemberId,

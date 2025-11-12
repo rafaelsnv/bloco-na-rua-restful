@@ -5,9 +5,9 @@ namespace BlocoNaRua.Restful.Mappers;
 
 public static class MeetingMapper
 {
-    public static MeetingDTO ToDTO(MeetingEntity entity)
+    public static MeetingResponse ToDTO(MeetingEntity entity)
     {
-        return new MeetingDTO(
+        return new MeetingResponse(
             entity.Id,
             entity.Name,
             entity.Description,

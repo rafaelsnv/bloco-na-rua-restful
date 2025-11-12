@@ -5,9 +5,9 @@ namespace BlocoNaRua.Restful.Mappers;
 
 public static class MemberMapper
 {
-    public static MemberDTO ToDTO(MemberEntity entity)
+    public static MemberResponse ToDTO(MemberEntity entity)
     {
-        return new MemberDTO(
+        return new MemberResponse(
             entity.Id,
             entity.Name,
             entity.Email,
