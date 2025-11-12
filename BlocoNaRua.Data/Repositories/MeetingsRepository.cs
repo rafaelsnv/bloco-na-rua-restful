@@ -14,4 +14,11 @@ public class MeetingsRepository(AppDbContext appContext) : RepositoryBase<Meetin
             .Where(m => m.CarnivalBlockId == blockId)
             .ToListAsync();
     }
+
+    public async Task<IList<MeetingEntity>> GetByBlockIdsAsync(List<int> blockIds)
+    {
+        return await DbSet
+            .Where(m => blockIds.Contains(m.CarnivalBlockId))
+            .ToListAsync();
+    }
 }

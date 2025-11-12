@@ -1,4 +1,5 @@
 ﻿using BlocoNaRua.Domain.Entities;
+using BlocoNaRua.Restful.Mappers;
 using BlocoNaRua.Restful.Models.Meeting;
 using BlocoNaRua.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -15,7 +16,7 @@ public class MeetingsController(IMeetingService service) : ControllerBase
     public async Task<IActionResult> GetAll()
     {
         var list = await _service.GetAllAsync();
-        return Ok(list.Select(ToDTO).ToList());
+        return Ok(list.Select(MeetingMapper.ToDTO).ToList());
     }
 
     [HttpGet("block/{blockId}")]
@@ -24,7 +25,7 @@ public class MeetingsController(IMeetingService service) : ControllerBase
         var list = await _service.GetAllByBlockIdAsync(blockId);
         if (list == null || !list.Any())
             return NotFound();
-        return Ok(list.Select(ToDTO).ToList());
+        return Ok(list.Select(MeetingMapper.ToDTO).ToList());
     }
 
     [HttpPost]
@@ -43,7 +44,7 @@ public class MeetingsController(IMeetingService service) : ControllerBase
         try
         {
             var created = await _service.CreateAsync(entity, loggedMember);
-            var result = ToDTO(created);
+            var result = MeetingMapper.ToDTO(created);
             return CreatedAtAction(nameof(GetAllByBlockId), new { blockId = result.CarnivalBlockId }, result);
         }
         catch (KeyNotFoundException ex)
@@ -75,7 +76,7 @@ public class MeetingsController(IMeetingService service) : ControllerBase
             if (updated is null)
                 return NotFound();
 
-            var result = ToDTO(updated);
+            var result = MeetingMapper.ToDTO(updated);
             return Ok(result);
         }
         catch (KeyNotFoundException ex)
@@ -106,18 +107,4 @@ public class MeetingsController(IMeetingService service) : ControllerBase
         }
     }
 
-    private static MeetingDTO ToDTO(MeetingEntity entity)
-    {
-        return new MeetingDTO(
-            entity.Id,
-            entity.Name,
-            entity.Description,
-            entity.Location,
-            entity.MeetingCode,
-            entity.MeetingDateTime,
-            entity.CarnivalBlockId,
-            entity.CreatedAt,
-            entity.UpdatedAt
-        );
-    }
 }
