@@ -32,7 +32,7 @@ public class CarnivalBlocksControllerTests
         var result = await controller.GetAll();
 
         var okResult = Assert.IsType<OkObjectResult>(result);
-        Assert.IsAssignableFrom<IList<CarnivalBlockDTO>>(okResult.Value);
+        Assert.IsAssignableFrom<IList<CarnivalBlockResponse>>(okResult.Value);
     }
 
     [Fact]
@@ -52,7 +52,7 @@ public class CarnivalBlocksControllerTests
         var result = await controller.GetById(1);
 
         var okResult = Assert.IsType<OkObjectResult>(result);
-        Assert.IsType<CarnivalBlockDTO>(okResult.Value);
+        Assert.IsType<CarnivalBlockResponse>(okResult.Value);
     }
 
     [Fact]
@@ -89,7 +89,7 @@ public class CarnivalBlocksControllerTests
 
         var created = Assert.IsType<CreatedAtActionResult>(result);
         Assert.Equal("GetById", created.ActionName);
-        Assert.IsType<CarnivalBlockDTO>(created.Value);
+        Assert.IsType<CarnivalBlockResponse>(created.Value);
     }
 
     [Fact]
@@ -146,7 +146,7 @@ public class CarnivalBlocksControllerTests
         var result = await controller.Update(1, updateDto, 2);
 
         var okResult = Assert.IsType<OkObjectResult>(result);
-        Assert.IsType<CarnivalBlockDTO>(okResult.Value);
+        Assert.IsType<CarnivalBlockResponse>(okResult.Value);
     }
 
     [Fact]

@@ -33,7 +33,7 @@ public class MembersControllerTests
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var dtoList = Assert.IsAssignableFrom<IList<MemberDTO>>(okResult.Value);
+        var dtoList = Assert.IsAssignableFrom<IList<MemberResponse>>(okResult.Value);
         Assert.Equal(2, dtoList.Count);
     }
 
@@ -51,7 +51,7 @@ public class MembersControllerTests
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var dto = Assert.IsType<MemberDTO>(okResult.Value);
+        var dto = Assert.IsType<MemberResponse>(okResult.Value);
         Assert.Equal(1, dto.Id);
     }
 
@@ -86,7 +86,7 @@ public class MembersControllerTests
         // Assert
         var created = Assert.IsType<CreatedAtActionResult>(result);
         Assert.Equal("GetById", created.ActionName);
-        var dto = Assert.IsType<MemberDTO>(created.Value);
+        var dto = Assert.IsType<MemberResponse>(created.Value);
         Assert.Equal(1, dto.Id);
     }
 
@@ -110,7 +110,7 @@ public class MembersControllerTests
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var dtoList = Assert.IsAssignableFrom<IList<CarnivalBlockDTO>>(okResult.Value);
+        var dtoList = Assert.IsAssignableFrom<IList<CarnivalBlockResponse>>(okResult.Value);
         Assert.Single(dtoList);
         Assert.Equal(10, dtoList[0].Id);
     }
@@ -147,7 +147,7 @@ public class MembersControllerTests
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var dtoList = Assert.IsAssignableFrom<IList<MeetingDTO>>(okResult.Value);
+        var dtoList = Assert.IsAssignableFrom<IList<MeetingResponse>>(okResult.Value);
         Assert.Single(dtoList);
         Assert.Equal("Meeting 1", dtoList[0].Name);
     }
@@ -198,7 +198,7 @@ public class MembersControllerTests
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var dto = Assert.IsType<MemberDTO>(okResult.Value);
+        var dto = Assert.IsType<MemberResponse>(okResult.Value);
         Assert.Equal("Updated", dto.Name);
     }
 

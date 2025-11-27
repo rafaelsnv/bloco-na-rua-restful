@@ -19,6 +19,16 @@ public class MeetingsController(IMeetingService service) : ControllerBase
         return Ok(list.Select(MeetingMapper.ToDTO).ToList());
     }
 
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetById(int id)
+    {
+        var entity = await _service.GetByIdAsync(id);
+        if (entity is null)
+            return NotFound();
+        var result = MeetingMapper.ToDTO(entity);
+        return Ok(result);
+    }
+
     [HttpGet("block/{blockId}")]
     public async Task<IActionResult> GetAllByBlockId(int blockId)
     {

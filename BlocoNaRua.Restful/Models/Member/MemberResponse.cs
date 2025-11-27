@@ -1,6 +1,6 @@
 ﻿namespace BlocoNaRua.Restful.Models.Member;
 
-public record MemberDTO(
+public record MemberResponse(
     int Id,
     string Name,
     string Email,

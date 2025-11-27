@@ -33,7 +33,7 @@ public class CarnivalBlockMembersControllerTests
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        Assert.IsAssignableFrom<List<CarnivalBlockMemberDTO>>(okResult.Value);
+        Assert.IsAssignableFrom<List<CarnivalBlockMemberResponse>>(okResult.Value);
     }
 
     [Fact]
@@ -54,7 +54,7 @@ public class CarnivalBlockMembersControllerTests
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var dtoList = Assert.IsAssignableFrom<List<CarnivalBlockMemberDTO>>(okResult.Value);
+        var dtoList = Assert.IsAssignableFrom<List<CarnivalBlockMemberResponse>>(okResult.Value);
         Assert.Equal(2, dtoList.Count);
     }
 
@@ -76,7 +76,7 @@ public class CarnivalBlockMembersControllerTests
         // Assert
         var created = Assert.IsType<CreatedAtActionResult>(result);
         Assert.Equal("GetBlocksMembersByBlockId", created.ActionName);
-        Assert.IsType<CarnivalBlockMemberDTO>(created.Value);
+        Assert.IsType<CarnivalBlockMemberResponse>(created.Value);
     }
 
     [Fact]
@@ -181,7 +181,7 @@ public class CarnivalBlockMembersControllerTests
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        Assert.IsType<CarnivalBlockMemberDTO>(okResult.Value);
+        Assert.IsType<CarnivalBlockMemberResponse>(okResult.Value);
     }
 
     [Fact]

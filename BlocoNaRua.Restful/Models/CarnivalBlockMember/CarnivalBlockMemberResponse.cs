@@ -2,8 +2,7 @@
 
 namespace BlocoNaRua.Restful.Models.CarnivalBlockMember;
 
-public record CarnivalBlockMemberDTO
-(
+public record CarnivalBlockMemberResponse(
     int Id,
     int CarnivalBlockId,
     int MemberId,

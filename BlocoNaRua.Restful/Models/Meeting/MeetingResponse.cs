@@ -1,6 +1,6 @@
 ﻿namespace BlocoNaRua.Restful.Models.Meeting;
 
-public record MeetingDTO(
+public record MeetingResponse(
     int Id,
     string Name,
     string Description,

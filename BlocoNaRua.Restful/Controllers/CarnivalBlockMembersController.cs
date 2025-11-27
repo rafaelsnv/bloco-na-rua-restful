@@ -1,4 +1,5 @@
 ﻿using BlocoNaRua.Domain.Entities;
+using BlocoNaRua.Restful.Mappers;
 using BlocoNaRua.Restful.Models.CarnivalBlockMember;
 using BlocoNaRua.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -20,7 +21,7 @@ public class CarnivalBlockMembersController
     public async Task<IActionResult> GetAllBlocksMembers()
     {
         var blocksMembersList = await _carnivalBlockMembersService.GetAllAsync();
-        var response = blocksMembersList.Select(ToDTO).ToList();
+        var response = blocksMembersList.Select(CarnivalBlockMemberMapper.ToDTO).ToList();
         return Ok(response);
     }
 
@@ -30,7 +31,7 @@ public class CarnivalBlockMembersController
         var blockMembers = await _carnivalBlockMembersService.GetByBlockIdAsync(blockId);
         if (blockMembers == null || !blockMembers.Any())
             return NotFound();
-        var response = blockMembers.Select(ToDTO).ToList();
+        var response = blockMembers.Select(CarnivalBlockMemberMapper.ToDTO).ToList();
         return Ok(response);
     }
 
@@ -54,7 +55,7 @@ public class CarnivalBlockMembersController
             (
                 nameof(GetBlocksMembersByBlockId),
                 new { blockId = entity.CarnivalBlockId },
-                ToDTO(entity)
+                CarnivalBlockMemberMapper.ToDTO(entity)
             );
         }
         catch (KeyNotFoundException ex)
@@ -79,7 +80,7 @@ public class CarnivalBlockMembersController
             if (updated == null)
                 return NotFound();
 
-            return Ok(ToDTO(updated));
+            return Ok(CarnivalBlockMemberMapper.ToDTO(updated));
         }
         catch (KeyNotFoundException ex)
         {
@@ -126,18 +127,6 @@ public class CarnivalBlockMembersController
         {
             return BadRequest(ex.Message);
         }
-    }
-
-    private static CarnivalBlockMemberDTO ToDTO(CarnivalBlockMembersEntity entity)
-    {
-        return new CarnivalBlockMemberDTO(
-            entity.Id,
-            entity.CarnivalBlockId,
-            entity.MemberId,
-            entity.Role,
-            entity.CreatedAt.GetValueOrDefault(),
-            entity.UpdatedAt.GetValueOrDefault()
-        );
     }
 
 }
