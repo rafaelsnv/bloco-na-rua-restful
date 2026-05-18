@@ -3,7 +3,7 @@ namespace BlocoNaRua.Services.Interfaces;
 
 public interface IMembersService
 {
-    Task<IList<MemberEntity>> GetAllAsync();
+    Task<IList<MemberEntity>> GetAllAsync(int? page = null, int? pageSize = null);
     Task<MemberEntity?> GetByIdAsync(int id);
     Task<MemberEntity?> GetByUuidAsync(Guid uuid);
     Task<IList<CarnivalBlockMembersEntity>> GetMemberBlocksAsync(int memberId);

@@ -4,7 +4,7 @@ namespace BlocoNaRua.Services.Interfaces;
 
 public interface IMeetingService
 {
-    Task<IList<MeetingEntity>> GetAllAsync();
+    Task<IList<MeetingEntity>> GetAllAsync(int? page = null, int? pageSize = null);
     Task<IList<MeetingEntity>> GetAllByBlockIdAsync(int blockId);
     Task<MeetingEntity?> GetByIdAsync(int id);
     Task<MeetingEntity> CreateAsync(MeetingEntity model, int loggedMember);

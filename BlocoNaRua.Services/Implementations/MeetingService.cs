@@ -2,26 +2,53 @@
 using BlocoNaRua.Domain.Entities;
 using BlocoNaRua.Domain.Enums;
 using BlocoNaRua.Services.Interfaces;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace BlocoNaRua.Services.Implementations;
 
 public class MeetingService
 (
     IMeetingsRepository repository,
-    IAuthorizationService authorizationService
+    IAuthorizationService authorizationService,
+    IMemoryCache cache
 ) : IMeetingService
 {
     private readonly IMeetingsRepository _repository = repository;
     private readonly IAuthorizationService _authorizationService = authorizationService;
+    private readonly IMemoryCache _cache = cache;
 
-    public async Task<IList<MeetingEntity>> GetAllAsync()
+    public async Task<IList<MeetingEntity>> GetAllAsync(int? page = null, int? pageSize = null)
     {
-        return await _repository.GetAllAsync();
+        const string cacheKey = "Meetings_All";
+        if (!_cache.TryGetValue(cacheKey, out IList<MeetingEntity>? meetings))
+        {
+            meetings = await _repository.GetAllAsync();
+            _cache.Set(cacheKey, meetings, TimeSpan.FromMinutes(5));
+        }
+
+        if (page.HasValue && pageSize.HasValue)
+        {
+            var skip = (page.Value - 1) * pageSize.Value;
+            return meetings!.Skip(skip).Take(pageSize.Value).ToList();
+        }
+
+        return meetings!;
     }
 
     public async Task<MeetingEntity?> GetByIdAsync(int id)
     {
-        return await _repository.GetByIdAsync(id);
+        var cacheKey = $"Meeting_{id}";
+        if (_cache.TryGetValue(cacheKey, out MeetingEntity? meeting))
+        {
+            return meeting;
+        }
+
+        meeting = await _repository.GetByIdAsync(id);
+        if (meeting != null)
+        {
+            _cache.Set(cacheKey, meeting, TimeSpan.FromMinutes(5));
+        }
+        return meeting;
     }
 
     public async Task<IList<MeetingEntity>> GetAllByBlockIdAsync(int blockId)
@@ -48,7 +75,9 @@ public class MeetingService
             model.MeetingDateTime,
             model.CarnivalBlockId
         );
-        return await _repository.AddAsync(entity);
+        var created = await _repository.AddAsync(entity);
+        _cache.Remove("Meetings_All");
+        return created;
     }
 
     public async Task<MeetingEntity?> UpdateAsync(int id, MeetingEntity model, int loggedMember)
@@ -69,6 +98,8 @@ public class MeetingService
         entity.MeetingDateTime = model.MeetingDateTime;
 
         await _repository.UpdateAsync(entity);
+        _cache.Remove($"Meeting_{id}");
+        _cache.Remove("Meetings_All");
         return entity;
     }
 
@@ -84,15 +115,20 @@ public class MeetingService
             throw new UnauthorizedAccessException("Member is not authorized to delete this meeting.");
         }
 
-        return await _repository.DeleteAsync(entity);
+        var deleted = await _repository.DeleteAsync(entity);
+        if (deleted)
+        {
+            _cache.Remove($"Meeting_{id}");
+            _cache.Remove("Meetings_All");
+        }
+        return deleted;
     }
 
 
     private static string GenerateMeetingCode()
     {
         const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-        var random = new Random();
         return new string(Enumerable.Repeat(chars, 6)
-            .Select(s => s[random.Next(s.Length)]).ToArray());
+            .Select(s => s[Random.Shared.Next(s.Length)]).ToArray());
     }
 }
