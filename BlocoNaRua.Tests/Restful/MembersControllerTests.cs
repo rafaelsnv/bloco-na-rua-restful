@@ -24,7 +24,7 @@ public class MembersControllerTests
             new(1, "Member 1", "member1@test.com", "111", "img1.jpg", new Guid()),
             new(2, "Member 2", "member2@test.com", "222", "img2.jpg", new Guid())
         };
-        _serviceMock.Setup(s => s.GetAllAsync()).ReturnsAsync(entities);
+        _serviceMock.Setup(s => s.GetAllAsync(It.IsAny<int?>(), It.IsAny<int?>())).ReturnsAsync(entities);
 
         var controller = CreateController();
 

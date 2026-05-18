@@ -4,16 +4,14 @@ using BlocoNaRua.Restful.Controllers;
 using BlocoNaRua.Restful.Models.CarnivalBlockMember;
 using BlocoNaRua.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 
 namespace BlocoNaRua.Tests.Restful;
 
 public class CarnivalBlockMembersControllerTests
 {
-    private readonly Mock<ILogger<CarnivalBlockMembersController>> _loggerMock = new();
     private readonly Mock<ICarnivalBlockMembersService> _serviceMock = new();
 
-    private CarnivalBlockMembersController CreateController() => new(_loggerMock.Object, _serviceMock.Object);
+    private CarnivalBlockMembersController CreateController() => new(_serviceMock.Object);
 
     [Fact]
     public async Task GetAllBlocksMembers_ReturnsOkWithList()

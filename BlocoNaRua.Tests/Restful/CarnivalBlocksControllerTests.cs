@@ -26,7 +26,7 @@ public class CarnivalBlocksControllerTests
                 carnivalBlockImage: "block_image.jpg"
             )
         };
-        _serviceMock.Setup(s => s.GetAllAsync()).ReturnsAsync(entities);
+        _serviceMock.Setup(s => s.GetAllAsync(It.IsAny<int?>(), It.IsAny<int?>())).ReturnsAsync(entities);
 
         var controller = CreateController();
         var result = await controller.GetAll();

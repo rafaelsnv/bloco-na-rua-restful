@@ -28,7 +28,7 @@ public class MeetingPresencesControllerTests
                 IsPresent = true
             }
         };
-        _serviceMock.Setup(s => s.GetAllAsync()).ReturnsAsync(entities);
+        _serviceMock.Setup(s => s.GetAllAsync(It.IsAny<int?>(), It.IsAny<int?>())).ReturnsAsync(entities);
 
         // Act
         var controller = CreateController();
