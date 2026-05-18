@@ -8,18 +8,23 @@ namespace BlocoNaRua.Restful.Controllers;
 
 [ApiController]
 [Route("api/v{version:apiVersion}/[controller]")]
+[ProducesResponseType(typeof(List<MeetingPresenceResponse>), StatusCodes.Status200OK)]
+[ProducesResponseType(StatusCodes.Status404NotFound)]
 public class MeetingPresencesController(IMeetingPresenceService service) : ControllerBase
 {
     private readonly IMeetingPresenceService _service = service;
 
     [HttpGet]
-    public async Task<IActionResult> GetAll()
+    [ProducesResponseType(typeof(List<MeetingPresenceResponse>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetAll([FromQuery] int? page = null, [FromQuery] int? pageSize = null)
     {
-        var list = await _service.GetAllAsync();
+        var list = await _service.GetAllAsync(page, pageSize);
         return Ok(list.Select(MeetingPresenceMapper.ToDTO).ToList());
     }
 
     [HttpGet("{id}")]
+    [ProducesResponseType(typeof(MeetingPresenceResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetById(int id)
     {
         var entity = await _service.GetByIdAsync(id);
@@ -30,6 +35,9 @@ public class MeetingPresencesController(IMeetingPresenceService service) : Contr
     }
 
     [HttpPost]
+    [ProducesResponseType(typeof(MeetingPresenceResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Create([FromBody] MeetingPresenceCreate model, [FromHeader(Name = "X-Logged-Member")] int loggedMember)
     {
         var entity = new MeetingPresenceEntity(0)
@@ -56,6 +64,9 @@ public class MeetingPresencesController(IMeetingPresenceService service) : Contr
     }
 
     [HttpPut("{id}")]
+    [ProducesResponseType(typeof(MeetingPresenceResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Update(int id, [FromBody] MeetingPresenceUpdate model, [FromHeader(Name = "X-Logged-Member")] int loggedMember)
     {
         var entity = new MeetingPresenceEntity(0)
@@ -81,6 +92,9 @@ public class MeetingPresencesController(IMeetingPresenceService service) : Contr
     }
 
     [HttpDelete("{id}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Delete(int id, [FromHeader(Name = "X-Logged-Member")] int loggedMember)
     {
         try

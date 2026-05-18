@@ -8,18 +8,23 @@ namespace BlocoNaRua.Restful.Controllers;
 
 [ApiController]
 [Route("api/v{version:apiVersion}/[controller]")]
+[ProducesResponseType(typeof(List<MeetingResponse>), StatusCodes.Status200OK)]
+[ProducesResponseType(StatusCodes.Status404NotFound)]
 public class MeetingsController(IMeetingService service) : ControllerBase
 {
     private readonly IMeetingService _service = service;
 
     [HttpGet]
-    public async Task<IActionResult> GetAll()
+    [ProducesResponseType(typeof(List<MeetingResponse>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetAll([FromQuery] int? page = null, [FromQuery] int? pageSize = null)
     {
-        var list = await _service.GetAllAsync();
+        var list = await _service.GetAllAsync(page, pageSize);
         return Ok(list.Select(MeetingMapper.ToDTO).ToList());
     }
 
     [HttpGet("{id}")]
+    [ProducesResponseType(typeof(MeetingResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetById(int id)
     {
         var entity = await _service.GetByIdAsync(id);
@@ -30,6 +35,8 @@ public class MeetingsController(IMeetingService service) : ControllerBase
     }
 
     [HttpGet("block/{blockId}")]
+    [ProducesResponseType(typeof(List<MeetingResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetAllByBlockId(int blockId)
     {
         var list = await _service.GetAllByBlockIdAsync(blockId);
@@ -39,6 +46,9 @@ public class MeetingsController(IMeetingService service) : ControllerBase
     }
 
     [HttpPost]
+    [ProducesResponseType(typeof(MeetingResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Create([FromBody] MeetingCreate model, [FromHeader(Name = "X-Logged-Member")] int loggedMember)
     {
         var entity = new MeetingEntity
@@ -68,6 +78,9 @@ public class MeetingsController(IMeetingService service) : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [ProducesResponseType(typeof(MeetingResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Update(int id, [FromBody] MeetingUpdate model, [FromHeader(Name = "X-Logged-Member")] int loggedMember)
     {
         var entity = new MeetingEntity
@@ -100,6 +113,9 @@ public class MeetingsController(IMeetingService service) : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Delete(int id, [FromHeader(Name = "X-Logged-Member")] int loggedMember)
     {
         try
