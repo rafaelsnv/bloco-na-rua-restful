@@ -5,18 +5,22 @@ using BlocoNaRua.Restful.Models.CarnivalBlock;
 using BlocoNaRua.Restful.Models.Meeting;
 using BlocoNaRua.Restful.Models.Member;
 using BlocoNaRua.Services.Interfaces;
+using BlocoNaRua.Restful.Extensions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BlocoNaRua.Restful.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/v{version:apiVersion}/[controller]")]
 [ApiVersion("1.0")]
 [ProducesResponseType(typeof(List<MemberResponse>), StatusCodes.Status200OK)]
 [ProducesResponseType(StatusCodes.Status404NotFound)]
-public class MembersController(IMembersService service) : ControllerBase
+public class MembersController(IMembersService service, IMemberIdentityService memberIdentityService) : ControllerBase
 {
     private readonly IMembersService _service = service;
+    private readonly IMemberIdentityService _memberIdentityService = memberIdentityService;
 
     [HttpGet]
     [ProducesResponseType(typeof(List<MemberResponse>), StatusCodes.Status200OK)]
@@ -98,10 +102,11 @@ public class MembersController(IMembersService service) : ControllerBase
     [ProducesResponseType(typeof(MemberResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> Update(int id, [FromBody] MemberUpdate model, [FromHeader(Name = "X-Logged-Member")] int loggedMember)
+    public async Task<IActionResult> Update(int id, [FromBody] MemberUpdate model)
     {
         try
         {
+            var memberId = await _memberIdentityService.GetMemberIdAsync();
             var entity = new MemberEntity(
                 id: id,
                 name: model.Name,
@@ -110,7 +115,7 @@ public class MembersController(IMembersService service) : ControllerBase
                 profileImage: model.ProfileImage,
                 uuid: new Guid()
             );
-            var updated = await _service.UpdateAsync(id, loggedMember, entity);
+            var updated = await _service.UpdateAsync(id, memberId, entity);
             if (updated is null)
                 return NotFound();
             var result = MemberMapper.ToDTO(updated);
@@ -126,11 +131,12 @@ public class MembersController(IMembersService service) : ControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> Delete(int id, [FromHeader(Name = "X-Logged-Member")] int loggedMember)
+    public async Task<IActionResult> Delete(int id)
     {
         try
         {
-            var deleted = await _service.DeleteAsync(id, loggedMember);
+            var memberId = await _memberIdentityService.GetMemberIdAsync();
+            var deleted = await _service.DeleteAsync(id, memberId);
             if (!deleted)
                 return NotFound();
             return NoContent();

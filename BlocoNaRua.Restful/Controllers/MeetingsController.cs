@@ -1,18 +1,22 @@
 ﻿using BlocoNaRua.Domain.Entities;
+using BlocoNaRua.Restful.Extensions;
 using BlocoNaRua.Restful.Mappers;
 using BlocoNaRua.Restful.Models.Meeting;
 using BlocoNaRua.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BlocoNaRua.Restful.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/v{version:apiVersion}/[controller]")]
 [ProducesResponseType(typeof(List<MeetingResponse>), StatusCodes.Status200OK)]
 [ProducesResponseType(StatusCodes.Status404NotFound)]
-public class MeetingsController(IMeetingService service) : ControllerBase
+public class MeetingsController(IMeetingService service, IMemberIdentityService memberIdentityService) : ControllerBase
 {
     private readonly IMeetingService _service = service;
+    private readonly IMemberIdentityService _memberIdentityService = memberIdentityService;
 
     [HttpGet]
     [ProducesResponseType(typeof(List<MeetingResponse>), StatusCodes.Status200OK)]
@@ -49,8 +53,9 @@ public class MeetingsController(IMeetingService service) : ControllerBase
     [ProducesResponseType(typeof(MeetingResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> Create([FromBody] MeetingCreate model, [FromHeader(Name = "X-Logged-Member")] int loggedMember)
+    public async Task<IActionResult> Create([FromBody] MeetingCreate model)
     {
+        var memberId = await _memberIdentityService.GetMemberIdAsync();
         var entity = new MeetingEntity
         (
             id: 0,
@@ -63,7 +68,7 @@ public class MeetingsController(IMeetingService service) : ControllerBase
         );
         try
         {
-            var created = await _service.CreateAsync(entity, loggedMember);
+            var created = await _service.CreateAsync(entity, memberId);
             var result = MeetingMapper.ToDTO(created);
             return CreatedAtAction(nameof(GetAllByBlockId), new { blockId = result.CarnivalBlockId }, result);
         }
@@ -81,8 +86,9 @@ public class MeetingsController(IMeetingService service) : ControllerBase
     [ProducesResponseType(typeof(MeetingResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> Update(int id, [FromBody] MeetingUpdate model, [FromHeader(Name = "X-Logged-Member")] int loggedMember)
+    public async Task<IActionResult> Update(int id, [FromBody] MeetingUpdate model)
     {
+        var memberId = await _memberIdentityService.GetMemberIdAsync();
         var entity = new MeetingEntity
         (
             id: 0,
@@ -95,7 +101,7 @@ public class MeetingsController(IMeetingService service) : ControllerBase
         );
         try
         {
-            var updated = await _service.UpdateAsync(id, entity, loggedMember);
+            var updated = await _service.UpdateAsync(id, entity, memberId);
             if (updated is null)
                 return NotFound();
 
@@ -116,11 +122,12 @@ public class MeetingsController(IMeetingService service) : ControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> Delete(int id, [FromHeader(Name = "X-Logged-Member")] int loggedMember)
+    public async Task<IActionResult> Delete(int id)
     {
+        var memberId = await _memberIdentityService.GetMemberIdAsync();
         try
         {
-            await _service.DeleteAsync(id, loggedMember);
+            await _service.DeleteAsync(id, memberId);
             return NoContent();
         }
         catch (KeyNotFoundException ex)
