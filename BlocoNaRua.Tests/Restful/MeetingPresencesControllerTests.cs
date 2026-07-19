@@ -9,8 +9,9 @@ namespace BlocoNaRua.Tests.Restful;
 public class MeetingPresencesControllerTests
 {
     private readonly Mock<IMeetingPresenceService> _serviceMock = new();
+    private readonly Mock<IMemberIdentityService> _memberIdentityServiceMock = new();
 
-    private MeetingPresencesController CreateController() => new(_serviceMock.Object);
+    private MeetingPresencesController CreateController() => new(_serviceMock.Object, _memberIdentityServiceMock.Object);
 
     [Fact]
     public async Task GetAll_ReturnsOkWithList()
@@ -28,7 +29,7 @@ public class MeetingPresencesControllerTests
                 IsPresent = true
             }
         };
-        _serviceMock.Setup(s => s.GetAllAsync()).ReturnsAsync(entities);
+        _serviceMock.Setup(s => s.GetAllAsync(It.IsAny<int?>(), It.IsAny<int?>())).ReturnsAsync(entities);
 
         // Act
         var controller = CreateController();
@@ -81,8 +82,8 @@ public class MeetingPresencesControllerTests
     public async Task Create_ReturnsCreatedAtAction()
     {
         // Arrange
+        _memberIdentityServiceMock.Setup(s => s.GetMemberIdAsync()).ReturnsAsync(1);
         var createDto = new MeetingPresenceCreate(
-            MemberId: 1,
             MeetingId: 1,
             CarnivalBlockId: 1,
             IsPresent: true
@@ -91,7 +92,7 @@ public class MeetingPresencesControllerTests
             id: 1
         )
         {
-            MemberId = createDto.MemberId,
+            MemberId = 1,
             MeetingId = createDto.MeetingId,
             CarnivalBlockId = createDto.CarnivalBlockId,
             IsPresent = createDto.IsPresent
@@ -100,7 +101,7 @@ public class MeetingPresencesControllerTests
 
         // Act
         var controller = CreateController();
-        var result = await controller.Create(createDto, 1);
+        var result = await controller.Create(createDto);
 
         // Assert
         var created = Assert.IsType<CreatedAtActionResult>(result);
@@ -112,9 +113,9 @@ public class MeetingPresencesControllerTests
     public async Task Create_ReturnsNotFound_WhenKeyNotFoundException()
     {
         // Arrange
+        _memberIdentityServiceMock.Setup(s => s.GetMemberIdAsync()).ReturnsAsync(1);
         _serviceMock.Setup(s => s.CreateAsync(It.IsAny<MeetingPresenceEntity>(), It.IsAny<int>())).ThrowsAsync(new KeyNotFoundException("Meeting does not exist."));
         var createDto = new MeetingPresenceCreate(
-            MemberId: 1,
             MeetingId: 1,
             CarnivalBlockId: 1,
             IsPresent: true
@@ -122,7 +123,7 @@ public class MeetingPresencesControllerTests
 
         // Act
         var controller = CreateController();
-        var result = await controller.Create(createDto, 1);
+        var result = await controller.Create(createDto);
 
         // Assert
         var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
@@ -133,9 +134,9 @@ public class MeetingPresencesControllerTests
     public async Task Create_ReturnsUnauthorized_WhenUnauthorizedAccessException()
     {
         // Arrange
+        _memberIdentityServiceMock.Setup(s => s.GetMemberIdAsync()).ReturnsAsync(1);
         _serviceMock.Setup(s => s.CreateAsync(It.IsAny<MeetingPresenceEntity>(), It.IsAny<int>())).ThrowsAsync(new UnauthorizedAccessException("You are not authorized to create a meeting presence for another member."));
         var createDto = new MeetingPresenceCreate(
-            MemberId: 2,
             MeetingId: 1,
             CarnivalBlockId: 1,
             IsPresent: true
@@ -143,7 +144,7 @@ public class MeetingPresencesControllerTests
 
         // Act
         var controller = CreateController();
-        var result = await controller.Create(createDto, 1);
+        var result = await controller.Create(createDto);
 
         // Assert
         var unauthorizedResult = Assert.IsType<UnauthorizedObjectResult>(result);
@@ -154,6 +155,7 @@ public class MeetingPresencesControllerTests
     public async Task Update_ReturnsOk_WhenSuccess()
     {
         // Arrange
+        _memberIdentityServiceMock.Setup(s => s.GetMemberIdAsync()).ReturnsAsync(1);
         var updatedEntity = new MeetingPresenceEntity(
             id: 1
         )
@@ -170,7 +172,7 @@ public class MeetingPresencesControllerTests
 
         // Act
         var controller = CreateController();
-        var result = await controller.Update(1, updateDto, 1);
+        var result = await controller.Update(1, updateDto);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
@@ -181,6 +183,7 @@ public class MeetingPresencesControllerTests
     public async Task Update_ReturnsNotFound_WhenKeyNotFoundException()
     {
         // Arrange
+        _memberIdentityServiceMock.Setup(s => s.GetMemberIdAsync()).ReturnsAsync(1);
         _serviceMock.Setup(s => s.UpdateAsync(It.IsAny<int>(), It.IsAny<MeetingPresenceEntity>(), It.IsAny<int>())).ThrowsAsync(new KeyNotFoundException("Meeting presence does not exist."));
         var updateDto = new MeetingPresenceUpdate(
             IsPresent: false
@@ -188,7 +191,7 @@ public class MeetingPresencesControllerTests
 
         // Act
         var controller = CreateController();
-        var result = await controller.Update(1, updateDto, 1);
+        var result = await controller.Update(1, updateDto);
 
         // Assert
         var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
@@ -199,6 +202,7 @@ public class MeetingPresencesControllerTests
     public async Task Update_ReturnsUnauthorized_WhenUnauthorizedAccessException()
     {
         // Arrange
+        _memberIdentityServiceMock.Setup(s => s.GetMemberIdAsync()).ReturnsAsync(1);
         _serviceMock.Setup(s => s.UpdateAsync(It.IsAny<int>(), It.IsAny<MeetingPresenceEntity>(), It.IsAny<int>())).ThrowsAsync(new UnauthorizedAccessException("You are not authorized to update this meeting presence."));
         var updateDto = new MeetingPresenceUpdate(
             IsPresent: false
@@ -206,7 +210,7 @@ public class MeetingPresencesControllerTests
 
         // Act
         var controller = CreateController();
-        var result = await controller.Update(1, updateDto, 1);
+        var result = await controller.Update(1, updateDto);
 
         // Assert
         var unauthorizedResult = Assert.IsType<UnauthorizedObjectResult>(result);
@@ -217,11 +221,12 @@ public class MeetingPresencesControllerTests
     public async Task Delete_ReturnsNoContent_WhenSuccess()
     {
         // Arrange
+        _memberIdentityServiceMock.Setup(s => s.GetMemberIdAsync()).ReturnsAsync(1);
         _serviceMock.Setup(s => s.DeleteAsync(It.IsAny<int>(), It.IsAny<int>())).ReturnsAsync(true);
 
         // Act
         var controller = CreateController();
-        var result = await controller.Delete(1, 1);
+        var result = await controller.Delete(1);
 
         // Assert
         Assert.IsType<NoContentResult>(result);
@@ -231,11 +236,12 @@ public class MeetingPresencesControllerTests
     public async Task Delete_ReturnsNotFound_WhenKeyNotFoundException()
     {
         // Arrange
+        _memberIdentityServiceMock.Setup(s => s.GetMemberIdAsync()).ReturnsAsync(1);
         _serviceMock.Setup(s => s.DeleteAsync(It.IsAny<int>(), It.IsAny<int>())).ThrowsAsync(new KeyNotFoundException("Meeting presence does not exist."));
 
         // Act
         var controller = CreateController();
-        var result = await controller.Delete(1, 1);
+        var result = await controller.Delete(1);
 
         // Assert
         var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
@@ -246,11 +252,12 @@ public class MeetingPresencesControllerTests
     public async Task Delete_ReturnsUnauthorized_WhenUnauthorizedAccessException()
     {
         // Arrange
+        _memberIdentityServiceMock.Setup(s => s.GetMemberIdAsync()).ReturnsAsync(1);
         _serviceMock.Setup(s => s.DeleteAsync(It.IsAny<int>(), It.IsAny<int>())).ThrowsAsync(new UnauthorizedAccessException("You are not authorized to delete this meeting presence."));
 
         // Act
         var controller = CreateController();
-        var result = await controller.Delete(1, 1);
+        var result = await controller.Delete(1);
 
         // Assert
         var unauthorizedResult = Assert.IsType<UnauthorizedObjectResult>(result);

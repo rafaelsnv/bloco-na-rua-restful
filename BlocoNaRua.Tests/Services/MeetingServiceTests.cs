@@ -6,6 +6,7 @@ using BlocoNaRua.Domain.Enums;
 using BlocoNaRua.Services.Implementations;
 using BlocoNaRua.Services.Interfaces;
 using BlocoNaRua.Tests.Helpers;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace BlocoNaRua.Tests.Services;
 
@@ -17,6 +18,7 @@ public class MeetingServiceTests : IDisposable
     private readonly ICarnivalBlocksRepository _carnivalBlocksRepository;
     private readonly ICarnivalBlockMembersRepository _carnivalBlockMembersRepository;
     private readonly Mock<IAuthorizationService> _authorizationServiceMock;
+    private readonly IMemoryCache _cache;
     private readonly MeetingService _meetingService;
 
     public MeetingServiceTests()
@@ -28,10 +30,12 @@ public class MeetingServiceTests : IDisposable
         _carnivalBlocksRepository = new CarnivalBlocksRepository(_context);
         _carnivalBlockMembersRepository = new CarnivalBlockMembersRepository(_context);
         _authorizationServiceMock = new Mock<IAuthorizationService>();
+        _cache = new MemoryCache(new MemoryCacheOptions());
         _meetingService = new MeetingService
         (
             _meetingsRepository,
-            _authorizationServiceMock.Object
+            _authorizationServiceMock.Object,
+            _cache
         );
     }
 

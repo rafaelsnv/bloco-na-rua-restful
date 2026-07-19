@@ -1,9 +1,12 @@
 ﻿using System.Text.Json;
+using System.Text;
 using Asp.Versioning;
 using BlocoNaRua.Data.Extensions;
 using BlocoNaRua.Services.Extensions;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.IdentityModel.Tokens;
 using Swashbuckle.AspNetCore.SwaggerUI;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -35,6 +38,21 @@ builder.Services.AddApiVersioning(options =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddMemoryCache();
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = configuration["Supabase:Url"],
+            ValidAudience = configuration["Supabase:Url"],
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(configuration["Supabase:JwtSecret"] ?? ""))
+        };
+    });
 builder.Services.AddEntityFramework(configuration, builder.Environment);
 builder.Services.AddRepositories();
 builder.Services.AddServices();
@@ -65,6 +83,7 @@ else
     app.UseHttpsRedirection();
 }
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.UseExceptionHandler(appBuilder =>

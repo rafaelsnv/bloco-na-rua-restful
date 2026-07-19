@@ -1,23 +1,25 @@
 ﻿using BlocoNaRua.Domain.Entities;
+using BlocoNaRua.Restful.Extensions;
 using BlocoNaRua.Restful.Mappers;
 using BlocoNaRua.Restful.Models.CarnivalBlockMember;
 using BlocoNaRua.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BlocoNaRua.Restful.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/v{version:apiVersion}/[controller]")]
-public class CarnivalBlockMembersController
-    (
-        ILogger<CarnivalBlockMembersController> logger,
-        ICarnivalBlockMembersService carnivalBlockMembersService
-    ) : ControllerBase
+[ProducesResponseType(typeof(List<CarnivalBlockMemberResponse>), StatusCodes.Status200OK)]
+[ProducesResponseType(StatusCodes.Status404NotFound)]
+public class CarnivalBlockMembersController(ICarnivalBlockMembersService carnivalBlockMembersService, IMemberIdentityService memberIdentityService) : ControllerBase
 {
-    private readonly ILogger<CarnivalBlockMembersController> _logger = logger;
     private readonly ICarnivalBlockMembersService _carnivalBlockMembersService = carnivalBlockMembersService;
+    private readonly IMemberIdentityService _memberIdentityService = memberIdentityService;
 
     [HttpGet]
+    [ProducesResponseType(typeof(List<CarnivalBlockMemberResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAllBlocksMembers()
     {
         var blocksMembersList = await _carnivalBlockMembersService.GetAllAsync();
@@ -26,6 +28,8 @@ public class CarnivalBlockMembersController
     }
 
     [HttpGet("block/{blockId}")]
+    [ProducesResponseType(typeof(List<CarnivalBlockMemberResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetBlocksMembersByBlockId(int blockId)
     {
         var blockMembers = await _carnivalBlockMembersService.GetByBlockIdAsync(blockId);
@@ -36,21 +40,27 @@ public class CarnivalBlockMembersController
     }
 
     [HttpPost]
-    public async Task<IActionResult> CreateCarnivalBlockMember([FromBody] CarnivalBlockMemberCreate blockMember, [FromHeader(Name = "X-Logged-Member")] int loggedMember)
+    [ProducesResponseType(typeof(CarnivalBlockMemberResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> CreateCarnivalBlockMember([FromBody] CarnivalBlockMemberCreate blockMember)
     {
         try
         {
             if (blockMember == null)
                 return BadRequest();
 
+            var memberId = await _memberIdentityService.GetMemberIdAsync();
+
             var entity = new CarnivalBlockMembersEntity(
                 id: 0,
                 carnivalBlockId: blockMember.CarnivalBlockId,
-                memberId: blockMember.MemberId,
+                memberId: memberId,
                 role: blockMember.Role
             );
 
-            await _carnivalBlockMembersService.CreateAsync(entity, loggedMember);
+            await _carnivalBlockMembersService.CreateAsync(entity, memberId);
             return CreatedAtAction
             (
                 nameof(GetBlocksMembersByBlockId),
@@ -62,21 +72,31 @@ public class CarnivalBlockMembersController
         {
             return NotFound(ex.Message);
         }
-        catch (Exception ex)
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(ex.Message);
+        }
+        catch (InvalidOperationException ex)
         {
             return BadRequest(ex.Message);
         }
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateCarnivalBlockMember(int id, [FromBody] CarnivalBlockMemberUpdate updateRole, [FromHeader(Name = "X-Logged-Member")] int loggedMember)
+    [ProducesResponseType(typeof(CarnivalBlockMemberResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> UpdateCarnivalBlockMember(int id, [FromBody] CarnivalBlockMemberUpdate updateRole)
     {
         try
         {
             if (updateRole == null)
                 return BadRequest();
 
-            var updated = await _carnivalBlockMembersService.UpdateAsync(id, loggedMember, updateRole.Role);
+            var memberId = await _memberIdentityService.GetMemberIdAsync();
+
+            var updated = await _carnivalBlockMembersService.UpdateAsync(id, memberId, updateRole.Role);
             if (updated == null)
                 return NotFound();
 
@@ -94,18 +114,20 @@ public class CarnivalBlockMembersController
         {
             return BadRequest(ex.Message);
         }
-        catch (Exception ex)
-        {
-            return BadRequest(ex.Message);
-        }
     }
 
     [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteCarnivalBlockMember(int id, [FromHeader(Name = "X-Logged-Member")] int loggedMember)
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> DeleteCarnivalBlockMember(int id)
     {
         try
         {
-            var deleted = await _carnivalBlockMembersService.DeleteAsync(id, loggedMember);
+            var memberId = await _memberIdentityService.GetMemberIdAsync();
+
+            var deleted = await _carnivalBlockMembersService.DeleteAsync(id, memberId);
             if (!deleted)
                 return NotFound();
 
@@ -120,10 +142,6 @@ public class CarnivalBlockMembersController
             return Unauthorized(ex.Message);
         }
         catch (InvalidOperationException ex)
-        {
-            return BadRequest(ex.Message);
-        }
-        catch (Exception ex)
         {
             return BadRequest(ex.Message);
         }

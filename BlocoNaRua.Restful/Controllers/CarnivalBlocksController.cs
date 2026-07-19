@@ -2,24 +2,33 @@
 using BlocoNaRua.Restful.Mappers;
 using BlocoNaRua.Restful.Models.CarnivalBlock;
 using BlocoNaRua.Services.Interfaces;
+using BlocoNaRua.Restful.Extensions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BlocoNaRua.Restful.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/v{version:apiVersion}/[controller]")]
-public class CarnivalBlocksController(ICarnivalBlockService service) : ControllerBase
+[ProducesResponseType(typeof(List<CarnivalBlockResponse>), StatusCodes.Status200OK)]
+[ProducesResponseType(StatusCodes.Status404NotFound)]
+public class CarnivalBlocksController(ICarnivalBlockService service, IMemberIdentityService memberIdentityService) : ControllerBase
 {
     private readonly ICarnivalBlockService _service = service;
+    private readonly IMemberIdentityService _memberIdentityService = memberIdentityService;
 
     [HttpGet]
-    public async Task<IActionResult> GetAll()
+    [ProducesResponseType(typeof(List<CarnivalBlockResponse>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetAll([FromQuery] int? page = null, [FromQuery] int? pageSize = null)
     {
-        var list = await _service.GetAllAsync();
+        var list = await _service.GetAllAsync(page, pageSize);
         return Ok(list.Select(CarnivalBlockMapper.ToDTO).ToList());
     }
 
     [HttpGet("{id}")]
+    [ProducesResponseType(typeof(CarnivalBlockResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetById(int id)
     {
         var entity = await _service.GetByIdAsync(id);
@@ -30,6 +39,8 @@ public class CarnivalBlocksController(ICarnivalBlockService service) : Controlle
     }
 
     [HttpPost]
+    [ProducesResponseType(typeof(CarnivalBlockResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Create([FromBody] CarnivalBlockCreate model)
     {
         var entity = new CarnivalBlockEntity
@@ -47,8 +58,12 @@ public class CarnivalBlocksController(ICarnivalBlockService service) : Controlle
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> Update(int id, [FromBody] CarnivalBlockUpdate model, [FromHeader(Name = "X-Logged-Member")] int loggedMember)
+    [ProducesResponseType(typeof(CarnivalBlockResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> Update(int id, [FromBody] CarnivalBlockUpdate model)
     {
+        var memberId = await _memberIdentityService.GetMemberIdAsync();
         var entity = new CarnivalBlockEntity
         (
             id: id,
@@ -60,7 +75,7 @@ public class CarnivalBlocksController(ICarnivalBlockService service) : Controlle
         );
         try
         {
-            var updated = await _service.UpdateAsync(id, loggedMember, entity);
+            var updated = await _service.UpdateAsync(id, memberId, entity);
             if (updated is null)
                 return NotFound();
 
@@ -78,11 +93,15 @@ public class CarnivalBlocksController(ICarnivalBlockService service) : Controlle
     }
 
     [HttpDelete("{id}")]
-    public async Task<IActionResult> Delete(int id, [FromHeader(Name = "X-Logged-Member")] int loggedMember)
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> Delete(int id)
     {
+        var memberId = await _memberIdentityService.GetMemberIdAsync();
         try
         {
-            await _service.DeleteAsync(id, loggedMember);
+            await _service.DeleteAsync(id, memberId);
             return NoContent();
         }
         catch (KeyNotFoundException ex)

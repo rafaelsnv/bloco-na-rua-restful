@@ -12,8 +12,9 @@ namespace BlocoNaRua.Tests.Restful;
 public class MembersControllerTests
 {
     private readonly Mock<IMembersService> _serviceMock = new();
+    private readonly Mock<IMemberIdentityService> _memberIdentityServiceMock = new();
 
-    private MembersController CreateController() => new(_serviceMock.Object);
+    private MembersController CreateController() => new(_serviceMock.Object, _memberIdentityServiceMock.Object);
 
     [Fact]
     public async Task GetAll_ReturnsOkWithList()
@@ -24,7 +25,7 @@ public class MembersControllerTests
             new(1, "Member 1", "member1@test.com", "111", "img1.jpg", new Guid()),
             new(2, "Member 2", "member2@test.com", "222", "img2.jpg", new Guid())
         };
-        _serviceMock.Setup(s => s.GetAllAsync()).ReturnsAsync(entities);
+        _serviceMock.Setup(s => s.GetAllAsync(It.IsAny<int?>(), It.IsAny<int?>())).ReturnsAsync(entities);
 
         var controller = CreateController();
 
@@ -156,12 +157,13 @@ public class MembersControllerTests
     public async Task Update_ReturnsNotFound_WhenEntityDoesNotExist()
     {
         // Arrange
+        _memberIdentityServiceMock.Setup(s => s.GetMemberIdAsync()).ReturnsAsync(1);
         _serviceMock.Setup(s => s.UpdateAsync(1, 1, It.IsAny<MemberEntity>())).ReturnsAsync((MemberEntity?)null);
         var updateDto = new MemberUpdate("Test", "test@test.com", "123", "img.jpg");
         var controller = CreateController();
 
         // Act
-        var result = await controller.Update(1, updateDto, 1);
+        var result = await controller.Update(1, updateDto);
 
         // Assert
         Assert.IsType<NotFoundResult>(result);
@@ -171,13 +173,14 @@ public class MembersControllerTests
     public async Task Update_ReturnsUnauthorized_WhenRequesterIsNotTarget()
     {
         // Arrange
+        _memberIdentityServiceMock.Setup(s => s.GetMemberIdAsync()).ReturnsAsync(2);
         _serviceMock.Setup(s => s.UpdateAsync(1, 2, It.IsAny<MemberEntity>()))
             .ThrowsAsync(new UnauthorizedAccessException("Member is not authorized to update this resource."));
         var updateDto = new MemberUpdate("Test", "test@test.com", "123", "img.jpg");
         var controller = CreateController();
 
         // Act
-        var result = await controller.Update(1, updateDto, 2);
+        var result = await controller.Update(1, updateDto);
 
         // Assert
         var unauthorizedResult = Assert.IsType<UnauthorizedObjectResult>(result);
@@ -188,13 +191,14 @@ public class MembersControllerTests
     public async Task Update_ReturnsOk_WhenSuccess()
     {
         // Arrange
+        _memberIdentityServiceMock.Setup(s => s.GetMemberIdAsync()).ReturnsAsync(1);
         var updatedEntity = new MemberEntity(1, "Updated", "updated@test.com", "321", "updated.jpg", new Guid());
         _serviceMock.Setup(s => s.UpdateAsync(1, 1, It.IsAny<MemberEntity>())).ReturnsAsync(updatedEntity);
         var updateDto = new MemberUpdate("Updated", "updated@test.com", "321", "updated.jpg");
         var controller = CreateController();
 
         // Act
-        var result = await controller.Update(1, updateDto, 1);
+        var result = await controller.Update(1, updateDto);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
@@ -206,11 +210,12 @@ public class MembersControllerTests
     public async Task Delete_ReturnsNotFound_WhenEntityDoesNotExist()
     {
         // Arrange
+        _memberIdentityServiceMock.Setup(s => s.GetMemberIdAsync()).ReturnsAsync(1);
         _serviceMock.Setup(s => s.DeleteAsync(1, 1)).ReturnsAsync(false);
         var controller = CreateController();
 
         // Act
-        var result = await controller.Delete(1, 1);
+        var result = await controller.Delete(1);
 
         // Assert
         Assert.IsType<NotFoundResult>(result);
@@ -220,12 +225,13 @@ public class MembersControllerTests
     public async Task Delete_ReturnsUnauthorized_WhenRequesterIsNotTarget()
     {
         // Arrange
+        _memberIdentityServiceMock.Setup(s => s.GetMemberIdAsync()).ReturnsAsync(2);
         _serviceMock.Setup(s => s.DeleteAsync(1, 2))
             .ThrowsAsync(new UnauthorizedAccessException("Member is not authorized to delete this resource."));
         var controller = CreateController();
 
         // Act
-        var result = await controller.Delete(1, 2);
+        var result = await controller.Delete(1);
 
         // Assert
         var unauthorizedResult = Assert.IsType<UnauthorizedObjectResult>(result);
@@ -236,11 +242,12 @@ public class MembersControllerTests
     public async Task Delete_ReturnsNoContent_WhenSuccess()
     {
         // Arrange
+        _memberIdentityServiceMock.Setup(s => s.GetMemberIdAsync()).ReturnsAsync(1);
         _serviceMock.Setup(s => s.DeleteAsync(1, 1)).ReturnsAsync(true);
         var controller = CreateController();
 
         // Act
-        var result = await controller.Delete(1, 1);
+        var result = await controller.Delete(1);
 
         // Assert
         Assert.IsType<NoContentResult>(result);

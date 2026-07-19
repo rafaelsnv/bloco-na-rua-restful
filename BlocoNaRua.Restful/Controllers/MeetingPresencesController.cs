@@ -1,25 +1,34 @@
 ﻿using BlocoNaRua.Domain.Entities;
 using BlocoNaRua.Restful.Mappers;
 using BlocoNaRua.Restful.Models.MeetingPresence;
+using BlocoNaRua.Restful.Extensions;
 using BlocoNaRua.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BlocoNaRua.Restful.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/v{version:apiVersion}/[controller]")]
-public class MeetingPresencesController(IMeetingPresenceService service) : ControllerBase
+[ProducesResponseType(typeof(List<MeetingPresenceResponse>), StatusCodes.Status200OK)]
+[ProducesResponseType(StatusCodes.Status404NotFound)]
+public class MeetingPresencesController(IMeetingPresenceService service, IMemberIdentityService memberIdentityService) : ControllerBase
 {
     private readonly IMeetingPresenceService _service = service;
+    private readonly IMemberIdentityService _memberIdentityService = memberIdentityService;
 
     [HttpGet]
-    public async Task<IActionResult> GetAll()
+    [ProducesResponseType(typeof(List<MeetingPresenceResponse>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetAll([FromQuery] int? page = null, [FromQuery] int? pageSize = null)
     {
-        var list = await _service.GetAllAsync();
+        var list = await _service.GetAllAsync(page, pageSize);
         return Ok(list.Select(MeetingPresenceMapper.ToDTO).ToList());
     }
 
     [HttpGet("{id}")]
+    [ProducesResponseType(typeof(MeetingPresenceResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetById(int id)
     {
         var entity = await _service.GetByIdAsync(id);
@@ -30,18 +39,22 @@ public class MeetingPresencesController(IMeetingPresenceService service) : Contr
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create([FromBody] MeetingPresenceCreate model, [FromHeader(Name = "X-Logged-Member")] int loggedMember)
+    [ProducesResponseType(typeof(MeetingPresenceResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> Create([FromBody] MeetingPresenceCreate model)
     {
+        var memberId = await _memberIdentityService.GetMemberIdAsync();
         var entity = new MeetingPresenceEntity(0)
         {
-            MemberId = model.MemberId,
             MeetingId = model.MeetingId,
             CarnivalBlockId = model.CarnivalBlockId,
             IsPresent = model.IsPresent
         };
         try
         {
-            var created = await _service.CreateAsync(entity, loggedMember);
+            entity.MemberId = memberId;
+            var created = await _service.CreateAsync(entity, memberId);
             var result = MeetingPresenceMapper.ToDTO(created);
             return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
         }
@@ -56,15 +69,19 @@ public class MeetingPresencesController(IMeetingPresenceService service) : Contr
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> Update(int id, [FromBody] MeetingPresenceUpdate model, [FromHeader(Name = "X-Logged-Member")] int loggedMember)
+    [ProducesResponseType(typeof(MeetingPresenceResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> Update(int id, [FromBody] MeetingPresenceUpdate model)
     {
+        var memberId = await _memberIdentityService.GetMemberIdAsync();
         var entity = new MeetingPresenceEntity(0)
         {
             IsPresent = model.IsPresent
         };
         try
         {
-            var updated = await _service.UpdateAsync(id, entity, loggedMember);
+            var updated = await _service.UpdateAsync(id, entity, memberId);
             if (updated is null)
                 return NotFound();
             var result = MeetingPresenceMapper.ToDTO(updated);
@@ -81,11 +98,15 @@ public class MeetingPresencesController(IMeetingPresenceService service) : Contr
     }
 
     [HttpDelete("{id}")]
-    public async Task<IActionResult> Delete(int id, [FromHeader(Name = "X-Logged-Member")] int loggedMember)
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> Delete(int id)
     {
+        var memberId = await _memberIdentityService.GetMemberIdAsync();
         try
         {
-            await _service.DeleteAsync(id, loggedMember);
+            await _service.DeleteAsync(id, memberId);
             return NoContent();
         }
         catch (KeyNotFoundException ex)

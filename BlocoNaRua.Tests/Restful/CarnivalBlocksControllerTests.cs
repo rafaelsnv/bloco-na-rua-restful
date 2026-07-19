@@ -9,8 +9,9 @@ namespace BlocoNaRua.Tests.Restful;
 public class CarnivalBlocksControllerTests
 {
     private readonly Mock<ICarnivalBlockService> _serviceMock = new();
+    private readonly Mock<IMemberIdentityService> _memberIdentityServiceMock = new();
 
-    private CarnivalBlocksController CreateController() => new(_serviceMock.Object);
+    private CarnivalBlocksController CreateController() => new(_serviceMock.Object, _memberIdentityServiceMock.Object);
 
     [Fact]
     public async Task GetAll_ReturnsOkWithList()
@@ -26,7 +27,7 @@ public class CarnivalBlocksControllerTests
                 carnivalBlockImage: "block_image.jpg"
             )
         };
-        _serviceMock.Setup(s => s.GetAllAsync()).ReturnsAsync(entities);
+        _serviceMock.Setup(s => s.GetAllAsync(It.IsAny<int?>(), It.IsAny<int?>())).ReturnsAsync(entities);
 
         var controller = CreateController();
         var result = await controller.GetAll();
@@ -95,6 +96,7 @@ public class CarnivalBlocksControllerTests
     [Fact]
     public async Task Update_ReturnsNotFound_WhenEntityDoesNotExist()
     {
+        _memberIdentityServiceMock.Setup(s => s.GetMemberIdAsync()).ReturnsAsync(1);
         _serviceMock.Setup(s => s.UpdateAsync(1, 1, It.IsAny<CarnivalBlockEntity>())).ThrowsAsync(new KeyNotFoundException());
 
         var controller = CreateController();
@@ -102,7 +104,7 @@ public class CarnivalBlocksControllerTests
             Name: "Test",
             CarnivalBlockImage: "img"
         );
-        var result = await controller.Update(1, updateDto, 1);
+        var result = await controller.Update(1, updateDto);
 
         Assert.IsType<NotFoundObjectResult>(result);
     }
@@ -110,6 +112,7 @@ public class CarnivalBlocksControllerTests
     [Fact]
     public async Task Update_ReturnsUnauthorized_WhenMemberIsNotAuthorized()
     {
+        _memberIdentityServiceMock.Setup(s => s.GetMemberIdAsync()).ReturnsAsync(1);
         _serviceMock.Setup(s => s.UpdateAsync(1, 1, It.IsAny<CarnivalBlockEntity>()))
             .ThrowsAsync(new UnauthorizedAccessException("Member is not authorized to update this carnival block."));
 
@@ -118,7 +121,7 @@ public class CarnivalBlocksControllerTests
             Name: "Test",
             CarnivalBlockImage: "img"
         );
-        var result = await controller.Update(1, updateDto, 1);
+        var result = await controller.Update(1, updateDto);
 
         var unauthorizedResult = Assert.IsType<UnauthorizedObjectResult>(result);
         Assert.Equal("Member is not authorized to update this carnival block.", unauthorizedResult.Value);
@@ -127,6 +130,7 @@ public class CarnivalBlocksControllerTests
     [Fact]
     public async Task Update_ReturnsOk_WhenSuccess()
     {
+        _memberIdentityServiceMock.Setup(s => s.GetMemberIdAsync()).ReturnsAsync(2);
         var updatedEntity = new CarnivalBlockEntity(
             id: 1,
             ownerId: 2,
@@ -143,7 +147,7 @@ public class CarnivalBlocksControllerTests
             CarnivalBlockImage: "img"
         );
 
-        var result = await controller.Update(1, updateDto, 2);
+        var result = await controller.Update(1, updateDto);
 
         var okResult = Assert.IsType<OkObjectResult>(result);
         Assert.IsType<CarnivalBlockResponse>(okResult.Value);
@@ -152,10 +156,11 @@ public class CarnivalBlocksControllerTests
     [Fact]
     public async Task Delete_ReturnsNotFound_WhenEntityDoesNotExist()
     {
+        _memberIdentityServiceMock.Setup(s => s.GetMemberIdAsync()).ReturnsAsync(1);
         _serviceMock.Setup(s => s.DeleteAsync(1, It.IsAny<int>())).ThrowsAsync(new KeyNotFoundException());
 
         var controller = CreateController();
-        var result = await controller.Delete(1, 1);
+        var result = await controller.Delete(1);
 
         Assert.IsType<NotFoundObjectResult>(result);
     }
@@ -163,11 +168,12 @@ public class CarnivalBlocksControllerTests
     [Fact]
     public async Task Delete_ReturnsUnauthorized_WhenMemberIsNotAuthorized()
     {
+        _memberIdentityServiceMock.Setup(s => s.GetMemberIdAsync()).ReturnsAsync(1);
         _serviceMock.Setup(s => s.DeleteAsync(1, It.IsAny<int>()))
             .ThrowsAsync(new UnauthorizedAccessException("Member is not authorized to delete this carnival block."));
 
         var controller = CreateController();
-        var result = await controller.Delete(1, 1);
+        var result = await controller.Delete(1);
 
         var unauthorizedResult = Assert.IsType<UnauthorizedObjectResult>(result);
         Assert.Equal("Member is not authorized to delete this carnival block.", unauthorizedResult.Value);
@@ -176,10 +182,11 @@ public class CarnivalBlocksControllerTests
     [Fact]
     public async Task Delete_ReturnsNoContent_WhenSuccess()
     {
+        _memberIdentityServiceMock.Setup(s => s.GetMemberIdAsync()).ReturnsAsync(1);
         _serviceMock.Setup(s => s.DeleteAsync(1, It.IsAny<int>())).ReturnsAsync(true);
 
         var controller = CreateController();
-        var result = await controller.Delete(1, 1);
+        var result = await controller.Delete(1);
 
         Assert.IsType<NoContentResult>(result);
     }
