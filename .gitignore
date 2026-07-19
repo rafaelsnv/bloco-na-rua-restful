@@ -426,3 +426,6 @@ FodyWeavers.xsd
 
 # End of https://www.toptal.com/developers/gitignore/api/visualstudio,visualstudiocode,dotnetcore
 *appsettings*.json
+/.opencode
+*opencode.json*
+/.ignore
