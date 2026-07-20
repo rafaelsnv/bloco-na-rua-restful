@@ -11,8 +11,8 @@ public class AdminService(IHttpClientFactory httpClientFactory, IConfiguration c
 
     public async Task<AdminDeleteResult> DeleteSignupAsync(Guid uuid)
     {
-        var supabaseUrl = _configuration["Supabase:Url"] ?? "";
-        var serviceRoleKey = _configuration["Supabase:ServiceRoleKey"] ?? "";
+        var supabaseUrl = _configuration["Supabase:Url"] ?? throw new InvalidOperationException("Supabase:Url configuration is missing");
+        var serviceRoleKey = _configuration["Supabase:ServiceRoleKey"] ?? throw new InvalidOperationException("Supabase:ServiceRoleKey configuration is missing");
 
         var client = _httpClientFactory.CreateClient("SupabaseAdmin");
         client.DefaultRequestHeaders.Add("apikey", serviceRoleKey);

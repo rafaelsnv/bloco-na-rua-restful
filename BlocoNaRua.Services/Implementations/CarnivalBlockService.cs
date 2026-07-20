@@ -1,4 +1,5 @@
-﻿using BlocoNaRua.Data.Repositories.Interfaces;
+﻿using System.Security.Cryptography;
+using BlocoNaRua.Data.Repositories.Interfaces;
 using BlocoNaRua.Domain.Entities;
 using BlocoNaRua.Domain.Enums;
 using BlocoNaRua.Services.Interfaces;
@@ -21,11 +22,10 @@ public class CarnivalBlockService
 
     public async Task<IList<CarnivalBlockEntity>> GetAllAsync(int? page = null, int? pageSize = null)
     {
-        const string cacheKey = "CarnivalBlocks_All";
-        if (!_cache.TryGetValue(cacheKey, out IList<CarnivalBlockEntity>? blocks))
+        if (!_cache.TryGetValue("CarnivalBlocks_All", out IList<CarnivalBlockEntity>? blocks))
         {
             blocks = await _repository.GetAllAsync();
-            _cache.Set(cacheKey, blocks, TimeSpan.FromMinutes(5));
+            _cache.Set("CarnivalBlocks_All", blocks, TimeSpan.FromMinutes(5));
         }
 
         if (page.HasValue && pageSize.HasValue)
@@ -39,8 +39,7 @@ public class CarnivalBlockService
 
     public async Task<CarnivalBlockEntity?> GetByIdAsync(int id)
     {
-        var cacheKey = $"CarnivalBlock_{id}";
-        if (_cache.TryGetValue(cacheKey, out CarnivalBlockEntity? block))
+        if (_cache.TryGetValue($"CarnivalBlock_{id}", out CarnivalBlockEntity? block))
         {
             return block;
         }
@@ -48,7 +47,7 @@ public class CarnivalBlockService
         block = await _repository.GetByIdAsync(id);
         if (block != null)
         {
-            _cache.Set(cacheKey, block, TimeSpan.FromMinutes(5));
+            _cache.Set($"CarnivalBlock_{id}", block, TimeSpan.FromMinutes(5));
         }
         return block;
     }
@@ -122,7 +121,9 @@ public class CarnivalBlockService
     private static string GenerateInviteCode()
     {
         const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-        return new string(Enumerable.Repeat(chars, 8)
-            .Select(s => s[Random.Shared.Next(s.Length)]).ToArray());
+        var buffer = new byte[8];
+        using var rng = RandomNumberGenerator.Create();
+        rng.GetBytes(buffer);
+        return new string(buffer.Select(b => chars[b % chars.Length]).ToArray());
     }
 }
