@@ -8,7 +8,8 @@ public static class ServicesExtensions
 {
     public static IServiceCollection AddServices(this IServiceCollection services)
     {
-        services.AddHttpClient("SupabaseAdmin");
+        services.AddHttpClient("SupabaseAdmin")
+            .AddHttpMessageHandler<LoggingHttpMessageHandler>();
         services.AddHttpContextAccessor();
         services.AddScoped<ICarnivalBlockService, CarnivalBlockService>()
                 .AddScoped<IMembersService, MembersService>()
@@ -17,6 +18,7 @@ public static class ServicesExtensions
                 .AddScoped<IMeetingPresenceService, MeetingPresenceService>()
                 .AddScoped<IAuthorizationService, AuthorizationService>()
                 .AddScoped<IAdminService, AdminService>()
+                .AddScoped<IAuthService, AuthService>()
                 .AddScoped<IMemberIdentityService, MemberIdentityService>();
         return services;
     }
