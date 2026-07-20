@@ -1,5 +1,5 @@
-﻿using System.Text.Json;
-using System.Text;
+﻿using System.Security.Claims;
+using System.Text.Json;
 using Asp.Versioning;
 using BlocoNaRua.Data.Extensions;
 using BlocoNaRua.Services.Extensions;
@@ -36,23 +36,72 @@ builder.Services.AddApiVersioning(options =>
 });
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+        Description = "Enter your JWT token"
+    });
+    options.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+    {
+        {
+            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+            {
+                Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                {
+                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
 builder.Services.AddMemoryCache();
+var supabaseUrl = configuration["Supabase:Url"] ?? "";
+var supabaseIssuer = $"{supabaseUrl}/auth/v1";
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
+        options.Authority = supabaseIssuer;
+        options.MetadataAddress = $"{supabaseIssuer}/.well-known/openid-configuration";
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
             ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            ValidIssuer = configuration["Supabase:Url"],
-            ValidAudience = configuration["Supabase:Url"],
-            IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(configuration["Supabase:JwtSecret"] ?? ""))
+            ValidAudience = "authenticated",
+            ValidIssuer = supabaseIssuer
+        };
+        options.Events = new JwtBearerEvents
+        {
+            OnTokenValidated = context =>
+            {
+                var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+                var claims = context.Principal?.Claims.Select(c => $"{c.Type}={c.Value}");
+                logger.LogInformation("JWT validated. Claims: {Claims}", string.Join(", ", claims ?? []));
+                return Task.CompletedTask;
+            },
+            OnAuthenticationFailed = context =>
+            {
+                var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+                logger.LogError("JWT auth failed: {Error}", context.Exception.Message);
+                return Task.CompletedTask;
+            }
         };
     });
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdminOnly", policy =>
+        policy.RequireClaim("role", "admin"));
+});
 builder.Services.AddEntityFramework(configuration, builder.Environment);
 builder.Services.AddRepositories();
 builder.Services.AddServices();

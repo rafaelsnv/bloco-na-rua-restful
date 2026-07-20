@@ -27,7 +27,7 @@ public class MembersController(IMembersService service, IMemberIdentityService m
     public async Task<IActionResult> GetAll([FromQuery] int? page = null, [FromQuery] int? pageSize = null)
     {
         var list = await _service.GetAllAsync(page, pageSize);
-        return Ok(list.Select(MemberMapper.ToDTO).ToList());
+        return Ok(list.Select(x => x.ToDTO()).ToList());
     }
 
     [HttpGet("{id}")]
@@ -38,7 +38,7 @@ public class MembersController(IMembersService service, IMemberIdentityService m
         var entity = await _service.GetByIdAsync(id);
         if (entity is null)
             return NotFound();
-        var result = MemberMapper.ToDTO(entity);
+        var result = entity.ToDTO();
         return Ok(result);
     }
 
@@ -50,7 +50,7 @@ public class MembersController(IMembersService service, IMemberIdentityService m
         var entity = await _service.GetByUuidAsync(uuid);
         if (entity is null)
             return NotFound();
-        var result = MemberMapper.ToDTO(entity);
+        var result = entity.ToDTO();
         return Ok(result);
     }
 
@@ -63,7 +63,7 @@ public class MembersController(IMembersService service, IMemberIdentityService m
         if (blockMembers == null || !blockMembers.Any())
             return NotFound();
 
-        var response = blockMembers.Select(bm => CarnivalBlockMapper.ToDTO(bm.CarnivalBlock)).ToList();
+        var response = blockMembers.Select(bm => bm.CarnivalBlock.ToDTO()).ToList();
         return Ok(response);
     }
 
@@ -76,7 +76,7 @@ public class MembersController(IMembersService service, IMemberIdentityService m
         if (meetings == null || !meetings.Any())
             return NotFound();
 
-        var response = meetings.Select(MeetingMapper.ToDTO).ToList();
+        var response = meetings.Select(x => x.ToDTO()).ToList();
         return Ok(response);
     }
 
@@ -94,7 +94,7 @@ public class MembersController(IMembersService service, IMemberIdentityService m
             uuid: new Guid(model.Uuid)
         );
         var created = await _service.CreateAsync(entity);
-        var result = MemberMapper.ToDTO(created);
+        var result = created.ToDTO();
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 
@@ -118,7 +118,7 @@ public class MembersController(IMembersService service, IMemberIdentityService m
             var updated = await _service.UpdateAsync(id, memberId, entity);
             if (updated is null)
                 return NotFound();
-            var result = MemberMapper.ToDTO(updated);
+            var result = updated.ToDTO();
             return Ok(result);
         }
         catch (UnauthorizedAccessException ex)

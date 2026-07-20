@@ -17,13 +17,22 @@ public class MeetingPresenceService
     private readonly IAuthorizationService _authorizationService = authorizationService;
     private readonly IMemoryCache _cache = cache;
 
+    private async Task AuthorizeForMemberAsync(int carnivalBlockId, int loggedMemberId, int targetMemberId)
+    {
+        if (loggedMemberId == targetMemberId) return;
+
+        var memberRole = await _authorizationService.GetMemberRole(carnivalBlockId, loggedMemberId);
+        if (memberRole == RolesEnum.Owner || memberRole == RolesEnum.Manager) return;
+
+        throw new UnauthorizedAccessException("You are not authorized to access this meeting presence for another member.");
+    }
+
     public async Task<IList<MeetingPresenceEntity>> GetAllAsync(int? page = null, int? pageSize = null)
     {
-        const string cacheKey = "MeetingPresences_All";
-        if (!_cache.TryGetValue(cacheKey, out IList<MeetingPresenceEntity>? presences))
+        if (!_cache.TryGetValue("MeetingPresences_All", out IList<MeetingPresenceEntity>? presences))
         {
             presences = await _repository.GetAllAsync();
-            _cache.Set(cacheKey, presences, TimeSpan.FromMinutes(5));
+            _cache.Set("MeetingPresences_All", presences, TimeSpan.FromMinutes(5));
         }
 
         if (page.HasValue && pageSize.HasValue)
@@ -37,8 +46,7 @@ public class MeetingPresenceService
 
     public async Task<MeetingPresenceEntity?> GetByIdAsync(int id)
     {
-        var cacheKey = $"MeetingPresence_{id}";
-        if (_cache.TryGetValue(cacheKey, out MeetingPresenceEntity? presence))
+        if (_cache.TryGetValue($"MeetingPresence_{id}", out MeetingPresenceEntity? presence))
         {
             return presence;
         }
@@ -46,30 +54,18 @@ public class MeetingPresenceService
         presence = await _repository.GetByIdAsync(id);
         if (presence != null)
         {
-            _cache.Set(cacheKey, presence, TimeSpan.FromMinutes(5));
+            _cache.Set($"MeetingPresence_{id}", presence, TimeSpan.FromMinutes(5));
         }
         return presence;
     }
 
     public async Task<MeetingPresenceEntity> CreateAsync(MeetingPresenceEntity model, int loggedMember)
     {
+        await AuthorizeForMemberAsync(model.CarnivalBlockId, loggedMember, model.MemberId);
 
-        if (model.MemberId == loggedMember)
-        {
-            var created = await _repository.AddAsync(model);
-            _cache.Remove("MeetingPresences_All");
-            return created;
-        }
-
-        var memberRole = await _authorizationService.GetMemberRole(model.CarnivalBlockId, loggedMember);
-        if (memberRole == RolesEnum.Owner || memberRole == RolesEnum.Manager)
-        {
-            var created = await _repository.AddAsync(model);
-            _cache.Remove("MeetingPresences_All");
-            return created;
-        }
-
-        throw new UnauthorizedAccessException("You are not authorized to create a meeting presence for another member.");
+        var created = await _repository.AddAsync(model);
+        _cache.Remove("MeetingPresences_All");
+        return created;
     }
 
     public async Task<MeetingPresenceEntity?> UpdateAsync(int id, MeetingPresenceEntity model, int loggedMember)
@@ -77,26 +73,13 @@ public class MeetingPresenceService
         var entity = await _repository.GetByIdAsync(id)
             ?? throw new KeyNotFoundException("Meeting presence does not exist.");
 
-        if (entity.MemberId == loggedMember)
-        {
-            entity.IsPresent = model.IsPresent;
-            await _repository.UpdateAsync(entity);
-            _cache.Remove($"MeetingPresence_{id}");
-            _cache.Remove("MeetingPresences_All");
-            return entity;
-        }
+        await AuthorizeForMemberAsync(entity.CarnivalBlockId, loggedMember, entity.MemberId);
 
-        var memberRole = await _authorizationService.GetMemberRole(entity.CarnivalBlockId, loggedMember);
-        if (memberRole == RolesEnum.Owner || memberRole == RolesEnum.Manager)
-        {
-            entity.IsPresent = model.IsPresent;
-            await _repository.UpdateAsync(entity);
-            _cache.Remove($"MeetingPresence_{id}");
-            _cache.Remove("MeetingPresences_All");
-            return entity;
-        }
-
-        throw new UnauthorizedAccessException("You are not authorized to update this meeting presence.");
+        entity.IsPresent = model.IsPresent;
+        await _repository.UpdateAsync(entity);
+        _cache.Remove($"MeetingPresence_{id}");
+        _cache.Remove("MeetingPresences_All");
+        return entity;
     }
 
     public async Task<bool> DeleteAsync(int id, int loggedMember)
@@ -104,30 +87,15 @@ public class MeetingPresenceService
         var entity = await _repository.GetByIdAsync(id)
             ?? throw new KeyNotFoundException("Meeting presence does not exist.");
 
-        if (entity.MemberId == loggedMember)
-        {
-            var deleted = await _repository.DeleteAsync(entity);
-            if (deleted)
-            {
-                _cache.Remove($"MeetingPresence_{id}");
-                _cache.Remove("MeetingPresences_All");
-            }
-            return deleted;
-        }
+        await AuthorizeForMemberAsync(entity.CarnivalBlockId, loggedMember, entity.MemberId);
 
-        var memberRole = await _authorizationService.GetMemberRole(entity.CarnivalBlockId, loggedMember);
-        if (memberRole == RolesEnum.Owner || memberRole == RolesEnum.Manager)
+        var deleted = await _repository.DeleteAsync(entity);
+        if (deleted)
         {
-            var deleted = await _repository.DeleteAsync(entity);
-            if (deleted)
-            {
-                _cache.Remove($"MeetingPresence_{id}");
-                _cache.Remove("MeetingPresences_All");
-            }
-            return deleted;
+            _cache.Remove($"MeetingPresence_{id}");
+            _cache.Remove("MeetingPresences_All");
         }
-
-        throw new UnauthorizedAccessException("You are not authorized to delete this meeting presence.");
+        return deleted;
     }
 
 }

@@ -36,8 +36,7 @@ public class MembersService(
 
     public async Task<MemberEntity?> GetByUuidAsync(Guid uuid)
     {
-        var cacheKey = $"Member_{uuid}";
-        if (_cache.TryGetValue(cacheKey, out MemberEntity? member))
+        if (_cache.TryGetValue($"Member_{uuid}", out MemberEntity? member))
         {
             return member;
         }
@@ -45,7 +44,7 @@ public class MembersService(
         member = await _repository.GetByUuidAsync(uuid);
         if (member != null)
         {
-            _cache.Set(cacheKey, member, TimeSpan.FromMinutes(5)); // Cache por 5 minutos
+            _cache.Set($"Member_{uuid}", member, TimeSpan.FromMinutes(5)); // Cache por 5 minutos
         }
         return member;
     }

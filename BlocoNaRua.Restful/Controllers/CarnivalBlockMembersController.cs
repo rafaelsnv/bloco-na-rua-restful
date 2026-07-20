@@ -23,7 +23,7 @@ public class CarnivalBlockMembersController(ICarnivalBlockMembersService carniva
     public async Task<IActionResult> GetAllBlocksMembers()
     {
         var blocksMembersList = await _carnivalBlockMembersService.GetAllAsync();
-        var response = blocksMembersList.Select(CarnivalBlockMemberMapper.ToDTO).ToList();
+        var response = blocksMembersList.Select(x => x.ToDTO()).ToList();
         return Ok(response);
     }
 
@@ -35,7 +35,7 @@ public class CarnivalBlockMembersController(ICarnivalBlockMembersService carniva
         var blockMembers = await _carnivalBlockMembersService.GetByBlockIdAsync(blockId);
         if (blockMembers == null || !blockMembers.Any())
             return NotFound();
-        var response = blockMembers.Select(CarnivalBlockMemberMapper.ToDTO).ToList();
+        var response = blockMembers.Select(x => x.ToDTO()).ToList();
         return Ok(response);
     }
 
@@ -65,7 +65,7 @@ public class CarnivalBlockMembersController(ICarnivalBlockMembersService carniva
             (
                 nameof(GetBlocksMembersByBlockId),
                 new { blockId = entity.CarnivalBlockId },
-                CarnivalBlockMemberMapper.ToDTO(entity)
+                entity.ToDTO()
             );
         }
         catch (KeyNotFoundException ex)
@@ -100,7 +100,7 @@ public class CarnivalBlockMembersController(ICarnivalBlockMembersService carniva
             if (updated == null)
                 return NotFound();
 
-            return Ok(CarnivalBlockMemberMapper.ToDTO(updated));
+            return Ok(updated.ToDTO());
         }
         catch (KeyNotFoundException ex)
         {

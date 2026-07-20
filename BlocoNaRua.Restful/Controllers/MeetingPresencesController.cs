@@ -23,7 +23,7 @@ public class MeetingPresencesController(IMeetingPresenceService service, IMember
     public async Task<IActionResult> GetAll([FromQuery] int? page = null, [FromQuery] int? pageSize = null)
     {
         var list = await _service.GetAllAsync(page, pageSize);
-        return Ok(list.Select(MeetingPresenceMapper.ToDTO).ToList());
+        return Ok(list.Select(x => x.ToDTO()).ToList());
     }
 
     [HttpGet("{id}")]
@@ -34,7 +34,7 @@ public class MeetingPresencesController(IMeetingPresenceService service, IMember
         var entity = await _service.GetByIdAsync(id);
         if (entity is null)
             return NotFound();
-        var result = MeetingPresenceMapper.ToDTO(entity);
+        var result = entity.ToDTO();
         return Ok(result);
     }
 
@@ -55,7 +55,7 @@ public class MeetingPresencesController(IMeetingPresenceService service, IMember
         {
             entity.MemberId = memberId;
             var created = await _service.CreateAsync(entity, memberId);
-            var result = MeetingPresenceMapper.ToDTO(created);
+            var result = created.ToDTO();
             return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
         }
         catch (KeyNotFoundException ex)
@@ -84,7 +84,7 @@ public class MeetingPresencesController(IMeetingPresenceService service, IMember
             var updated = await _service.UpdateAsync(id, entity, memberId);
             if (updated is null)
                 return NotFound();
-            var result = MeetingPresenceMapper.ToDTO(updated);
+            var result = updated.ToDTO();
             return Ok(result);
         }
         catch (KeyNotFoundException ex)
