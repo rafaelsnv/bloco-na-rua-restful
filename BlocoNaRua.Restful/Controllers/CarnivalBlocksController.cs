@@ -23,7 +23,7 @@ public class CarnivalBlocksController(ICarnivalBlockService service, IMemberIden
     public async Task<IActionResult> GetAll([FromQuery] int? page = null, [FromQuery] int? pageSize = null)
     {
         var list = await _service.GetAllAsync(page, pageSize);
-        return Ok(list.Select(CarnivalBlockMapper.ToDTO).ToList());
+        return Ok(list.Select(x => x.ToDTO()).ToList());
     }
 
     [HttpGet("{id}")]
@@ -34,7 +34,7 @@ public class CarnivalBlocksController(ICarnivalBlockService service, IMemberIden
         var entity = await _service.GetByIdAsync(id);
         if (entity is null)
             return NotFound();
-        var result = CarnivalBlockMapper.ToDTO(entity);
+        var result = entity.ToDTO();
         return Ok(result);
     }
 
@@ -53,7 +53,7 @@ public class CarnivalBlocksController(ICarnivalBlockService service, IMemberIden
             carnivalBlockImage: model.CarnivalBlockImage
         );
         var created = await _service.CreateAsync(entity);
-        var result = CarnivalBlockMapper.ToDTO(created);
+        var result = created.ToDTO();
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 
@@ -79,7 +79,7 @@ public class CarnivalBlocksController(ICarnivalBlockService service, IMemberIden
             if (updated is null)
                 return NotFound();
 
-            var result = CarnivalBlockMapper.ToDTO(updated);
+            var result = updated.ToDTO();
             return Ok(result);
         }
         catch (KeyNotFoundException ex)
