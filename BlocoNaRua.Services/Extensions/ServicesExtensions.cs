@@ -10,6 +10,7 @@ public static class ServicesExtensions
     {
         services.AddHttpClient("SupabaseAdmin")
             .AddHttpMessageHandler<LoggingHttpMessageHandler>();
+        services.AddTransient<LoggingHttpMessageHandler>();
         services.AddHttpContextAccessor();
         services.AddScoped<ICarnivalBlockService, CarnivalBlockService>()
                 .AddScoped<IMembersService, MembersService>()
