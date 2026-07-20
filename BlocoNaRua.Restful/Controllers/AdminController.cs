@@ -4,11 +4,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BlocoNaRua.Restful.Controllers;
 
-// ponytail: this exists — [AllowAnonymous] because it's called by server-side cleanup process.
-// Revisit when Owner-only middleware is added (living-notes.md C3).
 [ApiController]
 [Route("api/v{version:apiVersion}/admin")]
-[AllowAnonymous]
+[Authorize(Policy = "AdminOnly")]
 public class AdminController(IAdminService adminService) : ControllerBase
 {
     private readonly IAdminService _adminService = adminService;
