@@ -80,6 +80,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     {
         options.Authority = supabaseIssuer;
         options.MetadataAddress = $"{supabaseIssuer}/.well-known/openid-configuration";
+        options.MapInboundClaims = false;
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
