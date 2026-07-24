@@ -63,6 +63,15 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 builder.Services.AddMemoryCache();
+builder.Services.AddHttpLogging(logging =>
+{
+    logging.LoggingFields = Microsoft.AspNetCore.HttpLogging.HttpLoggingFields.RequestMethod |
+                           Microsoft.AspNetCore.HttpLogging.HttpLoggingFields.RequestPath |
+                           Microsoft.AspNetCore.HttpLogging.HttpLoggingFields.ResponseStatusCode |
+                           Microsoft.AspNetCore.HttpLogging.HttpLoggingFields.Duration;
+    logging.RequestBodyLogLimit = 4096;
+    logging.ResponseBodyLogLimit = 4096;
+});
 var supabaseUrl = configuration["Supabase:Url"] ?? "";
 var supabaseIssuer = $"{supabaseUrl}/auth/v1";
 
@@ -71,6 +80,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     {
         options.Authority = supabaseIssuer;
         options.MetadataAddress = $"{supabaseIssuer}/.well-known/openid-configuration";
+        options.MapInboundClaims = false;
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
@@ -109,6 +119,7 @@ builder.Services.AddServices();
 var app = builder.Build();
 
 app.UseForwardedHeaders();
+app.UseHttpLogging();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -165,3 +176,6 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.Run();
+
+// Make implicit Program class public for WebApplicationFactory access
+public partial class Program { }

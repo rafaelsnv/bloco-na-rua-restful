@@ -1,8 +1,8 @@
-﻿using System.Security.Cryptography;
-using BlocoNaRua.Data.Repositories.Interfaces;
+﻿using BlocoNaRua.Data.Repositories.Interfaces;
 using BlocoNaRua.Domain.Entities;
 using BlocoNaRua.Domain.Enums;
 using BlocoNaRua.Services.Interfaces;
+using BlocoNaRua.Services.Utils;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace BlocoNaRua.Services.Implementations;
@@ -11,12 +11,14 @@ public class CarnivalBlockService
 (
     ICarnivalBlocksRepository repository,
     IMembersRepository membersRepository,
+    ICarnivalBlockMembersRepository carnivalBlockMembersRepository,
     IAuthorizationService authorizationService,
     IMemoryCache cache
 ) : ICarnivalBlockService
 {
     private readonly ICarnivalBlocksRepository _repository = repository;
     private readonly IMembersRepository _membersRepository = membersRepository;
+    private readonly ICarnivalBlockMembersRepository _carnivalBlockMembersRepository = carnivalBlockMembersRepository;
     private readonly IAuthorizationService _authorizationService = authorizationService;
     private readonly IMemoryCache _cache = cache;
 
@@ -62,11 +64,15 @@ public class CarnivalBlockService
             0,
             model.OwnerId,
             model.Name,
-            GenerateInviteCode(),
-            GenerateInviteCode(),
+            CodeGenerator.Generate(),
+            CodeGenerator.Generate(),
             model.CarnivalBlockImage
         );
         var created = await _repository.AddAsync(entity);
+
+        var ownerMember = new CarnivalBlockMembersEntity(0, created.Id, model.OwnerId, RolesEnum.Owner);
+        await _carnivalBlockMembersRepository.AddAsync(ownerMember);
+
         _cache.Remove("CarnivalBlocks_All");
         return created;
     }
@@ -116,14 +122,5 @@ public class CarnivalBlockService
             _cache.Remove("CarnivalBlocks_All");
         }
         return deleted;
-    }
-
-    private static string GenerateInviteCode()
-    {
-        const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-        var buffer = new byte[8];
-        using var rng = RandomNumberGenerator.Create();
-        rng.GetBytes(buffer);
-        return new string(buffer.Select(b => chars[b % chars.Length]).ToArray());
     }
 }

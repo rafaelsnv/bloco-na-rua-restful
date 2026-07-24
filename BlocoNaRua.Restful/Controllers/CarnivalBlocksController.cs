@@ -23,7 +23,7 @@ public class CarnivalBlocksController(ICarnivalBlockService service, IMemberIden
     public async Task<IActionResult> GetAll([FromQuery] int? page = null, [FromQuery] int? pageSize = null)
     {
         var list = await _service.GetAllAsync(page, pageSize);
-        return Ok(list.Select(x => x.ToDTO()).ToList());
+        return Ok(list.Select(x => x.ToDTO()));
     }
 
     [HttpGet("{id}")]

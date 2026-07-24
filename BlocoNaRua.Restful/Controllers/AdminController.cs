@@ -19,9 +19,9 @@ public class AdminController(IAdminService adminService) : ControllerBase
     {
         try
         {
-            var result = await _adminService.DeleteSignupAsync(uuid);
-            if (!result.Deleted)
-                return NotFound(result.ErrorMessage ?? "User not found");
+            var (deleted, errorMessage) = await _adminService.DeleteSignupAsync(uuid);
+            if (!deleted)
+                return NotFound(errorMessage ?? "User not found");
             return Ok(new { deleted = true });
         }
         catch (HttpRequestException ex)

@@ -33,6 +33,7 @@ public class CarnivalBlockServiceTests : IDisposable
         (
             _carnivalBlocksRepository,
             _membersRepository,
+            _carnivalBlockMembersRepository,
             _authorizationServiceMock.Object,
             _cache
         );

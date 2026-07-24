@@ -14,6 +14,23 @@ public static class DataExtensions
 {
     public static IServiceCollection AddEntityFramework(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
     {
+        var useInMemory = environment.EnvironmentName == "Testing" ||
+                          Environment.GetEnvironmentVariable("USE_INMEMORY_DB") == "true";
+
+        if (useInMemory)
+        {
+            return services.AddDbContext<AppDbContext>(options =>
+            {
+                options.UseInMemoryDatabase("TestingDb");
+                if (environment.IsDevelopment())
+                {
+                    options.EnableDetailedErrors()
+                           .EnableSensitiveDataLogging()
+                           .EnableThreadSafetyChecks();
+                }
+            });
+        }
+
         var connectionString = configuration.GetConnectionString("DefaultConnection")
         ?? Environment.GetEnvironmentVariable("POSTGRESQLCONNSTR_SupabaseDB")
         ?? throw new InvalidOperationException("Connection string not found");

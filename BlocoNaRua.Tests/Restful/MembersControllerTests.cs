@@ -34,8 +34,8 @@ public class MembersControllerTests
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var dtoList = Assert.IsAssignableFrom<IList<MemberResponse>>(okResult.Value);
-        Assert.Equal(2, dtoList.Count);
+        var dtoList = Assert.IsAssignableFrom<IEnumerable<MemberResponse>>(okResult.Value);
+        Assert.Equal(2, dtoList.Count());
     }
 
     [Fact]
@@ -111,9 +111,9 @@ public class MembersControllerTests
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var dtoList = Assert.IsAssignableFrom<IList<CarnivalBlockResponse>>(okResult.Value);
+        var dtoList = Assert.IsAssignableFrom<IEnumerable<CarnivalBlockResponse>>(okResult.Value);
         Assert.Single(dtoList);
-        Assert.Equal(10, dtoList[0].Id);
+        Assert.Equal(10, dtoList.First().Id);
     }
 
     [Fact]
@@ -148,9 +148,9 @@ public class MembersControllerTests
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var dtoList = Assert.IsAssignableFrom<IList<MeetingResponse>>(okResult.Value);
+        var dtoList = Assert.IsAssignableFrom<IEnumerable<MeetingResponse>>(okResult.Value);
         Assert.Single(dtoList);
-        Assert.Equal("Meeting 1", dtoList[0].Name);
+        Assert.Equal("Meeting 1", dtoList.First().Name);
     }
 
     [Fact]

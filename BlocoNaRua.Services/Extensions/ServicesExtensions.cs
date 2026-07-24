@@ -8,9 +8,7 @@ public static class ServicesExtensions
 {
     public static IServiceCollection AddServices(this IServiceCollection services)
     {
-        services.AddHttpClient("SupabaseAdmin")
-            .AddHttpMessageHandler<LoggingHttpMessageHandler>();
-        services.AddTransient<LoggingHttpMessageHandler>();
+        services.AddHttpClient("SupabaseAdmin");
         services.AddHttpContextAccessor();
         services.AddScoped<ICarnivalBlockService, CarnivalBlockService>()
                 .AddScoped<IMembersService, MembersService>()

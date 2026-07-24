@@ -23,7 +23,7 @@ public class CarnivalBlockMembersController(ICarnivalBlockMembersService carniva
     public async Task<IActionResult> GetAllBlocksMembers()
     {
         var blocksMembersList = await _carnivalBlockMembersService.GetAllAsync();
-        var response = blocksMembersList.Select(x => x.ToDTO()).ToList();
+        var response = blocksMembersList.Select(x => x.ToDTO());
         return Ok(response);
     }
 
@@ -35,7 +35,7 @@ public class CarnivalBlockMembersController(ICarnivalBlockMembersService carniva
         var blockMembers = await _carnivalBlockMembersService.GetByBlockIdAsync(blockId);
         if (blockMembers == null || !blockMembers.Any())
             return NotFound();
-        var response = blockMembers.Select(x => x.ToDTO()).ToList();
+        var response = blockMembers.Select(x => x.ToDTO());
         return Ok(response);
     }
 

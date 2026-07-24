@@ -1,5 +1,6 @@
 ﻿using BlocoNaRua.Data.Repositories.Interfaces;
 using BlocoNaRua.Domain.Entities;
+using BlocoNaRua.Domain.Enums;
 using BlocoNaRua.Services.Implementations;
 using Microsoft.Extensions.Caching.Memory;
 
@@ -163,5 +164,142 @@ public class MembersServiceTests
 
         // Assert
         Assert.False(result);
+    }
+
+    [Fact]
+    public async Task GetByUuidAsync_ReturnsCachedMember_WhenMemberInCache()
+    {
+        // Arrange
+        var uuid = Guid.NewGuid();
+        var cachedMember = new MemberEntity(1, "Cached Member", "cached@test.com", "123", "img.jpg", uuid);
+        object? cachedValue = cachedMember;
+        _cacheMock.Setup(c => c.TryGetValue($"Member_{uuid}", out cachedValue)).Returns(true);
+
+        // Act
+        var result = await _service.GetByUuidAsync(uuid);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal("Cached Member", result.Name);
+        _repositoryMock.Verify(r => r.GetByUuidAsync(It.IsAny<Guid>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task GetByUuidAsync_ReturnsFromRepository_WhenNotInCache()
+    {
+        // Arrange
+        var uuid = Guid.NewGuid();
+        var member = new MemberEntity(1, "DB Member", "db@test.com", "456", "db.jpg", uuid);
+        object? cachedValue = null;
+        _cacheMock.Setup(c => c.TryGetValue($"Member_{uuid}", out cachedValue)).Returns(false);
+        _repositoryMock.Setup(r => r.GetByUuidAsync(uuid)).ReturnsAsync(member);
+
+        // ponytail: extension methods SetValue/SetAbsoluteExpiration can't be mocked; skip inner verification
+        // Use a lenient mock for ICacheEntry - the extension methods will set properties on it
+        var cacheEntryMock = new Mock<ICacheEntry>(MockBehavior.Loose);
+        cacheEntryMock.Setup(e => e.Dispose());
+        _cacheMock.Setup(c => c.CreateEntry(It.IsAny<object>())).Returns(cacheEntryMock.Object);
+
+        // Act
+        var result = await _service.GetByUuidAsync(uuid);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal("DB Member", result.Name);
+        _repositoryMock.Verify(r => r.GetByUuidAsync(uuid), Times.Once);
+    }
+
+    [Fact]
+    public async Task GetByUuidAsync_ReturnsNull_WhenMemberDoesNotExist()
+    {
+        // Arrange
+        var uuid = Guid.NewGuid();
+        object? cachedValue = null;
+        _cacheMock.Setup(c => c.TryGetValue($"Member_{uuid}", out cachedValue)).Returns(false);
+        _repositoryMock.Setup(r => r.GetByUuidAsync(uuid)).ReturnsAsync((MemberEntity?)null);
+
+        // Act
+        var result = await _service.GetByUuidAsync(uuid);
+
+        // Assert
+        Assert.Null(result);
+        _repositoryMock.Verify(r => r.GetByUuidAsync(uuid), Times.Once);
+    }
+
+    [Fact]
+    public async Task GetMemberBlocksAsync_ReturnsBlocks_WhenMemberHasBlocks()
+    {
+        // Arrange
+        var memberId = 1;
+        var blocks = new List<CarnivalBlockMembersEntity>
+        {
+            new CarnivalBlockMembersEntity(1, 10, memberId, RolesEnum.Member),
+            new CarnivalBlockMembersEntity(2, 20, memberId, RolesEnum.Manager)
+        };
+        _carnivalBlockMembersRepositoryMock.Setup(r => r.GetByMemberIdAsync(memberId)).ReturnsAsync(blocks);
+
+        // Act
+        var result = await _service.GetMemberBlocksAsync(memberId);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(2, result.Count);
+    }
+
+    [Fact]
+    public async Task GetMemberBlocksAsync_ReturnsEmptyList_WhenMemberHasNoBlocks()
+    {
+        // Arrange
+        var memberId = 999;
+        _carnivalBlockMembersRepositoryMock.Setup(r => r.GetByMemberIdAsync(memberId)).ReturnsAsync(new List<CarnivalBlockMembersEntity>());
+
+        // Act
+        var result = await _service.GetMemberBlocksAsync(memberId);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    public async Task GetMemberMeetingsAsync_ReturnsMeetings_WhenMemberHasBlocks()
+    {
+        // Arrange
+        var memberId = 1;
+        var blockIds = new List<int> { 10, 20 };
+        var blocks = new List<CarnivalBlockMembersEntity>
+        {
+            new CarnivalBlockMembersEntity(1, blockIds[0], memberId, RolesEnum.Member),
+            new CarnivalBlockMembersEntity(2, blockIds[1], memberId, RolesEnum.Member)
+        };
+        var meetings = new List<MeetingEntity>
+        {
+            new MeetingEntity(1, "Meeting 1", "Desc 1", "Location 1", "M1", DateTime.Now, blockIds[0]),
+            new MeetingEntity(2, "Meeting 2", "Desc 2", "Location 2", "M2", DateTime.Now, blockIds[1])
+        };
+        _carnivalBlockMembersRepositoryMock.Setup(r => r.GetByMemberIdAsync(memberId)).ReturnsAsync(blocks);
+        _meetingsRepositoryMock.Setup(r => r.GetByBlockIdsAsync(blockIds)).ReturnsAsync(meetings);
+
+        // Act
+        var result = await _service.GetMemberMeetingsAsync(memberId);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(2, result.Count);
+    }
+
+    [Fact]
+    public async Task GetMemberMeetingsAsync_ReturnsEmptyList_WhenMemberHasNoBlocks()
+    {
+        // Arrange
+        var memberId = 999;
+        _carnivalBlockMembersRepositoryMock.Setup(r => r.GetByMemberIdAsync(memberId)).ReturnsAsync(new List<CarnivalBlockMembersEntity>());
+
+        // Act
+        var result = await _service.GetMemberMeetingsAsync(memberId);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Empty(result);
     }
 }
