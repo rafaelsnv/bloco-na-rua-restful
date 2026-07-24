@@ -11,12 +11,14 @@ public class CarnivalBlockService
 (
     ICarnivalBlocksRepository repository,
     IMembersRepository membersRepository,
+    ICarnivalBlockMembersRepository carnivalBlockMembersRepository,
     IAuthorizationService authorizationService,
     IMemoryCache cache
 ) : ICarnivalBlockService
 {
     private readonly ICarnivalBlocksRepository _repository = repository;
     private readonly IMembersRepository _membersRepository = membersRepository;
+    private readonly ICarnivalBlockMembersRepository _carnivalBlockMembersRepository = carnivalBlockMembersRepository;
     private readonly IAuthorizationService _authorizationService = authorizationService;
     private readonly IMemoryCache _cache = cache;
 
@@ -67,6 +69,10 @@ public class CarnivalBlockService
             model.CarnivalBlockImage
         );
         var created = await _repository.AddAsync(entity);
+
+        var ownerMember = new CarnivalBlockMembersEntity(0, created.Id, model.OwnerId, RolesEnum.Owner);
+        await _carnivalBlockMembersRepository.AddAsync(ownerMember);
+
         _cache.Remove("CarnivalBlocks_All");
         return created;
     }
