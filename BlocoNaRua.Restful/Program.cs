@@ -175,3 +175,6 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.Run();
+
+// Make implicit Program class public for WebApplicationFactory access
+public partial class Program { }
