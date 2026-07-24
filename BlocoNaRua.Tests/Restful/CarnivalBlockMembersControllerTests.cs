@@ -32,7 +32,7 @@ public class CarnivalBlockMembersControllerTests
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        Assert.IsAssignableFrom<List<CarnivalBlockMemberResponse>>(okResult.Value);
+        Assert.IsAssignableFrom<IEnumerable<CarnivalBlockMemberResponse>>(okResult.Value);
     }
 
     [Fact]
@@ -53,8 +53,8 @@ public class CarnivalBlockMembersControllerTests
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var dtoList = Assert.IsAssignableFrom<List<CarnivalBlockMemberResponse>>(okResult.Value);
-        Assert.Equal(2, dtoList.Count);
+        var dtoList = Assert.IsAssignableFrom<IEnumerable<CarnivalBlockMemberResponse>>(okResult.Value);
+        Assert.Equal(2, dtoList.Count());
     }
 
     [Fact]

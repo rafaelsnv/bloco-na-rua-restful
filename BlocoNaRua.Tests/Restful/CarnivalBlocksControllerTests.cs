@@ -33,7 +33,7 @@ public class CarnivalBlocksControllerTests
         var result = await controller.GetAll();
 
         var okResult = Assert.IsType<OkObjectResult>(result);
-        Assert.IsAssignableFrom<IList<CarnivalBlockResponse>>(okResult.Value);
+        Assert.IsAssignableFrom<IEnumerable<CarnivalBlockResponse>>(okResult.Value);
     }
 
     [Fact]

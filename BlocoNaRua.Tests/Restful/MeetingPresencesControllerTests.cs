@@ -37,7 +37,7 @@ public class MeetingPresencesControllerTests
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        Assert.IsAssignableFrom<IList<MeetingPresenceResponse>>(okResult.Value);
+        Assert.IsAssignableFrom<IEnumerable<MeetingPresenceResponse>>(okResult.Value);
     }
 
     [Fact]

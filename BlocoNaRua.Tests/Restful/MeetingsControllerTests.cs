@@ -37,7 +37,7 @@ public class MeetingsControllerTests
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        Assert.IsAssignableFrom<IList<MeetingResponse>>(okResult.Value);
+        Assert.IsAssignableFrom<IEnumerable<MeetingResponse>>(okResult.Value);
     }
 
     [Fact]
@@ -64,7 +64,7 @@ public class MeetingsControllerTests
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        Assert.IsAssignableFrom<IList<MeetingResponse>>(okResult.Value);
+        Assert.IsAssignableFrom<IEnumerable<MeetingResponse>>(okResult.Value);
     }
 
     [Fact]

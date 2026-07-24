@@ -27,7 +27,7 @@ public class MembersController(IMembersService service, IMemberIdentityService m
     public async Task<IActionResult> GetAll([FromQuery] int? page = null, [FromQuery] int? pageSize = null)
     {
         var list = await _service.GetAllAsync(page, pageSize);
-        return Ok(list.Select(x => x.ToDTO()).ToList());
+        return Ok(list.Select(x => x.ToDTO()));
     }
 
     [HttpGet("{id}")]
@@ -63,7 +63,7 @@ public class MembersController(IMembersService service, IMemberIdentityService m
         if (blockMembers == null || !blockMembers.Any())
             return NotFound();
 
-        var response = blockMembers.Select(bm => bm.CarnivalBlock.ToDTO()).ToList();
+        var response = blockMembers.Select(bm => bm.CarnivalBlock.ToDTO());
         return Ok(response);
     }
 
@@ -76,7 +76,7 @@ public class MembersController(IMembersService service, IMemberIdentityService m
         if (meetings == null || !meetings.Any())
             return NotFound();
 
-        var response = meetings.Select(x => x.ToDTO()).ToList();
+        var response = meetings.Select(x => x.ToDTO());
         return Ok(response);
     }
 
