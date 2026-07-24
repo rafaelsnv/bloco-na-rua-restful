@@ -9,7 +9,7 @@ public class AdminService(IHttpClientFactory httpClientFactory, IConfiguration c
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
     private readonly IConfiguration _configuration = configuration;
 
-    public async Task<AdminDeleteResult> DeleteSignupAsync(Guid uuid)
+    public async Task<(bool Deleted, string? ErrorMessage)> DeleteSignupAsync(Guid uuid)
     {
         var supabaseUrl = _configuration["Supabase:Url"] ?? throw new InvalidOperationException("Supabase:Url configuration is missing");
         var serviceRoleKey = _configuration["Supabase:ServiceRoleKey"] ?? throw new InvalidOperationException("Supabase:ServiceRoleKey configuration is missing");
@@ -22,9 +22,9 @@ public class AdminService(IHttpClientFactory httpClientFactory, IConfiguration c
         var response = await client.DeleteAsync($"{supabaseUrl}/auth/v1/admin/users/{uuid}");
 
         if (response.IsSuccessStatusCode)
-            return new AdminDeleteResult(true, null);
+            return (true, null);
 
         var errorContent = await response.Content.ReadAsStringAsync();
-        return new AdminDeleteResult(false, $"Failed to delete user: {response.StatusCode} - {errorContent}");
+        return (false, $"Failed to delete user: {response.StatusCode} - {errorContent}");
     }
 }

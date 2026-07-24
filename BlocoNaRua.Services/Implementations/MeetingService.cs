@@ -2,6 +2,7 @@
 using BlocoNaRua.Domain.Entities;
 using BlocoNaRua.Domain.Enums;
 using BlocoNaRua.Services.Interfaces;
+using BlocoNaRua.Services.Utils;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace BlocoNaRua.Services.Implementations;
@@ -71,7 +72,7 @@ public class MeetingService
             model.Name,
             model.Description,
             model.Location,
-            GenerateMeetingCode(),
+            CodeGenerator.Generate(6),
             model.MeetingDateTime,
             model.CarnivalBlockId
         );
@@ -122,13 +123,5 @@ public class MeetingService
             _cache.Remove("Meetings_All");
         }
         return deleted;
-    }
-
-
-    private static string GenerateMeetingCode()
-    {
-        const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-        return new string(Enumerable.Repeat(chars, 6)
-            .Select(s => s[Random.Shared.Next(s.Length)]).ToArray());
     }
 }

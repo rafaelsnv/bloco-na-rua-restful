@@ -1,8 +1,8 @@
-﻿using System.Security.Cryptography;
-using BlocoNaRua.Data.Repositories.Interfaces;
+﻿using BlocoNaRua.Data.Repositories.Interfaces;
 using BlocoNaRua.Domain.Entities;
 using BlocoNaRua.Domain.Enums;
 using BlocoNaRua.Services.Interfaces;
+using BlocoNaRua.Services.Utils;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace BlocoNaRua.Services.Implementations;
@@ -62,8 +62,8 @@ public class CarnivalBlockService
             0,
             model.OwnerId,
             model.Name,
-            GenerateInviteCode(),
-            GenerateInviteCode(),
+            CodeGenerator.Generate(),
+            CodeGenerator.Generate(),
             model.CarnivalBlockImage
         );
         var created = await _repository.AddAsync(entity);
@@ -116,14 +116,5 @@ public class CarnivalBlockService
             _cache.Remove("CarnivalBlocks_All");
         }
         return deleted;
-    }
-
-    private static string GenerateInviteCode()
-    {
-        const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-        var buffer = new byte[8];
-        using var rng = RandomNumberGenerator.Create();
-        rng.GetBytes(buffer);
-        return new string(buffer.Select(b => chars[b % chars.Length]).ToArray());
     }
 }
