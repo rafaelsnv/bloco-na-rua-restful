@@ -17,7 +17,6 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     {
         modelBuilder
             .HasDefaultSchema("public")
-            .HasPostgresEnum<RolesEnum>()
             .ApplyConfiguration(new MemberConfiguration())
             .ApplyConfiguration(new MeetingConfiguration())
             .ApplyConfiguration(new CarnivalBlockConfiguration())

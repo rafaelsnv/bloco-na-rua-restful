@@ -10,6 +10,13 @@ using Microsoft.Extensions.Hosting;
 
 namespace BlocoNaRua.Data.Extensions;
 
+public sealed class PascalCaseNameTranslator : Npgsql.INpgsqlNameTranslator
+{
+    public string TranslateMemberName(string clrName) => clrName;
+
+    public string TranslateTypeName(string clrName) => clrName;
+}
+
 public static class DataExtensions
 {
     public static IServiceCollection AddEntityFramework(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
@@ -37,7 +44,10 @@ public static class DataExtensions
 
         return services.AddDbContext<AppDbContext>(options =>
         {
-            options.UseNpgsql(connectionString)
+            options.UseNpgsql(connectionString, npgsqlOptions =>
+                   {
+                        npgsqlOptions.MapEnum<Domain.Enums.RolesEnum>("roles", null, new PascalCaseNameTranslator());
+                   })
                    .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
                    .EnableServiceProviderCaching();
 

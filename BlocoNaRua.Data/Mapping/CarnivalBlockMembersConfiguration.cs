@@ -1,6 +1,9 @@
 ﻿using BlocoNaRua.Domain.Entities;
+using BlocoNaRua.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace BlocoNaRua.Data.Mapping;
 
@@ -27,8 +30,7 @@ public class CarnivalBlockMembersConfiguration : IEntityTypeConfiguration<Carniv
 
         builder.Property(e => e.Role)
                .HasColumnName("role")
-               .IsRequired()
-               .HasConversion<string>();
+               .IsRequired();
 
         builder.Property(e => e.CreatedAt)
                .HasColumnName("created_at")
@@ -51,5 +53,5 @@ public class CarnivalBlockMembersConfiguration : IEntityTypeConfiguration<Carniv
                .HasConstraintName("carnival_block_users_user_id_fkey");
 
        builder.HasIndex(e => e.MemberId);
-   }
+    }
 }
