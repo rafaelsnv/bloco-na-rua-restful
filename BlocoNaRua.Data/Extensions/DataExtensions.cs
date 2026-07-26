@@ -4,6 +4,7 @@ using BlocoNaRua.Data.Repositories;
 using BlocoNaRua.Data.Repositories.Base;
 using BlocoNaRua.Data.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -49,7 +50,8 @@ public static class DataExtensions
                         npgsqlOptions.MapEnum<Domain.Enums.RolesEnum>("roles", null, new PascalCaseNameTranslator());
                    })
                    .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
-                   .EnableServiceProviderCaching();
+                   .EnableServiceProviderCaching()
+                   .ConfigureWarnings(w => w.Ignore(CoreEventId.ManyServiceProvidersCreatedWarning));
 
             if (environment.IsDevelopment())
             {

@@ -142,12 +142,37 @@ app.UseExceptionHandler(appBuilder =>
         var error = context.Features.Get<IExceptionHandlerFeature>();
         if (error != null)
         {
+            var errorLogger = context.RequestServices.GetService<BlocoNaRua.Services.Interfaces.IErrorLogger>();
+            if (errorLogger != null)
+            {
+                var exception = error.Error as Exception;
+                var isCritical = exception is OutOfMemoryException
+                    or StackOverflowException
+                    or AccessViolationException;
+
+                var logEntry = new BlocoNaRua.Services.Interfaces.ErrorLogEntry
+                {
+                    Level = isCritical
+                        ? BlocoNaRua.Services.Interfaces.ErrorLevel.Critical
+                        : BlocoNaRua.Services.Interfaces.ErrorLevel.Error,
+                    Source = "ExceptionHandler",
+                    Message = exception?.Message ?? "Unknown error",
+                    StackTrace = exception?.StackTrace,
+                    RequestPath = context.Request.Path.Value,
+                    RequestMethod = context.Request.Method,
+                    StatusCode = context.Response.StatusCode,
+                    UserId = context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                };
+
+                _ = errorLogger.LogAsync(logEntry);
+            }
+
             var errorDetails = new
             {
                 StatusCode = context.Response.StatusCode,
                 DateTime = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss"),
                 Message = "Internal Server Error.",
-                Detailed = error.Error.Message,
+                Detailed = error.Error?.Message ?? "An unexpected error occurred.",
             };
             await context.Response.WriteAsync(JsonSerializer.Serialize(errorDetails));
         }
