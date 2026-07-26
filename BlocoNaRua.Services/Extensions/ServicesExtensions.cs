@@ -10,7 +10,8 @@ public static class ServicesExtensions
     {
         services.AddHttpClient("SupabaseAdmin");
         services.AddHttpContextAccessor();
-        services.AddScoped<ICarnivalBlockService, CarnivalBlockService>()
+        services.AddScoped<IErrorLogger, SupabaseErrorLoggerService>()
+                .AddScoped<ICarnivalBlockService, CarnivalBlockService>()
                 .AddScoped<IMembersService, MembersService>()
                 .AddScoped<ICarnivalBlockMembersService, CarnivalBlockMembersService>()
                 .AddScoped<IMeetingService, MeetingService>()
