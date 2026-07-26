@@ -117,7 +117,7 @@ public class MembersControllerTests
     }
 
     [Fact]
-    public async Task GetMemberCarnivalBlocks_ReturnsNotFound_WhenNoBlocks()
+    public async Task GetMemberCarnivalBlocks_ReturnsOkWithEmptyList_WhenNoBlocks()
     {
         // Arrange
         var memberId = 1;
@@ -128,7 +128,9 @@ public class MembersControllerTests
         var result = await controller.GetMemberCarnivalBlocks(memberId);
 
         // Assert
-        Assert.IsType<NotFoundResult>(result);
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        var dtoList = Assert.IsAssignableFrom<IEnumerable<CarnivalBlockResponse>>(okResult.Value);
+        Assert.Empty(dtoList);
     }
 
     [Fact]

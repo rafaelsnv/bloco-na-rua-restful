@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using BlocoNaRua.Data.Repositories;
 using BlocoNaRua.Data.Repositories.Interfaces;
 using BlocoNaRua.Domain.Entities;
 using BlocoNaRua.Services.Interfaces;
@@ -30,6 +31,6 @@ public class MemberIdentityService(
         if (!Guid.TryParse(subClaim.Value, out var uuid))
             throw new UnauthorizedAccessException("Invalid 'sub' claim format.");
 
-        return await _membersRepository.GetByUuidAsync(uuid);
+        return await _membersRepository.GetByUuidAsync(uuid, CancellationToken.None);
     }
 }

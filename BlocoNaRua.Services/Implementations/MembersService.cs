@@ -1,4 +1,5 @@
-﻿using BlocoNaRua.Data.Repositories.Interfaces;
+﻿using BlocoNaRua.Data.Repositories;
+using BlocoNaRua.Data.Repositories.Interfaces;
 using BlocoNaRua.Domain.Entities;
 using BlocoNaRua.Services.Interfaces;
 using Microsoft.Extensions.Caching.Memory;
@@ -11,14 +12,9 @@ public class MembersService(
     IMeetingsRepository meetingsRepository,
     IMemoryCache cache) : IMembersService
 {
-    private readonly IMembersRepository _repository = repository;
-    private readonly ICarnivalBlockMembersRepository _carnivalBlockMembersRepository = carnivalBlockMembersRepository;
-    private readonly IMeetingsRepository _meetingsRepository = meetingsRepository;
-    private readonly IMemoryCache _cache = cache;
-
     public async Task<IList<MemberEntity>> GetAllAsync(int? page = null, int? pageSize = null)
     {
-        var allMembers = await _repository.GetAllAsync();
+        var allMembers = await repository.GetAllAsync(null, null, CancellationToken.None);
         
         if (page.HasValue && pageSize.HasValue)
         {
@@ -31,38 +27,38 @@ public class MembersService(
 
     public async Task<MemberEntity?> GetByIdAsync(int id)
     {
-        return await _repository.GetByIdAsync(id);
+        return await repository.GetByIdAsync(id, CancellationToken.None);
     }
 
     public async Task<MemberEntity?> GetByUuidAsync(Guid uuid)
     {
-        if (_cache.TryGetValue($"Member_{uuid}", out MemberEntity? member))
+        if (cache.TryGetValue($"Member_{uuid}", out MemberEntity? member))
         {
             return member;
         }
 
-        member = await _repository.GetByUuidAsync(uuid);
+        member = await repository.GetByUuidAsync(uuid, CancellationToken.None);
         if (member != null)
         {
-            _cache.Set($"Member_{uuid}", member, TimeSpan.FromMinutes(5)); // Cache por 5 minutos
+            cache.Set($"Member_{uuid}", member, TimeSpan.FromMinutes(5)); // Cache por 5 minutos
         }
         return member;
     }
 
     public async Task<IList<CarnivalBlockMembersEntity>> GetMemberBlocksAsync(int memberId)
     {
-        return await _carnivalBlockMembersRepository.GetByMemberIdAsync(memberId);
+        return await carnivalBlockMembersRepository.GetByMemberIdAsync(memberId, CancellationToken.None);
     }
 
     public async Task<IList<MeetingEntity>> GetMemberMeetingsAsync(int memberId)
     {
-        var memberBlocks = await _carnivalBlockMembersRepository.GetByMemberIdAsync(memberId);
+        var memberBlocks = await carnivalBlockMembersRepository.GetByMemberIdAsync(memberId, CancellationToken.None);
         if (memberBlocks == null || !memberBlocks.Any())
             return new List<MeetingEntity>();
 
         var blockIds = memberBlocks.Select(mb => mb.CarnivalBlockId).ToList();
 
-        return await _meetingsRepository.GetByBlockIdsAsync(blockIds);
+        return await meetingsRepository.GetByBlockIdsAsync(blockIds, CancellationToken.None);
     }
 
     public async Task<MemberEntity> CreateAsync(MemberEntity entity)
@@ -75,10 +71,10 @@ public class MembersService(
             entity.ProfileImage,
             entity.Uuid
         );
-        var createdMember = await _repository.AddAsync(newMember);
+        var createdMember = await repository.AddAsync(newMember, CancellationToken.None);
         if (createdMember != null)
         {
-            _cache.Remove($"Member_{createdMember.Uuid}"); // Invalida o cache após a criação
+            cache.Remove($"Member_{createdMember.Uuid}"); // Invalida o cache após a criação
         }
         return createdMember!;
     }
@@ -88,7 +84,7 @@ public class MembersService(
         if (id != loggedMember)
             throw new UnauthorizedAccessException("Member is not authorized to update this resource.");
 
-        var entity = await _repository.GetByIdAsync(id);
+        var entity = await repository.GetByIdAsync(id, CancellationToken.None);
         if (entity is null)
             return null;
 
@@ -98,8 +94,8 @@ public class MembersService(
         entity.Phone = model.Phone;
         entity.ProfileImage = model.ProfileImage;
 
-        await _repository.UpdateAsync(entity);
-        _cache.Remove($"Member_{entity.Uuid}"); // Invalida o cache após a atualização
+        await repository.UpdateAsync(entity, CancellationToken.None);
+        cache.Remove($"Member_{entity.Uuid}"); // Invalida o cache após a atualização
         return entity;
     }
 
@@ -108,13 +104,13 @@ public class MembersService(
         if (id != loggedMember)
             throw new UnauthorizedAccessException("Member is not authorized to delete this resource.");
 
-        var entity = await _repository.GetByIdAsync(id);
+        var entity = await repository.GetByIdAsync(id, CancellationToken.None);
         if (entity is null)
             return false;
-        var deleted = await _repository.DeleteAsync(entity);
+        var deleted = await repository.DeleteAsync(entity, CancellationToken.None);
         if (deleted)
         {
-            _cache.Remove($"Member_{entity.Uuid}"); // Invalida o cache após a exclusão
+            cache.Remove($"Member_{entity.Uuid}"); // Invalida o cache após a exclusão
         }
         return deleted;
     }

@@ -35,7 +35,7 @@ public class MemberIdentityServiceTests
         var httpContext = new DefaultHttpContext { User = claimsPrincipal };
         _httpContextAccessorMock.Setup(a => a.HttpContext).Returns(httpContext);
 
-        _membersRepositoryMock.Setup(r => r.GetByUuidAsync(memberUuid)).ReturnsAsync(member);
+        _membersRepositoryMock.Setup(r => r.GetByUuidAsync(memberUuid, It.IsAny<CancellationToken>())).ReturnsAsync(member);
 
         // Act
         var result = await _service.GetMemberAsync();
@@ -93,7 +93,7 @@ public class MemberIdentityServiceTests
         var httpContext = new DefaultHttpContext { User = claimsPrincipal };
         _httpContextAccessorMock.Setup(a => a.HttpContext).Returns(httpContext);
 
-        _membersRepositoryMock.Setup(r => r.GetByUuidAsync(memberUuid)).ReturnsAsync(member);
+        _membersRepositoryMock.Setup(r => r.GetByUuidAsync(memberUuid, It.IsAny<CancellationToken>())).ReturnsAsync(member);
 
         // Act
         var result = await _service.GetMemberIdAsync();
@@ -117,7 +117,7 @@ public class MemberIdentityServiceTests
         var httpContext = new DefaultHttpContext { User = claimsPrincipal };
         _httpContextAccessorMock.Setup(a => a.HttpContext).Returns(httpContext);
 
-        _membersRepositoryMock.Setup(r => r.GetByUuidAsync(memberUuid)).ReturnsAsync((MemberEntity?)null);
+        _membersRepositoryMock.Setup(r => r.GetByUuidAsync(memberUuid, It.IsAny<CancellationToken>())).ReturnsAsync((MemberEntity?)null);
 
         // Act & Assert
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() => _service.GetMemberIdAsync());

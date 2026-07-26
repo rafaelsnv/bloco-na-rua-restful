@@ -2,6 +2,7 @@
 using System.Text.Json;
 using Asp.Versioning;
 using BlocoNaRua.Data.Extensions;
+using BlocoNaRua.Restful.Middleware;
 using BlocoNaRua.Services.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics;
@@ -13,6 +14,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Configuration.AddEnvironmentVariables();
+builder.Logging.AddFilter("Microsoft.EntityFrameworkCore.Model.Validation", LogLevel.Warning);
 
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
@@ -61,17 +63,9 @@ builder.Services.AddSwaggerGen(options =>
             Array.Empty<string>()
         }
     });
+    options.OperationFilter<BlocoNaRua.Restful.Swagger.FormFieldExamplesFilter>();
 });
 builder.Services.AddMemoryCache();
-builder.Services.AddHttpLogging(logging =>
-{
-    logging.LoggingFields = Microsoft.AspNetCore.HttpLogging.HttpLoggingFields.RequestMethod |
-                           Microsoft.AspNetCore.HttpLogging.HttpLoggingFields.RequestPath |
-                           Microsoft.AspNetCore.HttpLogging.HttpLoggingFields.ResponseStatusCode |
-                           Microsoft.AspNetCore.HttpLogging.HttpLoggingFields.Duration;
-    logging.RequestBodyLogLimit = 4096;
-    logging.ResponseBodyLogLimit = 4096;
-});
 var supabaseUrl = configuration["Supabase:Url"] ?? "";
 var supabaseIssuer = $"{supabaseUrl}/auth/v1";
 
@@ -92,13 +86,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
         options.Events = new JwtBearerEvents
         {
-            OnTokenValidated = context =>
-            {
-                var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
-                var claims = context.Principal?.Claims.Select(c => $"{c.Type}={c.Value}");
-                logger.LogInformation("JWT validated. Claims: {Claims}", string.Join(", ", claims ?? []));
-                return Task.CompletedTask;
-            },
             OnAuthenticationFailed = context =>
             {
                 var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
@@ -119,7 +106,7 @@ builder.Services.AddServices();
 var app = builder.Build();
 
 app.UseForwardedHeaders();
-app.UseHttpLogging();
+app.UseRequestLogging();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
