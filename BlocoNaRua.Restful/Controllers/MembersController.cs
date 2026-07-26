@@ -60,9 +60,6 @@ public class MembersController(IMembersService service, IMemberIdentityService m
     public async Task<IActionResult> GetMemberCarnivalBlocks(int id)
     {
         var blockMembers = await _service.GetMemberBlocksAsync(id);
-        if (blockMembers == null || !blockMembers.Any())
-            return NotFound();
-
         var response = blockMembers.Select(bm => bm.CarnivalBlock.ToDTO());
         return Ok(response);
     }
@@ -73,9 +70,6 @@ public class MembersController(IMembersService service, IMemberIdentityService m
     public async Task<IActionResult> GetMemberMeetings(int id)
     {
         var meetings = await _service.GetMemberMeetingsAsync(id);
-        if (meetings == null || !meetings.Any())
-            return NotFound();
-
         var response = meetings.Select(x => x.ToDTO());
         return Ok(response);
     }

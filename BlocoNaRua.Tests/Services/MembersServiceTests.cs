@@ -2,6 +2,7 @@
 using BlocoNaRua.Domain.Entities;
 using BlocoNaRua.Domain.Enums;
 using BlocoNaRua.Services.Implementations;
+using BlocoNaRua.Services.Interfaces;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace BlocoNaRua.Tests.Services;
@@ -20,7 +21,11 @@ public class MembersServiceTests
         _carnivalBlockMembersRepositoryMock = new Mock<ICarnivalBlockMembersRepository>();
         _meetingsRepositoryMock = new Mock<IMeetingsRepository>();
         _cacheMock = new Mock<IMemoryCache>();
-        _service = new MembersService(_repositoryMock.Object, _carnivalBlockMembersRepositoryMock.Object, _meetingsRepositoryMock.Object, _cacheMock.Object);
+        _service = new MembersService(
+            _repositoryMock.Object,
+            _carnivalBlockMembersRepositoryMock.Object,
+            _meetingsRepositoryMock.Object,
+            _cacheMock.Object);
     }
 
     [Fact]
@@ -32,7 +37,8 @@ public class MembersServiceTests
             new(1, "Member 1", "member1@test.com", "111", "img1.jpg", new Guid()),
             new(2, "Member 2", "member2@test.com", "222", "img2.jpg", new Guid())
         };
-        _repositoryMock.Setup(r => r.GetAllAsync()).ReturnsAsync(members);
+        _repositoryMock.Setup(r => r.GetAllAsync(It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(members);
 
         // Act
         var result = await _service.GetAllAsync();
@@ -47,7 +53,8 @@ public class MembersServiceTests
     {
         // Arrange
         var member = new MemberEntity(1, "Test Member", "test@test.com", "123", "img.jpg", new Guid());
-        _repositoryMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(member);
+        _repositoryMock.Setup(r => r.GetByIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(member);
 
         // Act
         var result = await _service.GetByIdAsync(1);
@@ -61,7 +68,8 @@ public class MembersServiceTests
     public async Task GetByIdAsync_ShouldReturnNull_WhenMemberDoesNotExist()
     {
         // Arrange
-        _repositoryMock.Setup(r => r.GetByIdAsync(It.IsAny<int>())).ReturnsAsync((MemberEntity?)null);
+        _repositoryMock.Setup(r => r.GetByIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((MemberEntity?)null);
 
         // Act
         var result = await _service.GetByIdAsync(999);
@@ -75,8 +83,9 @@ public class MembersServiceTests
     {
         // Arrange
         var newMember = new MemberEntity(0, "New Member", "new@test.com", "456", "new.jpg", new Guid());
-        var createdMember = new MemberEntity(1, "New Member", "new@test.com", "456", "new.jpg", new Guid());
-        _repositoryMock.Setup(r => r.AddAsync(It.IsAny<MemberEntity>())).ReturnsAsync(createdMember);
+        var createdMember = new MemberEntity(1, "New Member", "new@test.com", "456", "new.jpg", newMember.Uuid);
+        _repositoryMock.Setup(r => r.AddAsync(It.IsAny<MemberEntity>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(createdMember);
 
         // Act
         var result = await _service.CreateAsync(newMember);
@@ -92,10 +101,12 @@ public class MembersServiceTests
     {
         // Arrange
         var existingMember = new MemberEntity(1, "Old Name", "old@test.com", "123", "old.jpg", new Guid());
-        var updatedModel = new MemberEntity(1, "Updated Name", "updated@test.com", "321", "updated.jpg", new Guid());
+        var updatedModel = new MemberEntity(1, "Updated Name", "updated@test.com", "321", "updated.jpg", existingMember.Uuid);
 
-        _repositoryMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(existingMember);
-        _repositoryMock.Setup(r => r.UpdateAsync(It.IsAny<MemberEntity>())).ReturnsAsync(true);
+        _repositoryMock.Setup(r => r.GetByIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(existingMember);
+        _repositoryMock.Setup(r => r.UpdateAsync(It.IsAny<MemberEntity>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
 
         // Act
         var result = await _service.UpdateAsync(1, 1, updatedModel);
@@ -103,7 +114,7 @@ public class MembersServiceTests
         // Assert
         Assert.NotNull(result);
         Assert.Equal("Updated Name", result.Name);
-        _repositoryMock.Verify(r => r.UpdateAsync(It.Is<MemberEntity>(m => m.Name == "Updated Name")), Times.Once);
+        _repositoryMock.Verify(r => r.UpdateAsync(It.Is<MemberEntity>(m => m.Name == "Updated Name"), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -120,7 +131,8 @@ public class MembersServiceTests
     public async Task UpdateAsync_ShouldReturnNull_WhenMemberDoesNotExist()
     {
         // Arrange
-        _repositoryMock.Setup(r => r.GetByIdAsync(It.IsAny<int>())).ReturnsAsync((MemberEntity?)null);
+        _repositoryMock.Setup(r => r.GetByIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((MemberEntity?)null);
         var memberModel = new MemberEntity(999, "Non Existent", "none@test.com", "000", "none.jpg", new Guid());
 
         // Act
@@ -135,15 +147,17 @@ public class MembersServiceTests
     {
         // Arrange
         var member = new MemberEntity(1, "Test Member", "test@test.com", "123", "img.jpg", new Guid());
-        _repositoryMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(member);
-        _repositoryMock.Setup(r => r.DeleteAsync(member)).ReturnsAsync(true);
+        _repositoryMock.Setup(r => r.GetByIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(member);
+        _repositoryMock.Setup(r => r.DeleteAsync(It.IsAny<MemberEntity>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
 
         // Act
         var result = await _service.DeleteAsync(1, 1);
 
         // Assert
         Assert.True(result);
-        _repositoryMock.Verify(r => r.DeleteAsync(member), Times.Once);
+        _repositoryMock.Verify(r => r.DeleteAsync(It.Is<MemberEntity>(m => m.Id == 1), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -157,7 +171,8 @@ public class MembersServiceTests
     public async Task DeleteAsync_ShouldReturnFalse_WhenMemberDoesNotExist()
     {
         // Arrange
-        _repositoryMock.Setup(r => r.GetByIdAsync(It.IsAny<int>())).ReturnsAsync((MemberEntity?)null);
+        _repositoryMock.Setup(r => r.GetByIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((MemberEntity?)null);
 
         // Act
         var result = await _service.DeleteAsync(999, 999);
@@ -181,7 +196,7 @@ public class MembersServiceTests
         // Assert
         Assert.NotNull(result);
         Assert.Equal("Cached Member", result.Name);
-        _repositoryMock.Verify(r => r.GetByUuidAsync(It.IsAny<Guid>()), Times.Never);
+        _repositoryMock.Verify(r => r.GetByUuidAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -192,7 +207,8 @@ public class MembersServiceTests
         var member = new MemberEntity(1, "DB Member", "db@test.com", "456", "db.jpg", uuid);
         object? cachedValue = null;
         _cacheMock.Setup(c => c.TryGetValue($"Member_{uuid}", out cachedValue)).Returns(false);
-        _repositoryMock.Setup(r => r.GetByUuidAsync(uuid)).ReturnsAsync(member);
+        _repositoryMock.Setup(r => r.GetByUuidAsync(uuid, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(member);
 
         // ponytail: extension methods SetValue/SetAbsoluteExpiration can't be mocked; skip inner verification
         // Use a lenient mock for ICacheEntry - the extension methods will set properties on it
@@ -206,7 +222,7 @@ public class MembersServiceTests
         // Assert
         Assert.NotNull(result);
         Assert.Equal("DB Member", result.Name);
-        _repositoryMock.Verify(r => r.GetByUuidAsync(uuid), Times.Once);
+        _repositoryMock.Verify(r => r.GetByUuidAsync(uuid, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -216,14 +232,15 @@ public class MembersServiceTests
         var uuid = Guid.NewGuid();
         object? cachedValue = null;
         _cacheMock.Setup(c => c.TryGetValue($"Member_{uuid}", out cachedValue)).Returns(false);
-        _repositoryMock.Setup(r => r.GetByUuidAsync(uuid)).ReturnsAsync((MemberEntity?)null);
+        _repositoryMock.Setup(r => r.GetByUuidAsync(uuid, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((MemberEntity?)null);
 
         // Act
         var result = await _service.GetByUuidAsync(uuid);
 
         // Assert
         Assert.Null(result);
-        _repositoryMock.Verify(r => r.GetByUuidAsync(uuid), Times.Once);
+        _repositoryMock.Verify(r => r.GetByUuidAsync(uuid, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -236,7 +253,8 @@ public class MembersServiceTests
             new CarnivalBlockMembersEntity(1, 10, memberId, RolesEnum.Member),
             new CarnivalBlockMembersEntity(2, 20, memberId, RolesEnum.Manager)
         };
-        _carnivalBlockMembersRepositoryMock.Setup(r => r.GetByMemberIdAsync(memberId)).ReturnsAsync(blocks);
+        _carnivalBlockMembersRepositoryMock.Setup(r => r.GetByMemberIdAsync(memberId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(blocks);
 
         // Act
         var result = await _service.GetMemberBlocksAsync(memberId);
@@ -251,7 +269,8 @@ public class MembersServiceTests
     {
         // Arrange
         var memberId = 999;
-        _carnivalBlockMembersRepositoryMock.Setup(r => r.GetByMemberIdAsync(memberId)).ReturnsAsync(new List<CarnivalBlockMembersEntity>());
+        _carnivalBlockMembersRepositoryMock.Setup(r => r.GetByMemberIdAsync(memberId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<CarnivalBlockMembersEntity>());
 
         // Act
         var result = await _service.GetMemberBlocksAsync(memberId);
@@ -277,8 +296,10 @@ public class MembersServiceTests
             new MeetingEntity(1, "Meeting 1", "Desc 1", "Location 1", "M1", DateTime.Now, blockIds[0]),
             new MeetingEntity(2, "Meeting 2", "Desc 2", "Location 2", "M2", DateTime.Now, blockIds[1])
         };
-        _carnivalBlockMembersRepositoryMock.Setup(r => r.GetByMemberIdAsync(memberId)).ReturnsAsync(blocks);
-        _meetingsRepositoryMock.Setup(r => r.GetByBlockIdsAsync(blockIds)).ReturnsAsync(meetings);
+        _carnivalBlockMembersRepositoryMock.Setup(r => r.GetByMemberIdAsync(memberId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(blocks);
+        _meetingsRepositoryMock.Setup(r => r.GetByBlockIdsAsync(blockIds, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(meetings);
 
         // Act
         var result = await _service.GetMemberMeetingsAsync(memberId);
@@ -293,7 +314,8 @@ public class MembersServiceTests
     {
         // Arrange
         var memberId = 999;
-        _carnivalBlockMembersRepositoryMock.Setup(r => r.GetByMemberIdAsync(memberId)).ReturnsAsync(new List<CarnivalBlockMembersEntity>());
+        _carnivalBlockMembersRepositoryMock.Setup(r => r.GetByMemberIdAsync(memberId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<CarnivalBlockMembersEntity>());
 
         // Act
         var result = await _service.GetMemberMeetingsAsync(memberId);

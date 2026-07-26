@@ -41,20 +41,28 @@ public class CarnivalBlocksController(ICarnivalBlockService service, IMemberIden
     [HttpPost]
     [ProducesResponseType(typeof(CarnivalBlockResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Create([FromBody] CarnivalBlockCreate model)
     {
-        var entity = new CarnivalBlockEntity
-        (
-            id: 0,
-            ownerId: model.OwnerId,
-            name: model.Name,
-            inviteCode: string.Empty,
-            managersInviteCode: string.Empty,
-            carnivalBlockImage: model.CarnivalBlockImage
-        );
-        var created = await _service.CreateAsync(entity);
-        var result = created.ToDTO();
-        return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
+        try
+        {
+            var entity = new CarnivalBlockEntity
+            (
+                id: 0,
+                ownerId: model.OwnerId,
+                name: model.Name,
+                inviteCode: string.Empty,
+                managersInviteCode: string.Empty,
+                carnivalBlockImage: model.CarnivalBlockImage
+            );
+            var created = await _service.CreateAsync(entity);
+            var result = created.ToDTO();
+            return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
     }
 
     [HttpPut("{id}")]

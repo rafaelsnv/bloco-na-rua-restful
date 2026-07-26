@@ -24,7 +24,7 @@ public class MembersRepositoryTests
         var repo = new MembersRepository(context);
 
         // Act
-        var result = await repo.GetByUuidAsync(uuid);
+        var result = await repo.GetByUuidAsync(uuid, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -40,7 +40,7 @@ public class MembersRepositoryTests
         var repo = new MembersRepository(context);
 
         // Act
-        var result = await repo.GetByUuidAsync(Guid.NewGuid());
+        var result = await repo.GetByUuidAsync(Guid.NewGuid(), CancellationToken.None);
 
         // Assert
         Assert.Null(result);
@@ -66,7 +66,7 @@ public class MeetingsRepositoryTests
         var repo = new MeetingsRepository(context);
 
         // Act
-        var result = await repo.GetAllByBlockIdAsync(1);
+        var result = await repo.GetByBlockIdsAsync(new List<int> { 1 }, CancellationToken.None);
 
         // Assert
         Assert.Equal(2, result.Count);
@@ -84,7 +84,7 @@ public class MeetingsRepositoryTests
         var repo = new MeetingsRepository(context);
 
         // Act
-        var result = await repo.GetAllByBlockIdAsync(1);
+        var result = await repo.GetByBlockIdsAsync(new List<int> { 1 }, CancellationToken.None);
 
         // Assert
         Assert.Empty(result);
@@ -107,7 +107,7 @@ public class MeetingsRepositoryTests
         var repo = new MeetingsRepository(context);
 
         // Act
-        var result = await repo.GetByBlockIdsAsync(new List<int> { 1, 2 });
+        var result = await repo.GetByBlockIdsAsync(new List<int> { 1, 2 }, CancellationToken.None);
 
         // Assert
         Assert.Equal(3, result.Count);
@@ -121,7 +121,7 @@ public class MeetingsRepositoryTests
         var repo = new MeetingsRepository(context);
 
         // Act
-        var result = await repo.GetByBlockIdsAsync(new List<int> { 1, 2 });
+        var result = await repo.GetByBlockIdsAsync(new List<int> { 1, 2 }, CancellationToken.None);
 
         // Assert
         Assert.Empty(result);
@@ -148,7 +148,7 @@ public class CarnivalBlockMembersRepositoryTests
         var repo = new CarnivalBlockMembersRepository(context);
 
         // Act
-        var result = await repo.GetMemberRole(1, 1);
+        var result = await repo.GetMemberRole(1, 1, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -169,7 +169,7 @@ public class CarnivalBlockMembersRepositoryTests
         var repo = new CarnivalBlockMembersRepository(context);
 
         // Act
-        var result = await repo.GetMemberRole(1, 1);
+        var result = await repo.GetMemberRole(1, 1, CancellationToken.None);
 
         // Assert
         Assert.Null(result);
@@ -192,7 +192,7 @@ public class CarnivalBlockMembersRepositoryTests
         var repo = new CarnivalBlockMembersRepository(context);
 
         // Act
-        var result = await repo.GetByBlockIdAsync(1);
+        var result = await repo.GetByBlockIdAsync(1, CancellationToken.None);
 
         // Assert
         Assert.Equal(2, result.Count);
@@ -210,7 +210,7 @@ public class CarnivalBlockMembersRepositoryTests
         var repo = new CarnivalBlockMembersRepository(context);
 
         // Act
-        var result = await repo.GetByBlockIdAsync(1);
+        var result = await repo.GetByBlockIdAsync(1, CancellationToken.None);
 
         // Assert
         Assert.Empty(result);
@@ -231,7 +231,7 @@ public class CarnivalBlockMembersRepositoryTests
         var repo = new CarnivalBlockMembersRepository(context);
 
         // Act
-        var result = await repo.GetByMemberIdAsync(1);
+        var result = await repo.GetByMemberIdAsync(1, CancellationToken.None);
 
         // Assert
         Assert.Single(result);
@@ -251,7 +251,7 @@ public class CarnivalBlockMembersRepositoryTests
         var repo = new CarnivalBlockMembersRepository(context);
 
         // Act
-        var result = await repo.GetByMemberIdAsync(1);
+        var result = await repo.GetByMemberIdAsync(1, CancellationToken.None);
 
         // Assert
         Assert.Empty(result);

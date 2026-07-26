@@ -11,24 +11,31 @@ public class CarnivalBlockMembersService
     ICarnivalBlockMembersRepository repository,
     IMembersRepository membersRepository,
     ICarnivalBlocksRepository carnivalBlocksRepository,
-    IAuthorizationService authorizationService,
     IMemoryCache cache
 ) : ICarnivalBlockMembersService
 {
     private readonly ICarnivalBlockMembersRepository _repository = repository;
     private readonly IMembersRepository _membersRepository = membersRepository;
     private readonly ICarnivalBlocksRepository _carnivalBlocksRepository = carnivalBlocksRepository;
-    private readonly IAuthorizationService _authorizationService = authorizationService;
     private readonly IMemoryCache _cache = cache;
+
+    private async Task<RolesEnum?> GetMemberRoleInline(int carnivalBlockId, int memberId)
+    {
+        var carnivalBlock = await _carnivalBlocksRepository.GetByIdAsync(carnivalBlockId, CancellationToken.None)
+            ?? throw new KeyNotFoundException("Carnival block does not exist.");
+        if (carnivalBlock.OwnerId == memberId)
+            return RolesEnum.Owner;
+        return await _repository.GetMemberRole(carnivalBlockId, memberId, CancellationToken.None);
+    }
 
     public async Task<List<CarnivalBlockMembersEntity>> GetAllAsync()
     {
-        return (await _repository.GetAllAsync()).ToList();
+        return (await _repository.GetAllAsync(CancellationToken.None)).ToList();
     }
 
     public async Task<IList<CarnivalBlockMembersEntity>> GetByBlockIdAsync(int blockId)
     {
-        return await _repository.GetByBlockIdAsync(blockId);
+        return await _repository.GetByBlockIdAsync(blockId, CancellationToken.None);
     }
 
     public async Task<IList<CarnivalBlockMembersEntity>> GetByMemberIdAsync(int memberId)
@@ -39,7 +46,7 @@ public class CarnivalBlockMembersService
             return carnivalBlockMembers!;
         }
 
-        carnivalBlockMembers = await _repository.GetByMemberIdAsync(memberId);
+        carnivalBlockMembers = await _repository.GetByMemberIdAsync(memberId, CancellationToken.None);
         if (carnivalBlockMembers != null)
         {
             _cache.Set(cacheKey, carnivalBlockMembers, TimeSpan.FromMinutes(5)); // Cache por 5 minutos
@@ -49,35 +56,35 @@ public class CarnivalBlockMembersService
 
     public async Task CreateAsync(CarnivalBlockMembersEntity carnivalBlockMember, int loggedMemberId)
     {
-        var member = await _membersRepository.GetByIdAsync(carnivalBlockMember.MemberId)
+        var member = await _membersRepository.GetByIdAsync(carnivalBlockMember.MemberId, CancellationToken.None)
             ?? throw new KeyNotFoundException("Member does not exist.");
 
-        var carnivalBlock = await _carnivalBlocksRepository.GetByIdAsync(carnivalBlockMember.CarnivalBlockId)
+        var carnivalBlock = await _carnivalBlocksRepository.GetByIdAsync(carnivalBlockMember.CarnivalBlockId, CancellationToken.None)
             ?? throw new KeyNotFoundException("Carnival block does not exist.");
 
-        var loggedMemberRole = await _authorizationService.GetMemberRole(carnivalBlockMember.CarnivalBlockId, loggedMemberId);
+        var loggedMemberRole = await GetMemberRoleInline(carnivalBlockMember.CarnivalBlockId, loggedMemberId);
 
         if (loggedMemberRole != RolesEnum.Owner && loggedMemberRole != RolesEnum.Manager)
         {
             throw new UnauthorizedAccessException("Member is not authorized to add members.");
         }
 
-        await _repository.AddAsync(carnivalBlockMember);
+        await _repository.AddAsync(carnivalBlockMember, CancellationToken.None);
         _cache.Remove($"CarnivalBlockMembers_Member_{carnivalBlockMember.MemberId}"); // Invalida o cache
     }
 
     public async Task<CarnivalBlockMembersEntity?> UpdateAsync(int id, int loggedMemberId, RolesEnum newRole)
     {
-        var carnivalBlockMember = await _repository.GetByIdAsync(id)
+        var carnivalBlockMember = await _repository.GetByIdAsync(id, CancellationToken.None)
             ?? throw new KeyNotFoundException("Carnival block member does not exist.");
 
-        var carnivalBlock = await _carnivalBlocksRepository.GetByIdAsync(carnivalBlockMember.CarnivalBlockId)
+        var carnivalBlock = await _carnivalBlocksRepository.GetByIdAsync(carnivalBlockMember.CarnivalBlockId, CancellationToken.None)
             ?? throw new KeyNotFoundException("Carnival block does not exist.");
 
-        var loggedMember = await _membersRepository.GetByIdAsync(loggedMemberId)
+        var loggedMember = await _membersRepository.GetByIdAsync(loggedMemberId, CancellationToken.None)
             ?? throw new KeyNotFoundException("Logged member does not exist.");
 
-        var loggedMemberRole = await _authorizationService.GetMemberRole(carnivalBlockMember.CarnivalBlockId, loggedMemberId);
+        var loggedMemberRole = await GetMemberRoleInline(carnivalBlockMember.CarnivalBlockId, loggedMemberId);
 
         if (loggedMemberRole != RolesEnum.Owner && loggedMemberRole != RolesEnum.Manager)
         {
@@ -90,23 +97,23 @@ public class CarnivalBlockMembersService
         }
 
         carnivalBlockMember.Role = newRole;
-        await _repository.UpdateAsync(carnivalBlockMember);
+        await _repository.UpdateAsync(id, carnivalBlockMember, CancellationToken.None);
         _cache.Remove($"CarnivalBlockMembers_Member_{carnivalBlockMember.MemberId}"); // Invalida o cache
         return carnivalBlockMember;
     }
 
     public async Task<bool> DeleteAsync(int id, int loggedMemberId)
     {
-        var carnivalBlockMember = await _repository.GetByIdAsync(id)
+        var carnivalBlockMember = await _repository.GetByIdAsync(id, CancellationToken.None)
             ?? throw new KeyNotFoundException("Carnival block member does not exist.");
 
-        var carnivalBlock = await _carnivalBlocksRepository.GetByIdAsync(carnivalBlockMember.CarnivalBlockId)
+        var carnivalBlock = await _carnivalBlocksRepository.GetByIdAsync(carnivalBlockMember.CarnivalBlockId, CancellationToken.None)
             ?? throw new KeyNotFoundException("Carnival block does not exist.");
 
-        var loggedMember = await _membersRepository.GetByIdAsync(loggedMemberId)
+        var loggedMember = await _membersRepository.GetByIdAsync(loggedMemberId, CancellationToken.None)
             ?? throw new KeyNotFoundException("Logged member does not exist.");
 
-        var loggedMemberRole = await _authorizationService.GetMemberRole(carnivalBlockMember.CarnivalBlockId, loggedMemberId);
+        var loggedMemberRole = await GetMemberRoleInline(carnivalBlockMember.CarnivalBlockId, loggedMemberId);
 
         if (loggedMemberRole != RolesEnum.Owner && loggedMemberRole != RolesEnum.Manager)
         {
@@ -118,7 +125,7 @@ public class CarnivalBlockMembersService
             throw new InvalidOperationException("Cannot remove the owner from the carnival block.");
         }
 
-        var deleted = await _repository.DeleteAsync(carnivalBlockMember);
+        var deleted = await _repository.DeleteAsync(id, CancellationToken.None);
         if (deleted)
         {
             _cache.Remove($"CarnivalBlockMembers_Member_{carnivalBlockMember.MemberId}"); // Invalida o cache

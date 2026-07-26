@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using BlocoNaRua.Data.Context;
+using BlocoNaRua.Data.Repositories;
 using BlocoNaRua.Data.Repositories.Interfaces;
 using BlocoNaRua.Domain.Entities;
 using BlocoNaRua.Domain.Enums;
@@ -44,7 +45,7 @@ public abstract class IntegrationTestBase : IAsyncLifetime
 
         var scope = _factory!.Services.CreateScope();
         var repository = scope.ServiceProvider.GetRequiredService<IMembersRepository>();
-        var created = await repository.AddAsync(entity);
+        var created = await repository.AddAsync(entity, CancellationToken.None);
 
         SetCurrentMember(uuid);
 
@@ -61,7 +62,7 @@ public abstract class IntegrationTestBase : IAsyncLifetime
         var scope = _factory!.Services.CreateScope();
         var repository = scope.ServiceProvider.GetRequiredService<ICarnivalBlockMembersRepository>();
         var entity = new CarnivalBlockMembersEntity(0, carnivalBlockId, memberId, role);
-        var created = await repository.AddAsync(entity);
+        var created = await repository.AddAsync(entity, CancellationToken.None);
         return created.Id;
     }
 

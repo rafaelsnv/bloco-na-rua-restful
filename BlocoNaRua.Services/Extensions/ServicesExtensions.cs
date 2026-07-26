@@ -15,7 +15,6 @@ public static class ServicesExtensions
                 .AddScoped<ICarnivalBlockMembersService, CarnivalBlockMembersService>()
                 .AddScoped<IMeetingService, MeetingService>()
                 .AddScoped<IMeetingPresenceService, MeetingPresenceService>()
-                .AddScoped<IAuthorizationService, AuthorizationService>()
                 .AddScoped<IAdminService, AdminService>()
                 .AddScoped<IAuthService, AuthService>()
                 .AddScoped<IMemberIdentityService, MemberIdentityService>();

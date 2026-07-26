@@ -10,20 +10,31 @@ namespace BlocoNaRua.Services.Implementations;
 public class MeetingService
 (
     IMeetingsRepository repository,
-    IAuthorizationService authorizationService,
+    ICarnivalBlocksRepository carnivalBlocksRepository,
+    ICarnivalBlockMembersRepository carnivalBlockMembersRepository,
     IMemoryCache cache
 ) : IMeetingService
 {
     private readonly IMeetingsRepository _repository = repository;
-    private readonly IAuthorizationService _authorizationService = authorizationService;
+    private readonly ICarnivalBlocksRepository _carnivalBlocksRepository = carnivalBlocksRepository;
+    private readonly ICarnivalBlockMembersRepository _carnivalBlockMembersRepository = carnivalBlockMembersRepository;
     private readonly IMemoryCache _cache = cache;
+
+    private async Task<RolesEnum?> GetMemberRoleInline(int carnivalBlockId, int memberId)
+    {
+        var carnivalBlock = await _carnivalBlocksRepository.GetByIdAsync(carnivalBlockId, CancellationToken.None)
+            ?? throw new KeyNotFoundException("Carnival block does not exist.");
+        if (carnivalBlock.OwnerId == memberId)
+            return RolesEnum.Owner;
+        return await _carnivalBlockMembersRepository.GetMemberRole(carnivalBlockId, memberId, CancellationToken.None);
+    }
 
     public async Task<IList<MeetingEntity>> GetAllAsync(int? page = null, int? pageSize = null)
     {
         const string cacheKey = "Meetings_All";
         if (!_cache.TryGetValue(cacheKey, out IList<MeetingEntity>? meetings))
         {
-            meetings = await _repository.GetAllAsync();
+            meetings = await _repository.GetAllAsync(null, null, CancellationToken.None);
             _cache.Set(cacheKey, meetings, TimeSpan.FromMinutes(5));
         }
 
@@ -44,7 +55,7 @@ public class MeetingService
             return meeting;
         }
 
-        meeting = await _repository.GetByIdAsync(id);
+        meeting = await _repository.GetByIdAsync(id, CancellationToken.None);
         if (meeting != null)
         {
             _cache.Set(cacheKey, meeting, TimeSpan.FromMinutes(5));
@@ -54,12 +65,12 @@ public class MeetingService
 
     public async Task<IList<MeetingEntity>> GetAllByBlockIdAsync(int blockId)
     {
-        return await _repository.GetAllByBlockIdAsync(blockId);
+        return await _repository.GetByBlockIdsAsync([blockId], CancellationToken.None);
     }
 
     public async Task<MeetingEntity> CreateAsync(MeetingEntity model, int loggedMember)
     {
-        var memberRole = await _authorizationService.GetMemberRole(model.CarnivalBlockId, loggedMember);
+        var memberRole = await GetMemberRoleInline(model.CarnivalBlockId, loggedMember);
 
         if (memberRole != RolesEnum.Owner && memberRole != RolesEnum.Manager)
         {
@@ -76,17 +87,17 @@ public class MeetingService
             model.MeetingDateTime,
             model.CarnivalBlockId
         );
-        var created = await _repository.AddAsync(entity);
+        var created = await _repository.AddAsync(entity, CancellationToken.None);
         _cache.Remove("Meetings_All");
         return created;
     }
 
     public async Task<MeetingEntity?> UpdateAsync(int id, MeetingEntity model, int loggedMember)
     {
-        var entity = await _repository.GetByIdAsync(id)
+        var entity = await _repository.GetByIdAsync(id, CancellationToken.None)
             ?? throw new KeyNotFoundException("Meeting does not exist.");
 
-        var memberRole = await _authorizationService.GetMemberRole(entity.CarnivalBlockId, loggedMember);
+        var memberRole = await GetMemberRoleInline(entity.CarnivalBlockId, loggedMember);
 
         if (memberRole != RolesEnum.Owner && memberRole != RolesEnum.Manager)
         {
@@ -98,7 +109,7 @@ public class MeetingService
         entity.Location = model.Location;
         entity.MeetingDateTime = model.MeetingDateTime;
 
-        await _repository.UpdateAsync(entity);
+        await _repository.UpdateAsync(entity, CancellationToken.None);
         _cache.Remove($"Meeting_{id}");
         _cache.Remove("Meetings_All");
         return entity;
@@ -106,17 +117,17 @@ public class MeetingService
 
     public async Task<bool> DeleteAsync(int id, int loggedMember)
     {
-        var entity = await _repository.GetByIdAsync(id)
+        var entity = await _repository.GetByIdAsync(id, CancellationToken.None)
             ?? throw new KeyNotFoundException("Meeting does not exist.");
 
-        var memberRole = await _authorizationService.GetMemberRole(entity.CarnivalBlockId, loggedMember);
+        var memberRole = await GetMemberRoleInline(entity.CarnivalBlockId, loggedMember);
 
         if (memberRole != RolesEnum.Owner && memberRole != RolesEnum.Manager)
         {
             throw new UnauthorizedAccessException("Member is not authorized to delete this meeting.");
         }
 
-        var deleted = await _repository.DeleteAsync(entity);
+        var deleted = await _repository.DeleteAsync(id, CancellationToken.None);
         if (deleted)
         {
             _cache.Remove($"Meeting_{id}");
