@@ -156,8 +156,8 @@ app.UseExceptionHandler(appBuilder =>
                         ? BlocoNaRua.Services.Interfaces.ErrorLevel.Critical
                         : BlocoNaRua.Services.Interfaces.ErrorLevel.Error,
                     Source = "ExceptionHandler",
-                    Message = exception?.Message ?? "Unknown error",
-                    StackTrace = exception?.StackTrace,
+                    Message = exception?.InnerException?.Message ?? exception?.Message ?? "Unknown error",
+                    StackTrace = exception?.InnerException?.StackTrace ?? exception?.StackTrace,
                     RequestPath = context.Request.Path.Value,
                     RequestMethod = context.Request.Method,
                     StatusCode = context.Response.StatusCode,
