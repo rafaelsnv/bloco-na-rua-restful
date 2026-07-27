@@ -62,10 +62,7 @@ public class CarnivalBlockMembersControllerTests
     {
         // Arrange
         _memberIdentityServiceMock.Setup(s => s.GetMemberIdAsync()).ReturnsAsync(1);
-        var createDto = new CarnivalBlockMemberCreate(
-            CarnivalBlockId: 1,
-            Role: RolesEnum.Member
-        );
+        var createDto = new CarnivalBlockMemberCreate(1, RolesEnum.Member, null);
 
         var controller = CreateController();
 
@@ -97,10 +94,7 @@ public class CarnivalBlockMembersControllerTests
     {
         // Arrange
         _memberIdentityServiceMock.Setup(s => s.GetMemberIdAsync()).ReturnsAsync(1);
-        var createDto = new CarnivalBlockMemberCreate(
-            CarnivalBlockId: 1,
-            Role: RolesEnum.Member
-        );
+        var createDto = new CarnivalBlockMemberCreate(1, RolesEnum.Member, null);
 
         _serviceMock.Setup(s => s.CreateAsync(It.IsAny<CarnivalBlockMembersEntity>(), It.IsAny<int>()))
             .ThrowsAsync(new KeyNotFoundException("Member does not exist."));
@@ -120,10 +114,7 @@ public class CarnivalBlockMembersControllerTests
     {
         // Arrange
         _memberIdentityServiceMock.Setup(s => s.GetMemberIdAsync()).ReturnsAsync(1);
-        var createDto = new CarnivalBlockMemberCreate(
-            CarnivalBlockId: 999,
-            Role: RolesEnum.Member
-        );
+        var createDto = new CarnivalBlockMemberCreate(999, RolesEnum.Member, null);
 
         _serviceMock.Setup(s => s.CreateAsync(It.IsAny<CarnivalBlockMembersEntity>(), It.IsAny<int>()))
             .ThrowsAsync(new KeyNotFoundException("Carnival block does not exist."));
@@ -143,10 +134,7 @@ public class CarnivalBlockMembersControllerTests
     {
         // Arrange
         _memberIdentityServiceMock.Setup(s => s.GetMemberIdAsync()).ReturnsAsync(1);
-        var createDto = new CarnivalBlockMemberCreate(
-            CarnivalBlockId: 1,
-            Role: RolesEnum.Member
-        );
+        var createDto = new CarnivalBlockMemberCreate(1, RolesEnum.Member, null);
 
         _serviceMock.Setup(s => s.CreateAsync(It.IsAny<CarnivalBlockMembersEntity>(), It.IsAny<int>()))
             .ThrowsAsync(new InvalidOperationException("Something went wrong"));

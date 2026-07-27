@@ -142,7 +142,16 @@ public class CarnivalBlockMembersServiceTests : IDisposable
         // Arrange
         await AddData(1, 101, "Block 1", 101, RolesEnum.Owner);
         await AddData(1, 101, "Block 1", 102, RolesEnum.Member);
-        var newBlockMember = new CarnivalBlockMembersEntity(0, 1, 102, RolesEnum.Member);
+        // Add member 103 entity directly (not as block member) so service can add them
+        await _membersRepository.AddAsync(new MemberEntity(
+            id: 103,
+            name: "New Member",
+            email: "new@test.com",
+            phone: "1234567890",
+            profileImage: "profile_image.jpg",
+            uuid: new Guid()
+        ));
+        var newBlockMember = new CarnivalBlockMembersEntity(0, 1, 103, RolesEnum.Member);
 
         // Act
         await _carnivalBlockMembersService.CreateAsync(newBlockMember, 101);
