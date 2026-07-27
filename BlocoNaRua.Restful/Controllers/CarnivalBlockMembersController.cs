@@ -51,7 +51,7 @@ public class CarnivalBlockMembersController(ICarnivalBlockMembersService carniva
             if (blockMember == null)
                 return BadRequest();
 
-            var memberId = await _memberIdentityService.GetMemberIdAsync();
+            var memberId = blockMember.MemberId ?? await _memberIdentityService.GetMemberIdAsync();
 
             var entity = new CarnivalBlockMembersEntity(
                 id: 0,
