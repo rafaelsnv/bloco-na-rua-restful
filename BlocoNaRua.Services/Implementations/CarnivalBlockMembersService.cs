@@ -69,6 +69,12 @@ public class CarnivalBlockMembersService
             throw new UnauthorizedAccessException("Member is not authorized to add members.");
         }
 
+        var existing = await _repository.GetByBlockIdAsync(carnivalBlockMember.CarnivalBlockId, CancellationToken.None);
+        if (existing.Any(m => m.MemberId == carnivalBlockMember.MemberId))
+        {
+            throw new InvalidOperationException("Member is already part of this carnival block.");
+        }
+
         await _repository.AddAsync(carnivalBlockMember, CancellationToken.None);
         _cache.Remove($"CarnivalBlockMembers_Member_{carnivalBlockMember.MemberId}"); // Invalida o cache
     }

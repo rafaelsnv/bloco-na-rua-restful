@@ -25,6 +25,8 @@ public class MeetingsRepository(AppDbContext appContext) : RepositoryBase<Meetin
     {
         entity.CreatedAt = DateTime.UtcNow;
         entity.UpdatedAt = entity.CreatedAt;
+        if (entity.MeetingDateTime.HasValue && entity.MeetingDateTime.Value.Kind == DateTimeKind.Unspecified)
+            entity.MeetingDateTime = DateTime.SpecifyKind(entity.MeetingDateTime.Value, DateTimeKind.Utc);
         var result = await DbSet.AddAsync(entity, ct);
         await AppDbContext.SaveChangesAsync(ct);
         return result.Entity;
@@ -33,6 +35,8 @@ public class MeetingsRepository(AppDbContext appContext) : RepositoryBase<Meetin
     public async Task<bool> UpdateAsync(MeetingEntity entity, CancellationToken ct)
     {
         entity.UpdatedAt = DateTime.UtcNow;
+        if (entity.MeetingDateTime.HasValue && entity.MeetingDateTime.Value.Kind == DateTimeKind.Unspecified)
+            entity.MeetingDateTime = DateTime.SpecifyKind(entity.MeetingDateTime.Value, DateTimeKind.Utc);
         DbSet.Update(entity);
         return await AppDbContext.SaveChangesAsync(ct) > 0;
     }
