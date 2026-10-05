@@ -109,9 +109,10 @@ app.UseForwardedHeaders();
 app.UseRequestLogging();
 
 // Configure the HTTP request pipeline.
+app.UseSwagger();
+
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
     app.MapGet("/", () => Results.Redirect("/swagger/index.html"))
        .ExcludeFromDescription();
 
