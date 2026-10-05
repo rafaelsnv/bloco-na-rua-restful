@@ -13,11 +13,6 @@ public class CarnivalBlocksRepository(AppDbContext appContext) : RepositoryBase<
         return await DbSet.AsNoTracking().ToListAsync(ct);
     }
 
-    public async Task<CarnivalBlockEntity?> GetByInviteCodeAsync(string inviteCode, CancellationToken ct)
-    {
-        return await DbSet.AsNoTracking().FirstOrDefaultAsync(b => b.InviteCode == inviteCode, ct);
-    }
-
     public async Task<CarnivalBlockEntity> AddAsync(CarnivalBlockEntity entity, CancellationToken ct)
     {
         entity.CreatedAt = DateTime.UtcNow;

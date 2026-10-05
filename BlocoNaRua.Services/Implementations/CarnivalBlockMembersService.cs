@@ -54,6 +54,27 @@ public class CarnivalBlockMembersService
         return carnivalBlockMembers!;
     }
 
+    public async Task<CarnivalBlockMembersEntity> JoinByInviteCodeAsync(string inviteCode, int memberId)
+    {
+        var blockAndRole = await _repository.GetBlockAndRoleByInviteCodeAsync(inviteCode, CancellationToken.None)
+            ?? throw new KeyNotFoundException("Carnival block not found.");
+
+        var existing = await _repository.GetByMemberAndBlockAsync(blockAndRole.BlockId, memberId, CancellationToken.None);
+        if (existing != null)
+        {
+            throw new InvalidOperationException("Member is already part of this carnival block.");
+        }
+
+        var entity = new CarnivalBlockMembersEntity(0, blockAndRole.BlockId, memberId, blockAndRole.Role);
+        var created = await _repository.AddAsync(entity, CancellationToken.None);
+
+        var carnivalBlock = await _carnivalBlocksRepository.GetByIdAsync(blockAndRole.BlockId, CancellationToken.None);
+        created.CarnivalBlock = carnivalBlock!;
+
+        _cache.Remove($"CarnivalBlockMembers_Member_{memberId}");
+        return created;
+    }
+
     public async Task CreateAsync(CarnivalBlockMembersEntity carnivalBlockMember, int loggedMemberId)
     {
         var member = await _membersRepository.GetByIdAsync(carnivalBlockMember.MemberId, CancellationToken.None)

@@ -21,6 +21,9 @@ public static class EntityMapper
     public static CarnivalBlockMemberResponse ToDTO(this CarnivalBlockMembersEntity entity) =>
         new(entity.Id, entity.CarnivalBlockId, entity.MemberId, entity.Role, entity.CreatedAt.GetValueOrDefault(), entity.UpdatedAt.GetValueOrDefault());
 
+    public static CarnivalBlockMemberJoinResponse ToJoinDTO(this CarnivalBlockMembersEntity entity) =>
+        new(entity.Id, entity.CarnivalBlockId, entity.CarnivalBlock.Name, entity.MemberId, entity.Role, entity.CreatedAt.GetValueOrDefault(), entity.UpdatedAt.GetValueOrDefault());
+
     public static MeetingPresenceResponse ToDTO(this MeetingPresenceEntity entity) =>
         new(entity.Id, entity.MemberId, entity.MeetingId, entity.CarnivalBlockId, entity.IsPresent, entity.CreatedAt, entity.UpdatedAt);
 }
