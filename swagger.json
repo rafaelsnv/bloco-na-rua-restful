@@ -2670,6 +2670,11 @@
           },
           "role": {
             "$ref": "#/components/schemas/RolesEnum"
+          },
+          "memberId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
           }
         },
         "additionalProperties": false

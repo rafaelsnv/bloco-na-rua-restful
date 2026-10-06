@@ -27,6 +27,28 @@ public class CarnivalBlockMembersController(ICarnivalBlockMembersService carniva
         return Ok(response);
     }
 
+    [HttpPost("join/{inviteCode}")]
+    [ProducesResponseType(typeof(CarnivalBlockMemberJoinResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> JoinByInviteCode(string inviteCode)
+    {
+        try
+        {
+            var memberId = await _memberIdentityService.GetMemberIdAsync();
+            var result = await _carnivalBlockMembersService.JoinByInviteCodeAsync(inviteCode, memberId);
+            return CreatedAtAction(nameof(GetBlocksMembersByBlockId), new { blockId = result.CarnivalBlockId }, result.ToJoinDTO());
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(ex.Message);
+        }
+    }
+
     [HttpGet("block/{blockId}")]
     [ProducesResponseType(typeof(List<CarnivalBlockMemberResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]

@@ -24,6 +24,20 @@ public class CarnivalBlockMembersRepository(AppDbContext appContext) : Repositor
             cb => cb.CarnivalBlockId == carnivalBlockId && cb.MemberId == memberId, ct);
     }
 
+    public async Task<(int BlockId, RolesEnum Role)?> GetBlockAndRoleByInviteCodeAsync(string inviteCode, CancellationToken ct)
+    {
+        var block = await DbSet
+            .AsNoTracking()
+            .Include(cb => cb.CarnivalBlock)
+            .Where(cb => cb.CarnivalBlock.InviteCode == inviteCode || cb.CarnivalBlock.ManagersInviteCode == inviteCode)
+            .Select(cb => new { cb.CarnivalBlockId, cb.CarnivalBlock.InviteCode, cb.CarnivalBlock.ManagersInviteCode })
+            .FirstOrDefaultAsync(ct);
+
+        if (block == null) return null;
+        var role = block.InviteCode == inviteCode ? RolesEnum.Member : RolesEnum.Manager;
+        return (block.CarnivalBlockId, role);
+    }
+
     public async Task<RolesEnum?> GetMemberRole(int carnivalBlockId, int memberId, CancellationToken ct)
     {
         var carnivalBlockMember = await DbSet.AsNoTracking().FirstOrDefaultAsync

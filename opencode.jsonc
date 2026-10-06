@@ -4,7 +4,14 @@
     "csharp_mcp": {
       "enabled": true,
       "type": "remote",
-      "url": "https://learn.microsoft.com/api/mcp",
-    },
+      "url": "https://learn.microsoft.com/api/mcp"
+    }
   },
+  "agent": {
+    "OpenCopywriter": { "hidden": true },
+    "OpenDataAnalyst": { "hidden": true },
+    "OpenRepoManager": { "hidden": true },
+    "OpenSystemBuilder": { "hidden": true },
+    "OpenTechnicalWriter": { "hidden": true }
+  }
 }

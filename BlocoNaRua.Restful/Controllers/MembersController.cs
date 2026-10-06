@@ -24,9 +24,14 @@ public class MembersController(IMembersService service, IMemberIdentityService m
 
     [HttpGet]
     [ProducesResponseType(typeof(List<MemberResponse>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetAll([FromQuery] int? page = null, [FromQuery] int? pageSize = null)
+    public async Task<IActionResult> GetAll([FromQuery] int? page = null, [FromQuery] int? pageSize = null, [FromQuery] string? ids = null)
     {
-        var list = await _service.GetAllAsync(page, pageSize);
+        IEnumerable<int>? parsedIds = null;
+        if (!string.IsNullOrWhiteSpace(ids))
+        {
+            parsedIds = ids.Split(',').Select(int.Parse);
+        }
+        var list = await _service.GetAllAsync(page, pageSize, parsedIds);
         return Ok(list.Select(x => x.ToDTO()));
     }
 

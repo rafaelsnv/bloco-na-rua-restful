@@ -12,16 +12,22 @@ public class MembersService(
     IMeetingsRepository meetingsRepository,
     IMemoryCache cache) : IMembersService
 {
-    public async Task<IList<MemberEntity>> GetAllAsync(int? page = null, int? pageSize = null)
+    public async Task<IList<MemberEntity>> GetAllAsync(int? page = null, int? pageSize = null, IEnumerable<int>? ids = null)
     {
         var allMembers = await repository.GetAllAsync(null, null, CancellationToken.None);
-        
+
+        if (ids != null && ids.Any())
+        {
+            var idsHashSet = new HashSet<int>(ids);
+            allMembers = allMembers.Where(m => idsHashSet.Contains(m.Id)).ToList();
+        }
+
         if (page.HasValue && pageSize.HasValue)
         {
             var skip = (page.Value - 1) * pageSize.Value;
             return allMembers.Skip(skip).Take(pageSize.Value).ToList();
         }
-        
+
         return allMembers;
     }
 
