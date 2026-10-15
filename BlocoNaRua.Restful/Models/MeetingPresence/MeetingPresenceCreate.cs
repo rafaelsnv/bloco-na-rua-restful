@@ -3,5 +3,6 @@
 public record MeetingPresenceCreate(
     int MeetingId,
     int CarnivalBlockId,
-    bool IsPresent
+    bool IsPresent,
+    int? MemberId = null
 );

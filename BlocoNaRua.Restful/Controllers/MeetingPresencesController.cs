@@ -44,17 +44,17 @@ public class MeetingPresencesController(IMeetingPresenceService service, IMember
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Create([FromBody] MeetingPresenceCreate model)
     {
-        var memberId = await _memberIdentityService.GetMemberIdAsync();
+        var memberId = model.MemberId ?? await _memberIdentityService.GetMemberIdAsync();
         var entity = new MeetingPresenceEntity(0)
         {
+            MemberId = memberId,
             MeetingId = model.MeetingId,
             CarnivalBlockId = model.CarnivalBlockId,
             IsPresent = model.IsPresent
         };
         try
         {
-            entity.MemberId = memberId;
-            var created = await _service.CreateAsync(entity, memberId);
+            var created = await _service.CreateAsync(entity, await _memberIdentityService.GetMemberIdAsync());
             var result = created.ToDTO();
             return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
         }

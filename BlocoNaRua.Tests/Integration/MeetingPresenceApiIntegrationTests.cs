@@ -270,4 +270,112 @@ public class MeetingPresenceApiIntegrationTests : IntegrationTestBase
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
+
+    [Fact]
+    public async Task UpdatePresence_Returns200_WhenCallerIsOwner()
+    {
+        // Arrange - seed owner A and create block + meeting as A
+        var (ownerId, ownerUuid) = await SeedMember("Owner A", "ownera@test.com", Guid.NewGuid());
+        SetCurrentMember(ownerUuid);
+
+        var blockCreate = new CarnivalBlockCreate("Owner Block", ownerId, "block.jpg");
+        var blockResponse = await Client.PostAsJsonAsync("/api/v1/carnivalblocks", blockCreate);
+        var block = await blockResponse.Content.ReadFromJsonAsync<CarnivalBlockResponse>(_jsonOptions);
+        Assert.NotNull(block);
+        _carnivalBlockId = block.Id;
+
+        var meetingCreate = new MeetingCreate(
+            Name: "Owner Meeting",
+            Description: "Test",
+            Location: "Test",
+            MeetingDateTime: DateTime.UtcNow.AddDays(7),
+            CarnivalBlockId: _carnivalBlockId
+        );
+        var meetingResponse = await Client.PostAsJsonAsync("/api/v1/meetings", meetingCreate);
+        var meeting = await meetingResponse.Content.ReadFromJsonAsync<MeetingResponse>(_jsonOptions);
+        Assert.NotNull(meeting);
+        _meetingId = meeting.Id;
+
+        // Seed member B and create presence as B
+        var (memberBId, memberBuuid) = await SeedMember("Member B", "memberb@test.com", Guid.NewGuid());
+        await SeedCarnivalBlockMember(_carnivalBlockId, memberBId, RolesEnum.Member);
+        SetCurrentMember(memberBuuid);
+
+        var presenceCreate = new MeetingPresenceCreate(
+            MeetingId: _meetingId,
+            CarnivalBlockId: _carnivalBlockId,
+            IsPresent: true
+        );
+        var createResponse = await Client.PostAsJsonAsync("/api/v1/meetingpresences", presenceCreate);
+        var created = await createResponse.Content.ReadFromJsonAsync<MeetingPresenceResponse>(_jsonOptions);
+        Assert.NotNull(created);
+
+        // Switch back to owner A
+        SetCurrentMember(ownerUuid);
+
+        // Act - update B's presence as owner
+        var updateDto = new MeetingPresenceUpdate(IsPresent: false);
+        var response = await Client.PutAsJsonAsync($"/api/v1/meetingpresences/{created.Id}", updateDto);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var updated = await response.Content.ReadFromJsonAsync<MeetingPresenceResponse>(_jsonOptions);
+        Assert.NotNull(updated);
+        Assert.False(updated.IsPresent);
+    }
+
+    [Fact]
+    public async Task UpdatePresence_Returns200_WhenCallerIsManager()
+    {
+        // Arrange - seed owner A and create block + meeting as A
+        var (ownerId, ownerUuid) = await SeedMember("Manager Owner", "managerowner@test.com", Guid.NewGuid());
+        SetCurrentMember(ownerUuid);
+
+        var blockCreate = new CarnivalBlockCreate("Manager Block", ownerId, "block.jpg");
+        var blockResponse = await Client.PostAsJsonAsync("/api/v1/carnivalblocks", blockCreate);
+        var block = await blockResponse.Content.ReadFromJsonAsync<CarnivalBlockResponse>(_jsonOptions);
+        Assert.NotNull(block);
+        _carnivalBlockId = block.Id;
+
+        var meetingCreate = new MeetingCreate(
+            Name: "Manager Meeting",
+            Description: "Test",
+            Location: "Test",
+            MeetingDateTime: DateTime.UtcNow.AddDays(7),
+            CarnivalBlockId: _carnivalBlockId
+        );
+        var meetingResponse = await Client.PostAsJsonAsync("/api/v1/meetings", meetingCreate);
+        var meeting = await meetingResponse.Content.ReadFromJsonAsync<MeetingResponse>(_jsonOptions);
+        Assert.NotNull(meeting);
+        _meetingId = meeting.Id;
+
+        // Seed member B and create presence as B
+        var (memberBId, memberBuuid) = await SeedMember("Manager Member B", "managermemberb@test.com", Guid.NewGuid());
+        await SeedCarnivalBlockMember(_carnivalBlockId, memberBId, RolesEnum.Member);
+        SetCurrentMember(memberBuuid);
+
+        var presenceCreate = new MeetingPresenceCreate(
+            MeetingId: _meetingId,
+            CarnivalBlockId: _carnivalBlockId,
+            IsPresent: true
+        );
+        var createResponse = await Client.PostAsJsonAsync("/api/v1/meetingpresences", presenceCreate);
+        var created = await createResponse.Content.ReadFromJsonAsync<MeetingPresenceResponse>(_jsonOptions);
+        Assert.NotNull(created);
+
+        // Seed member C (Manager) and switch to C
+        var (memberCId, memberCuuid) = await SeedMember("Manager Member C", "managermemberc@test.com", Guid.NewGuid());
+        await SeedCarnivalBlockMember(_carnivalBlockId, memberCId, RolesEnum.Manager);
+        SetCurrentMember(memberCuuid);
+
+        // Act - update B's presence as manager C
+        var updateDto = new MeetingPresenceUpdate(IsPresent: false);
+        var response = await Client.PutAsJsonAsync($"/api/v1/meetingpresences/{created.Id}", updateDto);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var updated = await response.Content.ReadFromJsonAsync<MeetingPresenceResponse>(_jsonOptions);
+        Assert.NotNull(updated);
+        Assert.False(updated.IsPresent);
+    }
 }
