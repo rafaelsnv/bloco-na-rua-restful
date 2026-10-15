@@ -263,4 +263,81 @@ public class MeetingPresencesControllerTests
         var unauthorizedResult = Assert.IsType<UnauthorizedObjectResult>(result);
         Assert.Equal("You are not authorized to delete this meeting presence.", unauthorizedResult.Value);
     }
+
+    [Fact]
+    public async Task Create_PassesDtoMemberIdToService_WhenProvided()
+    {
+        // Arrange
+        _memberIdentityServiceMock.Setup(s => s.GetMemberIdAsync()).ReturnsAsync(99);
+        var createDto = new MeetingPresenceCreate(
+            MeetingId: 1,
+            CarnivalBlockId: 1,
+            IsPresent: true,
+            MemberId: 42
+        );
+        var entity = new MeetingPresenceEntity(id: 1)
+        {
+            MemberId = 42,
+            MeetingId = 1,
+            CarnivalBlockId = 1,
+            IsPresent = true
+        };
+        MeetingPresenceEntity? capturedEntity = null;
+        int capturedCallerId = 0;
+        _serviceMock.Setup(s => s.CreateAsync(It.IsAny<MeetingPresenceEntity>(), It.IsAny<int>()))
+            .Callback<MeetingPresenceEntity, int>((e, callerId) =>
+            {
+                capturedEntity = e;
+                capturedCallerId = callerId;
+            })
+            .ReturnsAsync(entity);
+
+        // Act
+        var controller = CreateController();
+        var result = await controller.Create(createDto);
+
+        // Assert
+        var created = Assert.IsType<CreatedAtActionResult>(result);
+        Assert.NotNull(capturedEntity);
+        Assert.Equal(42, capturedEntity.MemberId);
+        Assert.Equal(99, capturedCallerId);
+    }
+
+    [Fact]
+    public async Task Create_FallsBackToJwtMemberId_WhenDtoMemberIdIsNull()
+    {
+        // Arrange
+        _memberIdentityServiceMock.Setup(s => s.GetMemberIdAsync()).ReturnsAsync(99);
+        var createDto = new MeetingPresenceCreate(
+            MeetingId: 1,
+            CarnivalBlockId: 1,
+            IsPresent: true
+        );
+        var entity = new MeetingPresenceEntity(id: 1)
+        {
+            MemberId = 99,
+            MeetingId = 1,
+            CarnivalBlockId = 1,
+            IsPresent = true
+        };
+        MeetingPresenceEntity? capturedEntity = null;
+        int capturedCallerId = 0;
+        _serviceMock.Setup(s => s.CreateAsync(It.IsAny<MeetingPresenceEntity>(), It.IsAny<int>()))
+            .Callback<MeetingPresenceEntity, int>((e, callerId) =>
+            {
+                capturedEntity = e;
+                capturedCallerId = callerId;
+            })
+            .ReturnsAsync(entity);
+
+        // Act
+        var controller = CreateController();
+        var result = await controller.Create(createDto);
+
+        // Assert
+        var created = Assert.IsType<CreatedAtActionResult>(result);
+        Assert.NotNull(capturedEntity);
+        Assert.Equal(99, capturedEntity.MemberId);
+        Assert.Equal(99, capturedCallerId);
+    }
 }
