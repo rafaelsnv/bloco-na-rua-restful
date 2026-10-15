@@ -169,7 +169,7 @@ public class MeetingPresenceApiIntegrationTests : IntegrationTestBase
     [Fact]
     public async Task DeletePresence_Returns204_WhenSelf()
     {
-        // Arrange - seed owner and create block/meeting
+        // Arrange - fully self-contained; do NOT rely on shared _carnivalBlockId/_meetingId
         var (ownerId, ownerUuid) = await SeedMember("Delete Presence Owner", "deleteowner@test.com", Guid.NewGuid());
         SetCurrentMember(ownerUuid);
 
@@ -177,28 +177,28 @@ public class MeetingPresenceApiIntegrationTests : IntegrationTestBase
         var blockResponse = await Client.PostAsJsonAsync("/api/v1/carnivalblocks", blockCreate);
         var block = await blockResponse.Content.ReadFromJsonAsync<CarnivalBlockResponse>(_jsonOptions);
         Assert.NotNull(block);
-        _carnivalBlockId = block.Id;
+        var blockId = block.Id;
 
         var meetingCreate = new MeetingCreate(
             Name: "Delete Meeting",
             Description: "Test",
             Location: "Test",
             MeetingDateTime: DateTime.UtcNow.AddDays(7),
-            CarnivalBlockId: _carnivalBlockId
+            CarnivalBlockId: blockId
         );
         var meetingResponse = await Client.PostAsJsonAsync("/api/v1/meetings", meetingCreate);
         var meeting = await meetingResponse.Content.ReadFromJsonAsync<MeetingResponse>(_jsonOptions);
         Assert.NotNull(meeting);
-        _meetingId = meeting.Id;
+        var meetingId = meeting.Id;
 
         // Seed member and create presence
         var (memberId, memberUuid) = await SeedMember("Delete Presence Member", "deletepresencemember@test.com", Guid.NewGuid());
-        await SeedCarnivalBlockMember(_carnivalBlockId, memberId, RolesEnum.Member);
+        await SeedCarnivalBlockMember(blockId, memberId, RolesEnum.Member);
         SetCurrentMember(memberUuid);
 
         var presenceCreate = new MeetingPresenceCreate(
-            MeetingId: _meetingId,
-            CarnivalBlockId: _carnivalBlockId,
+            MeetingId: meetingId,
+            CarnivalBlockId: blockId,
             IsPresent: true
         );
         var createResponse = await Client.PostAsJsonAsync("/api/v1/meetingpresences", presenceCreate);

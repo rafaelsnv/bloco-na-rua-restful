@@ -327,4 +327,58 @@ public class CarnivalBlockMembersServiceTests : IDisposable
         await Assert.ThrowsAsync<KeyNotFoundException>(() =>
             _carnivalBlockMembersService.DeleteAsync(999, 101));
     }
+
+    [Fact]
+    public async Task CreateAsync_PopulatesMemberName_FromMember()
+    {
+        // Arrange
+        await AddData(1, 101, "Block 1", 101, RolesEnum.Owner);
+        // Seed a target member
+        await _membersRepository.AddAsync(new MemberEntity(
+            id: 102,
+            name: "Target Member Name",
+            email: "target@test.com",
+            phone: "1234567890",
+            profileImage: "profile_image.jpg",
+            uuid: new Guid()
+        ));
+
+        var newBlockMember = new CarnivalBlockMembersEntity(0, 1, 102, RolesEnum.Member);
+
+        // Act
+        await _carnivalBlockMembersService.CreateAsync(newBlockMember, 101);
+        var result = await _carnivalBlockMembersRepository.GetAllAsync();
+
+        // Assert
+        var created = result.First(m => m.MemberId == 102);
+        Assert.Equal("Target Member Name", created.MemberName);
+    }
+
+    [Fact]
+    public async Task JoinByInviteCodeAsync_PopulatesMemberName_FromMember()
+    {
+        // Arrange
+        var inviteCode = "TESTINVITE";
+        await AddData(1, 101, "Block 1", 101, RolesEnum.Owner);
+        // Update the block to have an invite code
+        var block = await _carnivalBlocksRepository.GetByIdAsync(1);
+        block!.InviteCode = inviteCode;
+        await _carnivalBlocksRepository.UpdateAsync(1, block, CancellationToken.None);
+
+        // Seed a joining member
+        await _membersRepository.AddAsync(new MemberEntity(
+            id: 102,
+            name: "Joining Member Name",
+            email: "joining@test.com",
+            phone: "1234567890",
+            profileImage: "profile_image.jpg",
+            uuid: new Guid()
+        ));
+
+        // Act
+        var result = await _carnivalBlockMembersService.JoinByInviteCodeAsync(inviteCode, 102);
+
+        // Assert
+        Assert.Equal("Joining Member Name", result.MemberName);
+    }
 }

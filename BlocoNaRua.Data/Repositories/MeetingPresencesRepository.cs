@@ -18,6 +18,12 @@ public class MeetingPresencesRepository(AppDbContext appContext) : RepositoryBas
         return await DbSet.AsNoTracking().Where(p => p.MeetingId == meetingId).ToListAsync(ct);
     }
 
+    public async Task<MeetingPresenceEntity?> GetByMeetingAndMemberAsync(int meetingId, int memberId, CancellationToken ct)
+    {
+        return await DbSet.AsNoTracking()
+            .FirstOrDefaultAsync(p => p.MeetingId == meetingId && p.MemberId == memberId, ct);
+    }
+
     public async Task<MeetingPresenceEntity> AddAsync(MeetingPresenceEntity entity, CancellationToken ct)
     {
         entity.CreatedAt = DateTime.UtcNow;

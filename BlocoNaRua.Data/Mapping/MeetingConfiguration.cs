@@ -54,5 +54,8 @@ public class MeetingConfiguration : IEntityTypeConfiguration<MeetingEntity>
                .HasForeignKey(m => m.CarnivalBlockId)
                .OnDelete(DeleteBehavior.Restrict)
                .HasConstraintName("meetings_carnival_block_id_fkey");
+
+        builder.HasIndex(m => m.CarnivalBlockId)
+               .HasDatabaseName("ix_meetings_carnival_block_id");
     }
 }

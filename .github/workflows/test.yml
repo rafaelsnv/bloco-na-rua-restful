@@ -4,10 +4,15 @@ on:
   push:
     branches:
       - main
+      - develop
   pull_request:
     branches:
       - main
       - develop
+
+permissions:
+  pull-requests: write
+  statuses: write
 
 jobs:
   build:
