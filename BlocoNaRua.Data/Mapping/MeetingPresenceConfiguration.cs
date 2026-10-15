@@ -57,5 +57,14 @@ public class MeetingPresenceConfiguration : IEntityTypeConfiguration<MeetingPres
                .HasForeignKey(mp => mp.CarnivalBlockId)
                .OnDelete(DeleteBehavior.Restrict)
                .HasConstraintName("meeting_presence_carnival_block_id_fkey");
+
+        builder.HasIndex(mp => new { mp.MeetingId, mp.MemberId })
+               .IsUnique()
+               .HasDatabaseName("ix_meeting_presences_meeting_id_member_id");
+
+        builder.HasIndex(mp => mp.MemberId)
+               .HasDatabaseName("ix_meeting_presences_member_id");
+        builder.HasIndex(mp => mp.CarnivalBlockId)
+               .HasDatabaseName("ix_meeting_presences_carnival_block_id");
     }
 }

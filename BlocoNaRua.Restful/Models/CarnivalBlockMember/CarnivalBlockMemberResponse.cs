@@ -8,5 +8,6 @@ public record CarnivalBlockMemberResponse(
     int MemberId,
     RolesEnum Role,
     DateTime CreatedAt,
-    DateTime UpdatedAt
+    DateTime UpdatedAt,
+    string? MemberName
 );

@@ -65,7 +65,13 @@ public class CarnivalBlockMembersService
             throw new InvalidOperationException("Member is already part of this carnival block.");
         }
 
-        var entity = new CarnivalBlockMembersEntity(0, blockAndRole.BlockId, memberId, blockAndRole.Role);
+        var member = await _membersRepository.GetByIdAsync(memberId, CancellationToken.None)
+            ?? throw new KeyNotFoundException("Member does not exist.");
+
+        var entity = new CarnivalBlockMembersEntity(0, blockAndRole.BlockId, memberId, blockAndRole.Role)
+        {
+            MemberName = member.Name,
+        };
         var created = await _repository.AddAsync(entity, CancellationToken.None);
 
         var carnivalBlock = await _carnivalBlocksRepository.GetByIdAsync(blockAndRole.BlockId, CancellationToken.None);
@@ -95,6 +101,8 @@ public class CarnivalBlockMembersService
         {
             throw new InvalidOperationException("Member is already part of this carnival block.");
         }
+
+        carnivalBlockMember.MemberName = member.Name;
 
         await _repository.AddAsync(carnivalBlockMember, CancellationToken.None);
         _cache.Remove($"CarnivalBlockMembers_Member_{carnivalBlockMember.MemberId}"); // Invalida o cache

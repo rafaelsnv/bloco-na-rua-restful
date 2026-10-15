@@ -135,6 +135,26 @@ public class MeetingPresenceServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task CreateAsync_IsIdempotent_WhenSameMeetingAndMember()
+    {
+        // Arrange
+        await AddData(1, 101, 102, RolesEnum.Member, 1);
+
+        // Act — create the same (meeting, member) pair twice with different isPresent values
+        var first = await _meetingPresenceService.CreateAsync(
+            new MeetingPresenceEntity(0) { MemberId = 102, MeetingId = 1, CarnivalBlockId = 1, IsPresent = true }, 102);
+        var second = await _meetingPresenceService.CreateAsync(
+            new MeetingPresenceEntity(0) { MemberId = 102, MeetingId = 1, CarnivalBlockId = 1, IsPresent = false }, 102);
+
+        // Assert — same row id, second value won
+        Assert.Equal(first.Id, second.Id);
+        Assert.False(second.IsPresent);
+        // And only one row in storage
+        var all = await _meetingPresenceService.GetAllAsync();
+        Assert.Single(all);
+    }
+
+    [Fact]
     public async Task UpdateAsync_ShouldUpdateMeetingPresence_WhenLoggedMemberIsSelf()
     {
         // Arrange

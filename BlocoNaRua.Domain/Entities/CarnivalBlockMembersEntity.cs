@@ -22,4 +22,6 @@ public class CarnivalBlockMembersEntity(int id) : EntityBase(id)
         MemberId = memberId;
         Role = role;
     }
+
+    public string? MemberName { get; set; }
 }

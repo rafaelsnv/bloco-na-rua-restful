@@ -19,7 +19,7 @@ public static class EntityMapper
         new(entity.Id, entity.OwnerId, entity.Name, entity.InviteCode, entity.ManagersInviteCode, entity.CarnivalBlockImage, entity.CreatedAt, entity.UpdatedAt);
 
     public static CarnivalBlockMemberResponse ToDTO(this CarnivalBlockMembersEntity entity) =>
-        new(entity.Id, entity.CarnivalBlockId, entity.MemberId, entity.Role, entity.CreatedAt.GetValueOrDefault(), entity.UpdatedAt.GetValueOrDefault());
+        new(entity.Id, entity.CarnivalBlockId, entity.MemberId, entity.Role, entity.CreatedAt.GetValueOrDefault(), entity.UpdatedAt.GetValueOrDefault(), entity.MemberName);
 
     public static CarnivalBlockMemberJoinResponse ToJoinDTO(this CarnivalBlockMembersEntity entity) =>
         new(entity.Id, entity.CarnivalBlockId, entity.CarnivalBlock.Name, entity.MemberId, entity.Role, entity.CreatedAt.GetValueOrDefault(), entity.UpdatedAt.GetValueOrDefault());

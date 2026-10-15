@@ -74,6 +74,16 @@ public class MeetingPresenceService
     {
         await AuthorizeForMemberAsync(model.CarnivalBlockId, loggedMember, model.MemberId);
 
+        var existing = await _repository.GetByMeetingAndMemberAsync(model.MeetingId, model.MemberId, CancellationToken.None);
+        if (existing is not null)
+        {
+            existing.IsPresent = model.IsPresent;
+            await _repository.UpdateAsync(existing.Id, existing, CancellationToken.None);
+            _cache.Remove("MeetingPresence_" + existing.Id);
+            _cache.Remove("MeetingPresences_All");
+            return existing;
+        }
+
         var created = await _repository.AddAsync(model, CancellationToken.None);
         _cache.Remove("MeetingPresences_All");
         return created;
