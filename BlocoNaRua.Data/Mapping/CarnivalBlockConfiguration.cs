@@ -37,6 +37,13 @@ public class CarnivalBlockConfiguration : IEntityTypeConfiguration<CarnivalBlock
                .HasColumnName("carnival_block_image")
                .IsRequired(false);
 
+        builder.Property(u => u.IsActive)
+               .HasColumnName("is_active")
+               .IsRequired()
+               .HasDefaultValue(true);
+
+        builder.HasQueryFilter(u => u.IsActive);
+
         builder.Property(u => u.CreatedAt)
                .HasColumnName("created_at")
                .IsRequired();

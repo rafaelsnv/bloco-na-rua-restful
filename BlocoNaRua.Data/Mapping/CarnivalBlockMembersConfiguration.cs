@@ -35,7 +35,7 @@ public class CarnivalBlockMembersConfiguration : IEntityTypeConfiguration<Carniv
         builder.Property(e => e.MemberName)
                .HasColumnName("member_name")
                .HasMaxLength(255)
-               .IsRequired(false);
+               .IsRequired();
 
         builder.Property(e => e.CreatedAt)
                .HasColumnName("created_at")
