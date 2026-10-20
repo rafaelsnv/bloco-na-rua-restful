@@ -210,7 +210,7 @@ public class MembersServiceTests
         _repositoryMock.Setup(r => r.GetByUuidAsync(uuid, It.IsAny<CancellationToken>()))
             .ReturnsAsync(member);
 
-        // ponytail: extension methods SetValue/SetAbsoluteExpiration can't be mocked; skip inner verification
+        // extension methods SetValue/SetAbsoluteExpiration can't be mocked; skip inner verification
         // Use a lenient mock for ICacheEntry - the extension methods will set properties on it
         var cacheEntryMock = new Mock<ICacheEntry>(MockBehavior.Loose);
         cacheEntryMock.Setup(e => e.Dispose());

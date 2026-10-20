@@ -86,7 +86,7 @@ public class MeetingPresenceApiIntegrationTests : IntegrationTestBase
         // Note: InMemory does not enforce FK constraints, so a presence can be created
         // for a non-existent meeting. In Postgres this would return 404 (KeyNotFoundException
         // from service layer). This test documents the InMemory gap.
-        // ponytail: InMemory FK gap — validate with real Postgres in integration environment.
+        // InMemory FK gap — validate with real Postgres in integration environment.
 
         // Arrange - seed owner member
         var (ownerId, ownerUuid) = await SeedMember("Presence Owner 404", "presenceowner404@test.com", Guid.NewGuid());

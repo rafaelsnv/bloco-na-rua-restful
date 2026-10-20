@@ -38,9 +38,17 @@ public class CarnivalBlocksRepository(AppDbContext appContext) : RepositoryBase<
     {
         var entity = await DbSet.FindAsync([id], ct);
         if (entity == null) return false;
-        DbSet.Remove(entity);
-        return await AppDbContext.SaveChangesAsync(ct) > 0;
+        entity.IsActive = false;
+        entity.UpdatedAt = DateTime.UtcNow;
+        await AppDbContext.SaveChangesAsync(ct);
+        AppDbContext.ChangeTracker.Clear();
+        return true;
     }
 
-    Task<CarnivalBlockEntity?> ICarnivalBlocksRepository.GetByIdAsync(int id, CancellationToken ct) => base.GetByIdAsync(id);
+    public async Task<CarnivalBlockEntity?> GetByIdAsyncOverride(int id, CancellationToken ct)
+    {
+        return await DbSet.AsNoTracking().FirstOrDefaultAsync(cb => cb.Id == id, ct);
+    }
+
+    Task<CarnivalBlockEntity?> ICarnivalBlocksRepository.GetByIdAsync(int id, CancellationToken ct) => GetByIdAsyncOverride(id, ct);
 }

@@ -90,7 +90,7 @@ public class CarnivalBlockMembersServiceTests : IDisposable
                 carnivalBlockId: blockId,
                 memberId: memberId,
                 role: role
-            );
+            ) { MemberName = "Test Member" };
             await _carnivalBlockMembersRepository.AddAsync(carnivalBlockMember);
         }
     }

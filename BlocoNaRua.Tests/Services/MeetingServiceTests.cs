@@ -56,7 +56,7 @@ public class MeetingServiceTests : IDisposable
             await _carnivalBlocksRepository.AddAsync(new CarnivalBlockEntity(blockId, ownerId, "Block", "code", "mcode", "img"));
 
         if (ownerId != memberId)
-            await _carnivalBlockMembersRepository.AddAsync(new CarnivalBlockMembersEntity(0, blockId, memberId, role));
+            await _carnivalBlockMembersRepository.AddAsync(new CarnivalBlockMembersEntity(0, blockId, memberId, role) { MemberName = "Test Member" });
 
         await _meetingsRepository.AddAsync(new MeetingEntity(0, "Meeting", "Desc", "Location", "mcode", DateTime.Now, blockId));
     }

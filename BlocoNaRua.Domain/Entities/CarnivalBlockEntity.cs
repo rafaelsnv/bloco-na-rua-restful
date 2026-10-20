@@ -9,6 +9,7 @@ public class CarnivalBlockEntity(int id) : EntityBase(id)
     public string InviteCode { get; set; } = string.Empty;
     public string ManagersInviteCode { get; set; } = string.Empty;
     public string CarnivalBlockImage { get; set; } = string.Empty;
+    public bool IsActive { get; set; } = true;
     public MemberEntity Owner { get; set; } = null!;
     public ICollection<CarnivalBlockMembersEntity> CarnivalBlockMembers { get; set; } = [];
     public ICollection<MeetingEntity> Meetings { get; set; } = [];

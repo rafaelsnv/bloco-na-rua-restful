@@ -61,7 +61,7 @@ public abstract class IntegrationTestBase : IAsyncLifetime
     {
         var scope = _factory!.Services.CreateScope();
         var repository = scope.ServiceProvider.GetRequiredService<ICarnivalBlockMembersRepository>();
-        var entity = new CarnivalBlockMembersEntity(0, carnivalBlockId, memberId, role);
+        var entity = new CarnivalBlockMembersEntity(0, carnivalBlockId, memberId, role) { MemberName = "Test Member" };
         var created = await repository.AddAsync(entity, CancellationToken.None);
         return created.Id;
     }

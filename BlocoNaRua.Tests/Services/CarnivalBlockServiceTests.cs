@@ -81,7 +81,7 @@ public class CarnivalBlockServiceTests : IDisposable
             carnivalBlockId: blockId,
             memberId: memberId,
             role: role
-        );
+        ) { MemberName = "Test Member" };
         await _carnivalBlockMembersRepository.AddAsync(carnivalBlockMember);
     }
 
@@ -219,7 +219,7 @@ public class CarnivalBlockServiceTests : IDisposable
         // Assert
         Assert.True(result);
         var deletedBlock = await _carnivalBlocksRepository.GetByIdAsync(4);
-        Assert.Null(deletedBlock);
+        Assert.Null(deletedBlock); // Soft-deleted: query filter hides it
     }
 
     [Fact]
