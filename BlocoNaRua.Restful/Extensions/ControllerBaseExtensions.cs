@@ -7,7 +7,7 @@ namespace BlocoNaRua.Restful.Extensions;
 public static class ControllerBaseExtensions
 {
     /// <summary>
-    /// ponytail: this exists — resolves memberId from the authenticated JWT sub claim via IMemberIdentityService.
+    /// this exists — resolves memberId from the authenticated JWT sub claim via IMemberIdentityService.
     /// Add when throughput matters: cache the memberId lookup per request (HttpContext.Items).
     /// </summary>
     public static int GetMemberId(this ControllerBase controller, IMemberIdentityService memberIdentityService)

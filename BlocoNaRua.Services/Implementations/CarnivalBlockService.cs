@@ -77,7 +77,10 @@ public class CarnivalBlockService
         );
         var created = await _repository.AddAsync(entity, CancellationToken.None);
 
-        var ownerMember = new CarnivalBlockMembersEntity(0, created.Id, model.OwnerId, RolesEnum.Owner);
+        var ownerMember = new CarnivalBlockMembersEntity(0, created.Id, model.OwnerId, RolesEnum.Owner)
+        {
+            MemberName = owner.Name,
+        };
         await _carnivalBlockMembersRepository.AddAsync(ownerMember, CancellationToken.None);
 
         _cache.Remove("CarnivalBlocks_All");
