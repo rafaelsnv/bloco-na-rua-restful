@@ -141,7 +141,7 @@ public class CarnivalBlockMembersRepositoryTests
         var block = new CarnivalBlockEntity(1, 10, "Block", "CODE", "MGR", "img.jpg");
         context.Members.Add(member);
         context.CarnivalBlocks.Add(block);
-        var cbMember = new CarnivalBlockMembersEntity(1, 1, 1, RolesEnum.Manager);
+        var cbMember = new CarnivalBlockMembersEntity(1, 1, 1, RolesEnum.Manager) { MemberName = "Member" };
         context.CarnivalBlockMembers.Add(cbMember);
         await context.SaveChangesAsync();
 
@@ -185,8 +185,8 @@ public class CarnivalBlockMembersRepositoryTests
         var block = new CarnivalBlockEntity(1, 10, "Block", "CODE", "MGR", "img.jpg");
         context.Members.AddRange(member1, member2);
         context.CarnivalBlocks.Add(block);
-        context.CarnivalBlockMembers.Add(new CarnivalBlockMembersEntity(1, 1, 1, RolesEnum.Member));
-        context.CarnivalBlockMembers.Add(new CarnivalBlockMembersEntity(2, 1, 2, RolesEnum.Manager));
+        context.CarnivalBlockMembers.Add(new CarnivalBlockMembersEntity(1, 1, 1, RolesEnum.Member) { MemberName = "M1" });
+        context.CarnivalBlockMembers.Add(new CarnivalBlockMembersEntity(2, 1, 2, RolesEnum.Manager) { MemberName = "M2" });
         await context.SaveChangesAsync();
 
         var repo = new CarnivalBlockMembersRepository(context);
@@ -225,7 +225,7 @@ public class CarnivalBlockMembersRepositoryTests
         var block = new CarnivalBlockEntity(1, 10, "Block", "CODE", "MGR", "img.jpg");
         context.Members.Add(member);
         context.CarnivalBlocks.Add(block);
-        context.CarnivalBlockMembers.Add(new CarnivalBlockMembersEntity(1, 1, 1, RolesEnum.Member));
+        context.CarnivalBlockMembers.Add(new CarnivalBlockMembersEntity(1, 1, 1, RolesEnum.Member) { MemberName = "Member" });
         await context.SaveChangesAsync();
 
         var repo = new CarnivalBlockMembersRepository(context);
