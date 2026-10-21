@@ -32,6 +32,13 @@ public class MeetingPresenceConfiguration : IEntityTypeConfiguration<MeetingPres
                .HasColumnName("is_present")
                .IsRequired();
 
+        builder.Property(e => e.IsActive)
+               .HasColumnName("is_active")
+               .IsRequired()
+               .HasDefaultValue(true);
+
+        builder.HasQueryFilter(e => e.IsActive);
+
         builder.Property(mp => mp.CreatedAt)
                .HasColumnName("created_at")
                .IsRequired();

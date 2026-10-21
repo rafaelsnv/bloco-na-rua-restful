@@ -48,9 +48,39 @@ public class MeetingPresencesRepository(AppDbContext appContext) : RepositoryBas
     {
         var entity = await DbSet.FindAsync([id], ct);
         if (entity == null) return false;
-        DbSet.Remove(entity);
-        return await AppDbContext.SaveChangesAsync(ct) > 0;
+        entity.IsActive = false;
+        entity.UpdatedAt = DateTime.UtcNow;
+        await AppDbContext.SaveChangesAsync(ct);
+        AppDbContext.ChangeTracker.Clear();
+        return true;
+    }
+
+    public async Task<int> SoftDeleteByMeetingIdAsync(int meetingId, CancellationToken ct)
+    {
+        var entities = await DbSet.Where(p => p.MeetingId == meetingId && p.IsActive).ToListAsync(ct);
+        foreach (var e in entities) { e.IsActive = false; e.UpdatedAt = DateTime.UtcNow; }
+        await AppDbContext.SaveChangesAsync(ct);
+        AppDbContext.ChangeTracker.Clear();
+        return entities.Count;
+    }
+
+    public async Task<int> SoftDeleteByMemberIdAsync(int memberId, CancellationToken ct)
+    {
+        var entities = await DbSet.Where(p => p.MemberId == memberId && p.IsActive).ToListAsync(ct);
+        foreach (var e in entities) { e.IsActive = false; e.UpdatedAt = DateTime.UtcNow; }
+        await AppDbContext.SaveChangesAsync(ct);
+        AppDbContext.ChangeTracker.Clear();
+        return entities.Count;
     }
 
     Task<MeetingPresenceEntity?> IMeetingPresencesRepository.GetByIdAsync(int id, CancellationToken ct) => base.GetByIdAsync(id);
+
+    public async Task<int> SoftDeleteByBlockIdAsync(int blockId, CancellationToken ct)
+    {
+        var entities = await DbSet.Where(p => p.CarnivalBlockId == blockId && p.IsActive).ToListAsync(ct);
+        foreach (var e in entities) { e.IsActive = false; e.UpdatedAt = DateTime.UtcNow; }
+        await AppDbContext.SaveChangesAsync(ct);
+        AppDbContext.ChangeTracker.Clear();
+        return entities.Count;
+    }
 }

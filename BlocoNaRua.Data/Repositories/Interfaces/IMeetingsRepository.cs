@@ -10,4 +10,5 @@ public interface IMeetingsRepository
     Task<MeetingEntity> AddAsync(MeetingEntity entity, CancellationToken ct);
     Task<bool> UpdateAsync(MeetingEntity entity, CancellationToken ct);
     Task<bool> DeleteAsync(int id, CancellationToken ct);
+    Task<int> SoftDeleteByBlockIdAsync(int blockId, CancellationToken ct);
 }

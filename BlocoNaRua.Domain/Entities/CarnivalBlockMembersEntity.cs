@@ -10,6 +10,7 @@ public class CarnivalBlockMembersEntity(int id) : EntityBase(id)
     public RolesEnum Role { get; set; }
     public MemberEntity Member { get; set; } = null!;
     public CarnivalBlockEntity CarnivalBlock { get; set; } = null!;
+    public bool IsActive { get; set; } = true;
 
     public CarnivalBlockMembersEntity(
         int id,

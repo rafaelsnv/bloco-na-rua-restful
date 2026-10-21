@@ -41,6 +41,13 @@ public class MeetingConfiguration : IEntityTypeConfiguration<MeetingEntity>
                .HasColumnName("meeting_date_time")
                .IsRequired(false);
 
+        builder.Property(m => m.IsActive)
+               .HasColumnName("is_active")
+               .IsRequired()
+               .HasDefaultValue(true);
+
+        builder.HasQueryFilter(m => m.IsActive);
+
         builder.Property(m => m.CreatedAt)
                .HasColumnName("created_at")
                .IsRequired();

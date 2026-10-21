@@ -15,4 +15,6 @@ public interface ICarnivalBlockMembersRepository
     Task<CarnivalBlockMembersEntity> AddAsync(CarnivalBlockMembersEntity entity, CancellationToken ct);
     Task<CarnivalBlockMembersEntity?> UpdateAsync(int id, CarnivalBlockMembersEntity entity, CancellationToken ct);
     Task<bool> DeleteAsync(int id, CancellationToken ct);
+    Task<int> SoftDeleteByBlockIdAsync(int blockId, CancellationToken ct);
+    Task<int> SoftDeleteByMemberIdAsync(int memberId, CancellationToken ct);
 }

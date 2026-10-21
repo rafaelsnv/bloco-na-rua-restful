@@ -45,6 +45,13 @@ public class MemberConfiguration : IEntityTypeConfiguration<MemberEntity>
                .HasColumnName("uuid")
                .IsRequired();
 
+        builder.Property(u => u.IsActive)
+               .HasColumnName("is_active")
+               .IsRequired()
+               .HasDefaultValue(true);
+
+        builder.HasQueryFilter(u => u.IsActive);
+
         builder.HasIndex(u => u.Uuid).IsUnique();
     }
 }

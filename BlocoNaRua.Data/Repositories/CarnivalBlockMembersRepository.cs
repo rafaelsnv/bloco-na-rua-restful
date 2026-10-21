@@ -73,8 +73,29 @@ public class CarnivalBlockMembersRepository(AppDbContext appContext) : Repositor
     {
         var entity = await DbSet.FindAsync([id], ct);
         if (entity == null) return false;
-        DbSet.Remove(entity);
-        return await AppDbContext.SaveChangesAsync(ct) > 0;
+        entity.IsActive = false;
+        entity.UpdatedAt = DateTime.UtcNow;
+        await AppDbContext.SaveChangesAsync(ct);
+        AppDbContext.ChangeTracker.Clear();
+        return true;
+    }
+
+    public async Task<int> SoftDeleteByBlockIdAsync(int blockId, CancellationToken ct)
+    {
+        var entities = await DbSet.Where(e => e.CarnivalBlockId == blockId && e.IsActive).ToListAsync(ct);
+        foreach (var e in entities) { e.IsActive = false; e.UpdatedAt = DateTime.UtcNow; }
+        await AppDbContext.SaveChangesAsync(ct);
+        AppDbContext.ChangeTracker.Clear();
+        return entities.Count;
+    }
+
+    public async Task<int> SoftDeleteByMemberIdAsync(int memberId, CancellationToken ct)
+    {
+        var entities = await DbSet.Where(e => e.MemberId == memberId && e.IsActive).ToListAsync(ct);
+        foreach (var e in entities) { e.IsActive = false; e.UpdatedAt = DateTime.UtcNow; }
+        await AppDbContext.SaveChangesAsync(ct);
+        AppDbContext.ChangeTracker.Clear();
+        return entities.Count;
     }
 
     Task<IList<CarnivalBlockMembersEntity>> ICarnivalBlockMembersRepository.GetAllAsync(CancellationToken ct) => base.GetAllAsync();

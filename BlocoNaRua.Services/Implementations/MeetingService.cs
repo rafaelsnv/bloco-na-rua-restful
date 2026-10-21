@@ -12,12 +12,14 @@ public class MeetingService
     IMeetingsRepository repository,
     ICarnivalBlocksRepository carnivalBlocksRepository,
     ICarnivalBlockMembersRepository carnivalBlockMembersRepository,
+    IMeetingPresencesRepository meetingPresencesRepository,
     IMemoryCache cache
 ) : IMeetingService
 {
     private readonly IMeetingsRepository _repository = repository;
     private readonly ICarnivalBlocksRepository _carnivalBlocksRepository = carnivalBlocksRepository;
     private readonly ICarnivalBlockMembersRepository _carnivalBlockMembersRepository = carnivalBlockMembersRepository;
+    private readonly IMeetingPresencesRepository _meetingPresencesRepository = meetingPresencesRepository;
     private readonly IMemoryCache _cache = cache;
 
     private async Task<RolesEnum?> GetMemberRoleInline(int carnivalBlockId, int memberId)
@@ -130,6 +132,7 @@ public class MeetingService
         var deleted = await _repository.DeleteAsync(id, CancellationToken.None);
         if (deleted)
         {
+            await _meetingPresencesRepository.SoftDeleteByMeetingIdAsync(id, CancellationToken.None);
             _cache.Remove($"Meeting_{id}");
             _cache.Remove("Meetings_All");
         }
