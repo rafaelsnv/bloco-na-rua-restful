@@ -32,9 +32,19 @@ public class MembersRepository(AppDbContext appContext) : RepositoryBase<MemberE
 
     public async Task<bool> DeleteAsync(MemberEntity entity, CancellationToken ct)
     {
-        DbSet.Remove(entity);
-        return await AppDbContext.SaveChangesAsync(ct) > 0;
+        entity.IsActive = false;
+        entity.UpdatedAt = DateTime.UtcNow;
+        await AppDbContext.SaveChangesAsync(ct);
+        AppDbContext.ChangeTracker.Clear();
+        return true;
     }
+
+    public async Task<MemberEntity?> GetByIdAsyncOverride(int id, CancellationToken ct)
+    {
+        return await DbSet.AsNoTracking().FirstOrDefaultAsync(m => m.Id == id, ct);
+    }
+
+    Task<MemberEntity?> IMembersRepository.GetByIdAsync(int id, CancellationToken ct) => GetByIdAsyncOverride(id, ct);
 
     public async Task<bool> UpdateAsync(MemberEntity entity, CancellationToken ct)
     {
@@ -43,5 +53,4 @@ public class MembersRepository(AppDbContext appContext) : RepositoryBase<MemberE
         return await AppDbContext.SaveChangesAsync(ct) > 0;
     }
 
-    Task<MemberEntity?> IMembersRepository.GetByIdAsync(int id, CancellationToken ct) => base.GetByIdAsync(id);
 }

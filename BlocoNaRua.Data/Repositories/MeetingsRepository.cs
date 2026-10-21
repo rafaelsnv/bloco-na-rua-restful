@@ -37,7 +37,9 @@ public class MeetingsRepository(AppDbContext appContext) : RepositoryBase<Meetin
         entity.UpdatedAt = DateTime.UtcNow;
         if (entity.MeetingDateTime.HasValue && entity.MeetingDateTime.Value.Kind == DateTimeKind.Unspecified)
             entity.MeetingDateTime = DateTime.SpecifyKind(entity.MeetingDateTime.Value, DateTimeKind.Utc);
-        DbSet.Update(entity);
+        var existing = await DbSet.AsNoTracking().FirstOrDefaultAsync(m => m.Id == entity.Id, ct);
+        if (existing is null) return false;
+        AppDbContext.Entry(existing).CurrentValues.SetValues(entity);
         return await AppDbContext.SaveChangesAsync(ct) > 0;
     }
 
@@ -45,9 +47,30 @@ public class MeetingsRepository(AppDbContext appContext) : RepositoryBase<Meetin
     {
         var entity = await DbSet.FindAsync([id], ct);
         if (entity == null) return false;
-        DbSet.Remove(entity);
-        return await AppDbContext.SaveChangesAsync(ct) > 0;
+        entity.IsActive = false;
+        entity.UpdatedAt = DateTime.UtcNow;
+        await AppDbContext.SaveChangesAsync(ct);
+        AppDbContext.ChangeTracker.Clear();
+        return true;
     }
 
-    Task<MeetingEntity?> IMeetingsRepository.GetByIdAsync(int id, CancellationToken ct) => base.GetByIdAsync(id);
+    public async Task<MeetingEntity?> GetByIdAsyncOverride(int id, CancellationToken ct)
+    {
+        return await DbSet.AsNoTracking().FirstOrDefaultAsync(m => m.Id == id, ct);
+    }
+
+    Task<MeetingEntity?> IMeetingsRepository.GetByIdAsync(int id, CancellationToken ct) => GetByIdAsyncOverride(id, ct);
+
+    public async Task<int> SoftDeleteByBlockIdAsync(int blockId, CancellationToken ct)
+    {
+        var entities = await DbSet.Where(m => m.CarnivalBlockId == blockId && m.IsActive).ToListAsync(ct);
+        foreach (var e in entities)
+        {
+            e.IsActive = false;
+            e.UpdatedAt = DateTime.UtcNow;
+        }
+        await AppDbContext.SaveChangesAsync(ct);
+        AppDbContext.ChangeTracker.Clear();
+        return entities.Count;
+    }
 }

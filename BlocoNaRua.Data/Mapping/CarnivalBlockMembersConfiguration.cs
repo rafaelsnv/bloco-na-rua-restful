@@ -37,6 +37,13 @@ public class CarnivalBlockMembersConfiguration : IEntityTypeConfiguration<Carniv
                .HasMaxLength(255)
                .IsRequired();
 
+        builder.Property(e => e.IsActive)
+               .HasColumnName("is_active")
+               .IsRequired()
+               .HasDefaultValue(true);
+
+        builder.HasQueryFilter(e => e.IsActive);
+
         builder.Property(e => e.CreatedAt)
                .HasColumnName("created_at")
                .IsRequired();

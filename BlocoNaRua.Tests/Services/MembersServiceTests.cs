@@ -12,6 +12,7 @@ public class MembersServiceTests
     private readonly Mock<IMembersRepository> _repositoryMock;
     private readonly Mock<ICarnivalBlockMembersRepository> _carnivalBlockMembersRepositoryMock;
     private readonly Mock<IMeetingsRepository> _meetingsRepositoryMock;
+    private readonly Mock<IMeetingPresencesRepository> _meetingPresencesRepositoryMock;
     private readonly Mock<IMemoryCache> _cacheMock;
     private readonly MembersService _service;
 
@@ -20,11 +21,13 @@ public class MembersServiceTests
         _repositoryMock = new Mock<IMembersRepository>();
         _carnivalBlockMembersRepositoryMock = new Mock<ICarnivalBlockMembersRepository>();
         _meetingsRepositoryMock = new Mock<IMeetingsRepository>();
+        _meetingPresencesRepositoryMock = new Mock<IMeetingPresencesRepository>();
         _cacheMock = new Mock<IMemoryCache>();
         _service = new MembersService(
             _repositoryMock.Object,
             _carnivalBlockMembersRepositoryMock.Object,
             _meetingsRepositoryMock.Object,
+            _meetingPresencesRepositoryMock.Object,
             _cacheMock.Object);
     }
 

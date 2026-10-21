@@ -9,6 +9,7 @@ public class MemberEntity(int id) : EntityBase(id)
     public string Phone { get; set; } = string.Empty;
     public string ProfileImage { get; set; } = string.Empty;
     public Guid Uuid { get; set; } = new Guid();
+    public bool IsActive { get; set; } = true;
     public ICollection<CarnivalBlockMembersEntity> CarnivalBlockMembers { get; set; } = [];
     public ICollection<MeetingPresenceEntity> Presences { get; set; } = [];
 

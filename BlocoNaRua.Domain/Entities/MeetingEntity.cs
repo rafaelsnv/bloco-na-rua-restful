@@ -10,6 +10,7 @@ public class MeetingEntity(int id) : EntityBase(id)
     public string MeetingCode { get; set; } = string.Empty;
     public DateTime? MeetingDateTime { get; set; } = new DateTime(1900, 1, 1);
     public int CarnivalBlockId { get; set; }
+    public bool IsActive { get; set; } = true;
     public CarnivalBlockEntity CarnivalBlock { get; set; } = null!;
     public ICollection<MeetingPresenceEntity> Presences { get; set; } = [];
     public MeetingEntity(

@@ -15,6 +15,8 @@ public class CarnivalBlockServiceTests : IDisposable
     private readonly CarnivalBlocksRepository _carnivalBlocksRepository;
     private readonly MembersRepository _membersRepository;
     private readonly CarnivalBlockMembersRepository _carnivalBlockMembersRepository;
+    private readonly MeetingsRepository _meetingsRepository;
+    private readonly MeetingPresencesRepository _meetingPresencesRepository;
     private readonly IMemoryCache _cache;
     private readonly CarnivalBlockService _carnivalBlockService;
 
@@ -25,12 +27,16 @@ public class CarnivalBlockServiceTests : IDisposable
         _carnivalBlocksRepository = new CarnivalBlocksRepository(_context);
         _membersRepository = new MembersRepository(_context);
         _carnivalBlockMembersRepository = new CarnivalBlockMembersRepository(_context);
+        _meetingsRepository = new MeetingsRepository(_context);
+        _meetingPresencesRepository = new MeetingPresencesRepository(_context);
         _cache = new MemoryCache(new MemoryCacheOptions());
         _carnivalBlockService = new CarnivalBlockService
         (
             _carnivalBlocksRepository,
             _membersRepository,
             _carnivalBlockMembersRepository,
+            _meetingsRepository,
+            _meetingPresencesRepository,
             _cache
         );
     }

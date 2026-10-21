@@ -10,6 +10,7 @@ public class MembersService(
     IMembersRepository repository,
     ICarnivalBlockMembersRepository carnivalBlockMembersRepository,
     IMeetingsRepository meetingsRepository,
+    IMeetingPresencesRepository meetingPresencesRepository,
     IMemoryCache cache) : IMembersService
 {
     public async Task<IList<MemberEntity>> GetAllAsync(int? page = null, int? pageSize = null, IEnumerable<int>? ids = null)
@@ -116,7 +117,9 @@ public class MembersService(
         var deleted = await repository.DeleteAsync(entity, CancellationToken.None);
         if (deleted)
         {
-            cache.Remove($"Member_{entity.Uuid}"); // Invalida o cache após a exclusão
+            await carnivalBlockMembersRepository.SoftDeleteByMemberIdAsync(id, CancellationToken.None);
+            await meetingPresencesRepository.SoftDeleteByMemberIdAsync(id, CancellationToken.None);
+            cache.Remove($"Member_{entity.Uuid}");
         }
         return deleted;
     }

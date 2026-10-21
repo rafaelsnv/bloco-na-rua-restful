@@ -12,12 +12,16 @@ public class CarnivalBlockService
     ICarnivalBlocksRepository repository,
     IMembersRepository membersRepository,
     ICarnivalBlockMembersRepository carnivalBlockMembersRepository,
+    IMeetingsRepository meetingsRepository,
+    IMeetingPresencesRepository meetingPresencesRepository,
     IMemoryCache cache
 ) : ICarnivalBlockService
 {
     private readonly ICarnivalBlocksRepository _repository = repository;
     private readonly IMembersRepository _membersRepository = membersRepository;
     private readonly ICarnivalBlockMembersRepository _carnivalBlockMembersRepository = carnivalBlockMembersRepository;
+    private readonly IMeetingsRepository _meetingsRepository = meetingsRepository;
+    private readonly IMeetingPresencesRepository _meetingPresencesRepository = meetingPresencesRepository;
     private readonly IMemoryCache _cache = cache;
 
     private async Task<RolesEnum?> GetMemberRoleInline(int carnivalBlockId, int memberId)
@@ -128,6 +132,10 @@ public class CarnivalBlockService
         var deleted = await _repository.DeleteAsync(id, CancellationToken.None);
         if (deleted)
         {
+            // Cascade soft-delete to children
+            await _meetingPresencesRepository.SoftDeleteByBlockIdAsync(id, CancellationToken.None);
+            await _meetingsRepository.SoftDeleteByBlockIdAsync(id, CancellationToken.None);
+            await _carnivalBlockMembersRepository.SoftDeleteByBlockIdAsync(id, CancellationToken.None);
             _cache.Remove($"CarnivalBlock_{id}");
             _cache.Remove("CarnivalBlocks_All");
         }
