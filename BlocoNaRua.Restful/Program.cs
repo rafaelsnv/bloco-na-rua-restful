@@ -1,4 +1,5 @@
 ﻿using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Asp.Versioning;
@@ -258,14 +259,17 @@ public partial class Program
     /// <summary>
     /// Resolves the HS256 signing key bytes. Mirrors <c>TokenService.DecodeSigningKey</c> so the
     /// validator and the token issuer always use the very same bytes: base64 first (deployment
-    /// format), raw secret bytes as fallback. A missing key is a loud failure, never a default.
+    /// format), raw secret bytes as fallback. A missing key degrades instead of crashing the
+    /// API: a random ephemeral key is returned so no token can validate (401 everywhere auth
+    /// is required) until <c>Auth__SigningKey</c> is set — same philosophy as the Google scheme.
     /// </summary>
     private static byte[] ResolveSigningKeyBytes(string? signingKey)
     {
         if (string.IsNullOrWhiteSpace(signingKey))
         {
-            throw new InvalidOperationException(
-                "Auth:SigningKey is missing. Set the Auth__SigningKey environment variable to the secret used to sign the API tokens.");
+            // Random per-process key: tokens issued/validated with it are worthless, which is
+            // the safe degradation — the API stays up, protected endpoints return 401.
+            return RandomNumberGenerator.GetBytes(MinimumSigningKeyBytes);
         }
 
         try
