@@ -1,0 +1,27 @@
+name: Docker Build Check
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+    paths:
+      - Dockerfile
+      - .dockerignore
+      - .github/workflows/docker-build.yml
+      - BlocoNaRua.Restful/**
+      - "**/*.csproj"
+      - BlocoNaRua.Core/**
+      - BlocoNaRua.Domain/**
+      - BlocoNaRua.Data/**
+      - BlocoNaRua.Services/**
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t bloconarua-ci:check .
