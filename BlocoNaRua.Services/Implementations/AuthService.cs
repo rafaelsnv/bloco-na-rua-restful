@@ -1,43 +1,95 @@
-using System.Net.Http.Headers;
-using System.Text;
-using System.Text.Json;
+using BlocoNaRua.Data.Repositories.Interfaces;
+using BlocoNaRua.Domain.Entities;
 using BlocoNaRua.Services.Interfaces;
-using Microsoft.Extensions.Configuration;
 
 namespace BlocoNaRua.Services.Implementations;
 
-public class AuthService(IHttpClientFactory httpClientFactory, IConfiguration configuration) : IAuthService
+/// <summary>
+/// API owned auth (plan §1/§3). No Supabase HTTP calls: members are upserted through the
+/// members repository and tokens come from <see cref="ITokenService"/>.
+/// </summary>
+public class AuthService(IMembersRepository membersRepository, ITokenService tokenService) : IAuthService
 {
-    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
-    private readonly IConfiguration _configuration = configuration;
+    private const string GoogleProvider = "google";
 
-    public async Task<LoginResponse> LoginAsync(LoginRequest request)
+    public Task<LoginResponse> LoginAsync(LoginRequest request)
     {
-        var supabaseUrl = _configuration["Supabase:Url"] ?? throw new InvalidOperationException("Supabase:Url configuration is missing");
-        var serviceRoleKey = _configuration["Supabase:ServiceRoleKey"] ?? throw new InvalidOperationException("Supabase:ServiceRoleKey configuration is missing");
-        var client = _httpClientFactory.CreateClient("SupabaseAdmin");
-        client.DefaultRequestHeaders.Add("apikey", serviceRoleKey);
+        // Phase 2 (plan §7): the Supabase password grant is gone, no password check is performed.
+        throw new NotImplementedException("Password login migrates in phase 2; use /auth/google");
+    }
 
-        var body = new { grant_type = "password", email = request.Email, password = request.Password };
-        var json = JsonSerializer.Serialize(body);
-        var content = new StringContent(json, Encoding.UTF8, "application/json");
-        var response = await client.PostAsync($"{supabaseUrl}/auth/v1/token?grant_type=password", content);
+    public async Task<(string AccessToken, string RefreshToken, int ExpiresIn)> ProcessGoogleCallbackAsync(
+        string displayName,
+        string email,
+        string providerId,
+        CancellationToken ct = default,
+        string? picture = null)
+    {
+        var existing = await membersRepository.GetByProviderAsync(GoogleProvider, providerId, ct);
 
-        var responseBody = await response.Content.ReadAsStringAsync();
-
-        if (!response.IsSuccessStatusCode)
+        MemberEntity member;
+        if (existing is null)
         {
-            throw new HttpRequestException($"Login failed: {response.StatusCode} - {responseBody}");
+            member = await membersRepository.AddAsync(
+                new MemberEntity(0)
+                {
+                    Name = string.IsNullOrWhiteSpace(displayName) ? email : displayName,
+                    Email = email,
+                    Provider = GoogleProvider,
+                    ProviderId = providerId,
+                    ProfileImage = picture ?? string.Empty,
+                    IsActive = true,
+                    EmailConfirmed = true,
+                    Uuid = Guid.NewGuid(),
+                },
+                ct);
+        }
+        else
+        {
+            if (!existing.IsActive)
+            {
+                throw new UnauthorizedAccessException("Member account is inactive.");
+            }
+
+            member = existing;
+
+            // A Google account without a picture must not wipe an avatar set earlier.
+            if (!string.IsNullOrWhiteSpace(picture) && string.IsNullOrWhiteSpace(member.ProfileImage))
+            {
+                member.ProfileImage = picture;
+            }
         }
 
-        var responseJson = JsonSerializer.Deserialize<JsonElement>(responseBody);
+        var tokens = tokenService.IssueTokens(member);
+        await membersRepository.UpdateAsync(member, ct);
+        return tokens;
+    }
 
-        return new LoginResponse(
-            AccessToken: responseJson.GetProperty("access_token").GetString() ?? "",
-            RefreshToken: responseJson.GetProperty("refresh_token").GetString() ?? "",
-            ExpiresIn: responseJson.GetProperty("expires_in").GetInt32(),
-            TokenType: responseJson.GetProperty("token_type").GetString() ?? "bearer",
-            UserId: Guid.Parse(responseJson.GetProperty("user").GetProperty("id").GetString()!)
-        );
+    public async Task<(string AccessToken, string RefreshToken, int ExpiresIn)?> RotateRefreshTokenAsync(
+        string refreshToken,
+        CancellationToken ct = default)
+    {
+        var validated = await tokenService.ValidateRefreshToken(refreshToken);
+        if (validated is null)
+        {
+            return null;
+        }
+
+        var member = validated.Value.Member;
+        var tokens = tokenService.RotateRefreshToken(member);
+        await membersRepository.UpdateAsync(member, ct);
+        return tokens;
+    }
+
+    public async Task RevokeRefreshTokenAsync(Guid memberUuid, CancellationToken ct = default)
+    {
+        var member = await membersRepository.GetByUuidAsync(memberUuid, ct);
+        if (member is null)
+        {
+            return;
+        }
+
+        tokenService.RevokeRefreshToken(member);
+        await membersRepository.UpdateAsync(member, ct);
     }
 }
