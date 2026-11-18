@@ -1,0 +1,20 @@
+{
+  "description": "Context file paths for BlocoNaRua (.NET 8 RESTful API). Agents load via @ reference for dynamic pathing.",
+  "project": {
+    "name": "BlocoNaRua",
+    "type": "backend-restful-api",
+    "framework": ".NET 8",
+    "database": "PostgreSQL (self-hosted, Dokploy)",
+    "primary_consumer": "Flutter mobile client (separate repo)"
+  },
+  "paths": {
+    "local": ".opencode/context",
+    "global": "~/.config/opencode/context"
+  },
+  "removed": [
+    {
+      "file": ".opencode/context/project-intelligence/mcp-tools-figma.md",
+      "reason": "Removed 2026-07-19 — documented a Flutter UI/design workflow that does not apply to this backend-only repo."
+    }
+  ]
+}

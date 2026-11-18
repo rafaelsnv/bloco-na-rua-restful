@@ -5,6 +5,11 @@
       "enabled": true,
       "type": "remote",
       "url": "https://learn.microsoft.com/api/mcp"
+    },
+    "nuget": {
+      "enabled": true,
+      "type": "local",
+      "command": ["dnx", "NuGet.Mcp.Server@1.4.23", "--yes"]
     }
   },
   "agent": {
