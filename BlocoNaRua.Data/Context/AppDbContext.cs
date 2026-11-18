@@ -12,6 +12,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<CarnivalBlockEntity> CarnivalBlocks { get; set; }
     public DbSet<MeetingPresenceEntity> MeetingAttendances { get; set; }
     public DbSet<CarnivalBlockMembersEntity> CarnivalBlockMembers { get; set; }
+    public DbSet<ApiErrorEntity> ApiErrors { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -21,7 +22,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             .ApplyConfiguration(new MeetingConfiguration())
             .ApplyConfiguration(new CarnivalBlockConfiguration())
             .ApplyConfiguration(new MeetingPresenceConfiguration())
-            .ApplyConfiguration(new CarnivalBlockMembersConfiguration());
+            .ApplyConfiguration(new CarnivalBlockMembersConfiguration())
+            .ApplyConfiguration(new ApiErrorConfiguration());
 
         base.OnModelCreating(modelBuilder);
     }

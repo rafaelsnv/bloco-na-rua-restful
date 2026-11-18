@@ -21,6 +21,19 @@ public class MembersRepository(AppDbContext appContext) : RepositoryBase<MemberE
         return await DbSet.AsNoTracking().FirstOrDefaultAsync(m => m.Uuid == uuid, ct);
     }
 
+    public async Task<MemberEntity?> GetByUuidIgnoreFiltersAsync(Guid uuid, CancellationToken ct)
+    {
+        // IgnoreQueryFilters: a soft deleted member must still be found so signup cleanup can hard delete it.
+        return await DbSet.IgnoreQueryFilters().FirstOrDefaultAsync(m => m.Uuid == uuid, ct);
+    }
+
+    public async Task<MemberEntity?> GetByProviderAsync(string provider, string providerId, CancellationToken ct)
+    {
+        // IgnoreQueryFilters: a soft deleted member must still be found by its provider identity,
+        // otherwise the insert below would break the unique ux_members_provider index.
+        return await DbSet.IgnoreQueryFilters().FirstOrDefaultAsync(m => m.Provider == provider && m.ProviderId == providerId, ct);
+    }
+
     public async Task<MemberEntity> AddAsync(MemberEntity entity, CancellationToken ct)
     {
         entity.CreatedAt = DateTime.UtcNow;
@@ -51,6 +64,14 @@ public class MembersRepository(AppDbContext appContext) : RepositoryBase<MemberE
         entity.UpdatedAt = DateTime.UtcNow;
         DbSet.Update(entity);
         return await AppDbContext.SaveChangesAsync(ct) > 0;
+    }
+
+    public async Task<bool> HardDeleteAsync(MemberEntity entity, CancellationToken ct)
+    {
+        DbSet.Remove(entity);
+        await AppDbContext.SaveChangesAsync(ct);
+        AppDbContext.ChangeTracker.Clear();
+        return true;
     }
 
 }

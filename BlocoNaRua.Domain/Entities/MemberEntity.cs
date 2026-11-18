@@ -10,6 +10,12 @@ public class MemberEntity(int id) : EntityBase(id)
     public string ProfileImage { get; set; } = string.Empty;
     public Guid Uuid { get; set; } = new Guid();
     public bool IsActive { get; set; } = true;
+    public string? Provider { get; set; }
+    public string? ProviderId { get; set; }
+    public string? PasswordHash { get; set; }
+    public string? RefreshToken { get; set; }
+    public DateTime? RefreshTokenExpiresAt { get; set; }
+    public bool EmailConfirmed { get; set; } = false;
     public ICollection<CarnivalBlockMembersEntity> CarnivalBlockMembers { get; set; } = [];
     public ICollection<MeetingPresenceEntity> Presences { get; set; } = [];
 
