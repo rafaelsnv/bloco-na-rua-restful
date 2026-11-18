@@ -18,12 +18,28 @@ public class TestCurrentMemberHolder
 
 public class BlocoNaRuaWebApplicationFactory : WebApplicationFactory<Program>
 {
+    // Fixed HS256 signing key for the tests: 32 random bytes, base64 encoded.
+    private const string TestSigningKey = "dGVzdC1zaWduaW5nLWtleS1mb3ItYm5yLXRlc3RzLTMyIQ==";
+
+    // Uploads land in a temp folder so the tests never touch the real upload volume.
+    private static readonly string TestUploadsPath =
+        Path.Combine(Path.GetTempPath(), "bnr-tests-uploads");
+
     private readonly Guid _databaseName = Guid.NewGuid();
     private TestCurrentMemberHolder? _currentMemberHolder;
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
+
+        // The app resolves these at startup (JWT validation parameters, Google OAuth scheme,
+        // static files). Without them the host fails before any request is served.
+        builder.UseSetting("Auth:SigningKey", TestSigningKey);
+        builder.UseSetting("Auth:Issuer", "bloconarua-api");
+        builder.UseSetting("Auth:Audience", "bloconarua-api");
+        builder.UseSetting("Authentication:Google:ClientId", "test-client");
+        builder.UseSetting("Authentication:Google:ClientSecret", "test-secret");
+        builder.UseSetting("Uploads:BasePath", TestUploadsPath);
 
         builder.ConfigureServices(services =>
         {

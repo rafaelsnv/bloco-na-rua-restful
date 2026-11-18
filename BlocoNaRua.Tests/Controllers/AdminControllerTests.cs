@@ -49,11 +49,11 @@ public class AdminControllerTests
     }
 
     [Fact]
-    public async Task DeleteSignupCleanup_Returns500_WhenHttpRequestException()
+    public async Task DeleteSignupCleanup_Returns500_WhenUnexpectedException()
     {
         // Arrange
         var uuid = Guid.NewGuid();
-        var errorDetail = "Supabase connection failed";
+        var errorDetail = "Delete failed";
         _serviceMock.Setup(s => s.DeleteSignupAsync(uuid)).ThrowsAsync(new HttpRequestException(errorDetail));
 
         var controller = CreateController();
@@ -72,7 +72,7 @@ public class AdminControllerTests
         Assert.NotNull(messageProp);
         Assert.NotNull(detailProp);
         Assert.Equal(500, statusCodeProp.GetValue(statusResult.Value));
-        Assert.Equal("Supabase error", messageProp.GetValue(statusResult.Value));
+        Assert.Equal("Internal error", messageProp.GetValue(statusResult.Value));
         Assert.Equal(errorDetail, detailProp.GetValue(statusResult.Value));
     }
 }

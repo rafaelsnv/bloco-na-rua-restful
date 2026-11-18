@@ -9,5 +9,8 @@ public interface IMembersRepository
     Task<MemberEntity> AddAsync(MemberEntity entity, CancellationToken ct);
     Task<bool> DeleteAsync(MemberEntity entity, CancellationToken ct);
     Task<bool> UpdateAsync(MemberEntity entity, CancellationToken ct);
+    Task<bool> HardDeleteAsync(MemberEntity entity, CancellationToken ct);
     Task<MemberEntity?> GetByUuidAsync(Guid uuid, CancellationToken ct);
+    Task<MemberEntity?> GetByUuidIgnoreFiltersAsync(Guid uuid, CancellationToken ct);
+    Task<MemberEntity?> GetByProviderAsync(string provider, string providerId, CancellationToken ct);
 }

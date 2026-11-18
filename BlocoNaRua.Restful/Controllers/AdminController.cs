@@ -24,9 +24,9 @@ public class AdminController(IAdminService adminService) : ControllerBase
                 return NotFound(errorMessage ?? "User not found");
             return Ok(new { deleted = true });
         }
-        catch (HttpRequestException ex)
+        catch (Exception ex)
         {
-            return StatusCode(500, new { statusCode = 500, message = "Supabase error", detail = ex.Message });
+            return StatusCode(500, new { statusCode = 500, message = "Internal error", detail = ex.Message });
         }
     }
 }

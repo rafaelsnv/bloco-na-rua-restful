@@ -50,8 +50,42 @@ public class MemberConfiguration : IEntityTypeConfiguration<MemberEntity>
                .IsRequired()
                .HasDefaultValue(true);
 
+        builder.Property(u => u.Provider)
+               .HasColumnName("provider")
+               .IsRequired(false);
+
+        builder.Property(u => u.ProviderId)
+               .HasColumnName("provider_id")
+               .IsRequired(false);
+
+        builder.Property(u => u.PasswordHash)
+               .HasColumnName("password_hash")
+               .IsRequired(false);
+
+        builder.Property(u => u.RefreshToken)
+               .HasColumnName("refresh_token")
+               .IsRequired(false);
+
+        builder.Property(u => u.RefreshTokenExpiresAt)
+               .HasColumnName("refresh_token_expires_at")
+               .IsRequired(false);
+
+        builder.Property(u => u.EmailConfirmed)
+               .HasColumnName("email_confirmed")
+               .IsRequired()
+               .HasDefaultValue(false);
+
         builder.HasQueryFilter(u => u.IsActive);
 
         builder.HasIndex(u => u.Uuid).IsUnique();
+
+        builder.HasIndex(u => new { u.Provider, u.ProviderId })
+               .IsUnique()
+               .HasDatabaseName("ux_members_provider");
+
+        builder.HasIndex(u => u.RefreshToken)
+               .IsUnique()
+               .HasDatabaseName("ux_members_refresh_token")
+               .HasFilter("refresh_token IS NOT NULL");
     }
 }

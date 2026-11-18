@@ -88,10 +88,10 @@ The API will be available at `https://localhost:7001` (or the port configured in
 
 ## 🔐 Authentication <a name = "authentication"></a>
 
-Protected endpoints require a Supabase-issued JWT Bearer token:
+Protected endpoints require an API-issued JWT Bearer token (HS256). Identity is Google OAuth — Supabase is not used:
 
-1. **Login:** Send an `application/x-www-form-urlencoded` request to `POST /api/v1/auth/login` with your credentials to receive a Supabase JWT.
-2. **Authorize requests:** Include `Authorization: Bearer <token>` on requests to protected endpoints.
+1. **Login:** Start the Google OAuth flow at `GET /api/v1/auth/google/challenge`, then complete it at `GET /api/v1/auth/google/complete` to receive an access + refresh token pair. Rotate with `POST /api/v1/auth/refresh`; revoke with `POST /api/v1/auth/logout` (Bearer). (`POST /api/v1/auth/login` is a 501 placeholder for a future credential flow.)
+2. **Authorize requests:** Include `Authorization: Bearer <access-token>` on requests to protected endpoints.
 3. **Admin endpoints:** Routes under `/api/v1/admin/*` require the `AdminOnly` policy (`role: admin` claim in the JWT).
 
 For the full endpoint reference and schemas, see the committed [`swagger.json`](swagger.json) at the repository root (or open `/swagger` while running the API).
@@ -139,6 +139,7 @@ To deploy this API in a production environment, follow these general steps:
 
 3.  **Hosting:**
     A aplicação pode ser hospedada em diversas plataformas, como:
+    - **Docker / Dokploy (current):** Build the image from the repo root with `docker build .` (multi-stage Dockerfile: `sdk:8.0` build → `aspnet:8.0` runtime). The container listens on port `8080` (`ASPNETCORE_URLS=http://0.0.0.0:8080`). The API is deployed on [Dokploy](https://dokploy.com/) (self-hosted), with the database as self-hosted PostgreSQL via a Dokploy docker-compose service.
     - **Web Servers:** IIS on Windows, Nginx or Apache on Linux.
     - **Cloud:** Azure App Service, AWS Elastic Beanstalk, Google Cloud Run.
     - **Containers:** Docker and Kubernetes.

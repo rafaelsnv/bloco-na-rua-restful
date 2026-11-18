@@ -1,12 +1,15 @@
 ﻿using System.Security.Claims;
+using System.Text;
 using System.Text.Json;
 using Asp.Versioning;
 using BlocoNaRua.Data.Extensions;
 using BlocoNaRua.Restful.Middleware;
 using BlocoNaRua.Services.Extensions;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Swashbuckle.AspNetCore.SwaggerUI;
 
@@ -66,23 +69,33 @@ builder.Services.AddSwaggerGen(options =>
     options.OperationFilter<BlocoNaRua.Restful.Swagger.FormFieldExamplesFilter>();
 });
 builder.Services.AddMemoryCache();
-var supabaseUrl = configuration["Supabase:Url"] ?? "";
-var supabaseIssuer = $"{supabaseUrl}/auth/v1";
+
+// Self-issued HS256 tokens (plan §1). Issuer/audience/signing key come from the Auth section;
+// the defaults match TokenService so issued and validated tokens always agree.
+const string defaultAuthIssuer = "bloconarua-api";
+const string defaultAuthAudience = "bloconarua-api";
+// The Google handler needs a sign-in scheme to persist the OAuth state; it is a short-lived
+// state cookie only — the API itself authenticates exclusively with the Bearer JWT.
+const string googleStateScheme = "GoogleState";
+
+var authIssuer = configuration["Auth:Issuer"] ?? defaultAuthIssuer;
+var authAudience = configuration["Auth:Audience"] ?? defaultAuthAudience;
+var uploadsBasePath = configuration["Uploads:BasePath"] ?? "/app/uploads";
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        options.Authority = supabaseIssuer;
-        options.MetadataAddress = $"{supabaseIssuer}/.well-known/openid-configuration";
         options.MapInboundClaims = false;
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
+            ValidIssuer = authIssuer,
             ValidateAudience = true,
-            ValidateLifetime = true,
+            ValidAudience = authAudience,
             ValidateIssuerSigningKey = true,
-            ValidAudience = "authenticated",
-            ValidIssuer = supabaseIssuer
+            IssuerSigningKey = new SymmetricSecurityKey(ResolveSigningKeyBytes(configuration["Auth:SigningKey"])),
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.FromMinutes(5)
         };
         options.Events = new JwtBearerEvents
         {
@@ -93,6 +106,21 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 return Task.CompletedTask;
             }
         };
+    })
+    .AddCookie(googleStateScheme, options =>
+    {
+        options.Cookie.Name = "bnr_google_state";
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SameSite = SameSiteMode.Lax;
+        options.ExpireTimeSpan = TimeSpan.FromMinutes(10);
+        options.SlidingExpiration = false;
+    })
+    .AddGoogle("Google", options =>
+    {
+        options.ClientId = configuration["Authentication:Google:ClientId"] ?? "";
+        options.ClientSecret = configuration["Authentication:Google:ClientSecret"] ?? "";
+        options.CallbackPath = "/api/v1/auth/google/callback";
+        options.SignInScheme = googleStateScheme;
     });
 builder.Services.AddAuthorization(options =>
 {
@@ -133,6 +161,21 @@ else
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Serve uploaded media from the volume mount (plan §4). Public read: avatars are not sensitive.
+try
+{
+    Directory.CreateDirectory(uploadsBasePath);
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        RequestPath = "/uploads",
+        FileProvider = new PhysicalFileProvider(uploadsBasePath)
+    });
+}
+catch (Exception ex)
+{
+    app.Logger.LogWarning(ex, "Static file serving for /uploads is disabled: '{UploadsBasePath}' is unavailable.", uploadsBasePath);
+}
 
 app.UseExceptionHandler(appBuilder =>
 {
@@ -191,4 +234,43 @@ if (!app.Environment.IsDevelopment())
 app.Run();
 
 // Make implicit Program class public for WebApplicationFactory access
-public partial class Program { }
+public partial class Program
+{
+    private const int MinimumSigningKeyBytes = 32;
+
+    /// <summary>
+    /// Resolves the HS256 signing key bytes. Mirrors <c>TokenService.DecodeSigningKey</c> so the
+    /// validator and the token issuer always use the very same bytes: base64 first (deployment
+    /// format), raw secret bytes as fallback. A missing key is a loud failure, never a default.
+    /// </summary>
+    private static byte[] ResolveSigningKeyBytes(string? signingKey)
+    {
+        if (string.IsNullOrWhiteSpace(signingKey))
+        {
+            throw new InvalidOperationException(
+                "Auth:SigningKey is missing. Set the Auth__SigningKey environment variable to the secret used to sign the API tokens.");
+        }
+
+        try
+        {
+            var decoded = Convert.FromBase64String(signingKey);
+            if (decoded.Length >= MinimumSigningKeyBytes)
+            {
+                return decoded;
+            }
+        }
+        catch (FormatException)
+        {
+            // Not base64 — fall back to the raw secret bytes below.
+        }
+
+        var keyBytes = Encoding.UTF8.GetBytes(signingKey);
+        if (keyBytes.Length < MinimumSigningKeyBytes)
+        {
+            throw new InvalidOperationException(
+                $"Auth:SigningKey must decode to at least {MinimumSigningKeyBytes} bytes to sign tokens with HS256.");
+        }
+
+        return keyBytes;
+    }
+}
