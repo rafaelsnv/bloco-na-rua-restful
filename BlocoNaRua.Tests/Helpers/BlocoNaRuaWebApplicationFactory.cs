@@ -26,20 +26,38 @@ public class BlocoNaRuaWebApplicationFactory : WebApplicationFactory<Program>
         Path.Combine(Path.GetTempPath(), "bnr-tests-uploads");
 
     private readonly Guid _databaseName = Guid.NewGuid();
+    private readonly bool _configureGoogle;
     private TestCurrentMemberHolder? _currentMemberHolder;
+
+    /// <param name="configureGoogle">
+    /// When false the Google OAuth scheme is not registered, mirroring a deployment without
+    /// Authentication__Google__ClientId / Authentication__Google__ClientSecret.
+    /// </param>
+    public BlocoNaRuaWebApplicationFactory(bool configureGoogle = true)
+    {
+        _configureGoogle = configureGoogle;
+    }
+
+    /// <summary>
+    /// Factory for a deployment without Google OAuth credentials.
+    /// </summary>
+    public static BlocoNaRuaWebApplicationFactory WithoutGoogle() => new(configureGoogle: false);
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
 
-        // The app resolves these at startup (JWT validation parameters, Google OAuth scheme,
-        // static files). Without them the host fails before any request is served.
+        // The app resolves these at startup (JWT validation parameters, static files).
+        // Without them the host fails before any request is served.
         builder.UseSetting("Auth:SigningKey", TestSigningKey);
         builder.UseSetting("Auth:Issuer", "bloconarua-api");
         builder.UseSetting("Auth:Audience", "bloconarua-api");
-        builder.UseSetting("Authentication:Google:ClientId", "test-client");
-        builder.UseSetting("Authentication:Google:ClientSecret", "test-secret");
         builder.UseSetting("Uploads:BasePath", TestUploadsPath);
+
+        // The Google scheme is registered by the app only when both values are present;
+        // empty values keep it out without changing any other behaviour.
+        builder.UseSetting("Authentication:Google:ClientId", _configureGoogle ? "test-client" : string.Empty);
+        builder.UseSetting("Authentication:Google:ClientSecret", _configureGoogle ? "test-secret" : string.Empty);
 
         builder.ConfigureServices(services =>
         {

@@ -55,11 +55,24 @@ public class AuthController(IAuthService authService) : ControllerBase
     /// Starts the Google OAuth flow. The provider redirects back to
     /// <c>/api/v1/auth/google/complete</c>.
     /// </summary>
+    /// <remarks>
+    /// The Google scheme is only registered when the server has Google credentials
+    /// configured; without them the endpoint answers 503 instead of throwing.
+    /// </remarks>
     [HttpGet("google/challenge")]
     [ProducesResponseType(StatusCodes.Status302Found)]
+    [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public IActionResult GoogleChallenge()
+    public async Task<IActionResult> GoogleChallenge()
     {
+        var schemeProvider = HttpContext.RequestServices.GetRequiredService<IAuthenticationSchemeProvider>();
+        if (await schemeProvider.GetSchemeAsync("Google") is null)
+        {
+            return Problem(
+                statusCode: StatusCodes.Status503ServiceUnavailable,
+                title: "Google sign-in is not configured");
+        }
+
         return Challenge(new AuthenticationProperties { RedirectUri = "/api/v1/auth/google/complete" }, "Google");
     }
 
@@ -70,9 +83,18 @@ public class AuthController(IAuthService authService) : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GoogleComplete()
     {
+        var schemeProvider = HttpContext.RequestServices.GetRequiredService<IAuthenticationSchemeProvider>();
+        if (await schemeProvider.GetSchemeAsync("GoogleState") is null)
+        {
+            return Problem(
+                statusCode: StatusCodes.Status503ServiceUnavailable,
+                title: "Google sign-in is not configured");
+        }
+
         var result = await HttpContext.AuthenticateAsync("GoogleState");
         if (!result.Succeeded || result.Principal is null)
         {
