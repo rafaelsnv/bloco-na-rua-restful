@@ -1,95 +1,119 @@
-using System.Net;
-using System.Text.Json;
+using BlocoNaRua.Data.Repositories.Interfaces;
+using BlocoNaRua.Domain.Entities;
 using BlocoNaRua.Services.Implementations;
 using BlocoNaRua.Services.Interfaces;
-using Microsoft.Extensions.Configuration;
-using Moq;
-using Moq.Protected;
 
 namespace BlocoNaRua.Tests.Services;
 
 public class AuthServiceTests
 {
-    private readonly Mock<IHttpClientFactory> _httpClientFactoryMock;
-    private readonly Mock<IConfiguration> _configurationMock;
+    private readonly Mock<IMembersRepository> _membersRepositoryMock = new();
+    private readonly Mock<ITokenService> _tokenServiceMock = new();
     private readonly AuthService _service;
 
     public AuthServiceTests()
     {
-        _httpClientFactoryMock = new Mock<IHttpClientFactory>();
-        _configurationMock = new Mock<IConfiguration>();
-        _configurationMock.Setup(c => c["Supabase:Url"]).Returns("https://test.supabase.co");
-        _configurationMock.Setup(c => c["Supabase:ServiceRoleKey"]).Returns("test-service-role-key");
-        _service = new AuthService(_httpClientFactoryMock.Object, _configurationMock.Object);
+        _service = new AuthService(_membersRepositoryMock.Object, _tokenServiceMock.Object);
+        _membersRepositoryMock
+            .Setup(r => r.UpdateAsync(It.IsAny<MemberEntity>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        _tokenServiceMock
+            .Setup(t => t.IssueTokens(It.IsAny<MemberEntity>()))
+            .Returns(("access", "refresh", 3600));
     }
 
     [Fact]
-    public async Task LoginAsync_ReturnsLoginResponse_WhenCredentialsAreValid()
+    public async Task LoginAsync_ThrowsNotImplemented()
     {
-        // Arrange
         var request = new LoginRequest("test@example.com", "password123");
-        var userId = Guid.NewGuid();
-        var responseJson = JsonSerializer.Serialize(new
-        {
-            access_token = "test_token",
-            refresh_token = "refresh",
-            expires_in = 3600,
-            token_type = "bearer",
-            user = new { id = userId.ToString() }
-        });
 
-        var handlerMock = new Mock<HttpMessageHandler>();
-        handlerMock
-            .Protected()
-            .Setup<Task<HttpResponseMessage>>(
-                "SendAsync",
-                ItExpr.IsAny<HttpRequestMessage>(),
-                ItExpr.IsAny<CancellationToken>())
-            .ReturnsAsync(new HttpResponseMessage
-            {
-                StatusCode = HttpStatusCode.OK,
-                Content = new StringContent(responseJson)
-            });
+        await Assert.ThrowsAsync<NotImplementedException>(() => _service.LoginAsync(request));
+    }
 
-        var httpClient = new HttpClient(handlerMock.Object);
-        _httpClientFactoryMock.Setup(f => f.CreateClient("SupabaseAdmin")).Returns(httpClient);
+    [Fact]
+    public async Task ProcessGoogleCallbackAsync_CreatesMember_WhenProviderIsUnknown()
+    {
+        var providerId = "google-sub-123";
+        MemberEntity? added = null;
 
-        // Act
-        var result = await _service.LoginAsync(request);
+        _membersRepositoryMock
+            .Setup(r => r.GetByProviderAsync("google", providerId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((MemberEntity?)null);
+        _membersRepositoryMock
+            .Setup(r => r.AddAsync(It.IsAny<MemberEntity>(), It.IsAny<CancellationToken>()))
+            .Callback<MemberEntity, CancellationToken>((entity, _) => added = entity)
+            .Returns((MemberEntity entity, CancellationToken _) => Task.FromResult(entity));
 
-        // Assert
-        Assert.NotNull(result);
-        Assert.Equal("test_token", result.AccessToken);
+        var result = await _service.ProcessGoogleCallbackAsync(
+            "Test User", "test@example.com", providerId, CancellationToken.None, "https://pic");
+
+        Assert.NotNull(added);
+        Assert.Equal("google", added!.Provider);
+        Assert.Equal(providerId, added.ProviderId);
+        Assert.Equal("test@example.com", added.Email);
+        Assert.Equal("https://pic", added.ProfileImage);
+        Assert.True(added.IsActive);
+        Assert.NotEqual(Guid.Empty, added.Uuid);
+        Assert.Equal("access", result.AccessToken);
         Assert.Equal("refresh", result.RefreshToken);
         Assert.Equal(3600, result.ExpiresIn);
-        Assert.Equal("bearer", result.TokenType);
-        Assert.Equal(userId, result.UserId);
     }
 
     [Fact]
-    public async Task LoginAsync_ThrowsHttpRequestException_WhenCredentialsAreInvalid()
+    public async Task ProcessGoogleCallbackAsync_ReusesMember_WhenProviderIsKnown()
     {
-        // Arrange
-        var request = new LoginRequest("invalid@example.com", "wrongpassword");
+        var providerId = "google-sub-456";
+        var member = new MemberEntity(1)
+        {
+            Name = "Existing",
+            Email = "existing@example.com",
+            Provider = "google",
+            ProviderId = providerId,
+            Uuid = Guid.NewGuid(),
+        };
 
-        var handlerMock = new Mock<HttpMessageHandler>();
-        handlerMock
-            .Protected()
-            .Setup<Task<HttpResponseMessage>>(
-                "SendAsync",
-                ItExpr.IsAny<HttpRequestMessage>(),
-                ItExpr.IsAny<CancellationToken>())
-            .ReturnsAsync(new HttpResponseMessage
-            {
-                StatusCode = HttpStatusCode.BadRequest,
-                Content = new StringContent("{\"error\":\"Invalid login credentials\"}")
-            });
+        _membersRepositoryMock
+            .Setup(r => r.GetByProviderAsync("google", providerId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(member);
+        _membersRepositoryMock
+            .Setup(r => r.AddAsync(It.IsAny<MemberEntity>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("member must not be created twice"));
 
-        var httpClient = new HttpClient(handlerMock.Object);
-        _httpClientFactoryMock.Setup(f => f.CreateClient("SupabaseAdmin")).Returns(httpClient);
+        var result = await _service.ProcessGoogleCallbackAsync("Existing", "existing@example.com", providerId);
 
-        // Act & Assert
-        var exception = await Assert.ThrowsAsync<HttpRequestException>(() => _service.LoginAsync(request));
-        Assert.Contains("Login failed", exception.Message);
+        Assert.Equal("access", result.AccessToken);
+        Assert.Equal("refresh", result.RefreshToken);
+    }
+
+    [Fact]
+    public async Task RevokeRefreshTokenAsync_ClearsRefreshToken()
+    {
+        var uuid = Guid.NewGuid();
+        var member = new MemberEntity(1) { Uuid = uuid, RefreshToken = "token" };
+
+        _membersRepositoryMock
+            .Setup(r => r.GetByUuidAsync(uuid, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(member);
+
+        await _service.RevokeRefreshTokenAsync(uuid);
+
+        // Clearing the token is delegated to the token service; the service persists the member.
+        _tokenServiceMock.Verify(t => t.RevokeRefreshToken(member), Times.Once);
+        _membersRepositoryMock.Verify(r => r.UpdateAsync(member, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task RevokeRefreshTokenAsync_DoesNothing_WhenMemberNotFound()
+    {
+        var uuid = Guid.NewGuid();
+
+        _membersRepositoryMock
+            .Setup(r => r.GetByUuidAsync(uuid, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((MemberEntity?)null);
+
+        await _service.RevokeRefreshTokenAsync(uuid);
+
+        _tokenServiceMock.Verify(t => t.RevokeRefreshToken(It.IsAny<MemberEntity>()), Times.Never);
+        _membersRepositoryMock.Verify(r => r.UpdateAsync(It.IsAny<MemberEntity>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 }
