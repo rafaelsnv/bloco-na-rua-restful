@@ -1,0 +1,11 @@
+**/bin/
+**/obj/
+.git/
+.github/
+.tmp/
+.opencode/
+.vs/
+BlocoNaRua.Tests/
+*.md
+Dockerfile*
+docker-compose*

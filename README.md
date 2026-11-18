@@ -27,6 +27,7 @@
 - [🏁 Getting Started ](#-getting-started-)
   - [Prerequisites](#prerequisites)
   - [Installing](#installing)
+- [🔐 Authentication ](#-authentication-)
 - [🔧 Running the tests ](#-running-the-tests-)
 - [🎈 Usage ](#-usage-)
 - [🚀 Deployment ](#-deployment-)
@@ -84,6 +85,16 @@ Follow the steps below to set up and run the project on your local machine:
     ```
 
 The API will be available at `https://localhost:7001` (or the port configured in `launchSettings.json`).
+
+## 🔐 Authentication <a name = "authentication"></a>
+
+Protected endpoints require a Supabase-issued JWT Bearer token:
+
+1. **Login:** Send an `application/x-www-form-urlencoded` request to `POST /api/v1/auth/login` with your credentials to receive a Supabase JWT.
+2. **Authorize requests:** Include `Authorization: Bearer <token>` on requests to protected endpoints.
+3. **Admin endpoints:** Routes under `/api/v1/admin/*` require the `AdminOnly` policy (`role: admin` claim in the JWT).
+
+For the full endpoint reference and schemas, see the committed [`swagger.json`](swagger.json) at the repository root (or open `/swagger` while running the API).
 
 ## 🔧 Running the tests <a name = "running_the_tests"></a>
 
