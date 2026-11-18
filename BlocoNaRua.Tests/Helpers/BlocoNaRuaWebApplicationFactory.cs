@@ -19,7 +19,6 @@ public class TestCurrentMemberHolder
 public class BlocoNaRuaWebApplicationFactory : WebApplicationFactory<Program>
 {
     private readonly Guid _databaseName = Guid.NewGuid();
-    private HttpContextAccessorStub? _httpContextAccessorStub;
     private TestCurrentMemberHolder? _currentMemberHolder;
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -46,17 +45,6 @@ public class BlocoNaRuaWebApplicationFactory : WebApplicationFactory<Program>
             _currentMemberHolder = new TestCurrentMemberHolder();
             services.AddSingleton<TestCurrentMemberHolder>(_currentMemberHolder);
 
-            // Replace IHttpContextAccessor with test stub
-            var httpContextAccessorDescriptor = services.SingleOrDefault(
-                d => d.ServiceType == typeof(IHttpContextAccessor));
-            if (httpContextAccessorDescriptor != null)
-            {
-                services.Remove(httpContextAccessorDescriptor);
-            }
-
-            _httpContextAccessorStub = new HttpContextAccessorStub();
-            services.AddSingleton<IHttpContextAccessor>(_httpContextAccessorStub);
-
             // Add TestAuth as an available authentication scheme
             services.AddAuthentication("TestAuth")
                 .AddScheme<TestAuthOptions, TestAuthHandler>("TestAuth", _ => { });
@@ -70,9 +58,4 @@ public class BlocoNaRuaWebApplicationFactory : WebApplicationFactory<Program>
     }
 
     internal TestCurrentMemberHolder? GetCurrentMemberHolder() => _currentMemberHolder;
-
-    private class HttpContextAccessorStub : IHttpContextAccessor
-    {
-        public HttpContext? HttpContext { get; set; }
-    }
 }
