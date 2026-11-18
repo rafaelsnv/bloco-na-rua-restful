@@ -44,7 +44,15 @@ public class MeetingPresencesController(IMeetingPresenceService service, IMember
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Create([FromBody] MeetingPresenceCreate model)
     {
-        var memberId = model.MemberId ?? await _memberIdentityService.GetMemberIdAsync();
+        int memberId;
+        try
+        {
+            memberId = model.MemberId ?? await _memberIdentityService.GetMemberIdAsync();
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(ex.Message);
+        }
         var entity = new MeetingPresenceEntity(0)
         {
             MemberId = memberId,
@@ -52,9 +60,18 @@ public class MeetingPresencesController(IMeetingPresenceService service, IMember
             CarnivalBlockId = model.CarnivalBlockId,
             IsPresent = model.IsPresent
         };
+        int callerMemberId;
         try
         {
-            var created = await _service.CreateAsync(entity, await _memberIdentityService.GetMemberIdAsync());
+            callerMemberId = await _memberIdentityService.GetMemberIdAsync();
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(ex.Message);
+        }
+        try
+        {
+            var created = await _service.CreateAsync(entity, callerMemberId);
             var result = created.ToDTO();
             return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
         }
@@ -74,7 +91,15 @@ public class MeetingPresencesController(IMeetingPresenceService service, IMember
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Update(int id, [FromBody] MeetingPresenceUpdate model)
     {
-        var memberId = await _memberIdentityService.GetMemberIdAsync();
+        int memberId;
+        try
+        {
+            memberId = await _memberIdentityService.GetMemberIdAsync();
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(ex.Message);
+        }
         var entity = new MeetingPresenceEntity(0)
         {
             IsPresent = model.IsPresent
@@ -103,7 +128,15 @@ public class MeetingPresencesController(IMeetingPresenceService service, IMember
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Delete(int id)
     {
-        var memberId = await _memberIdentityService.GetMemberIdAsync();
+        int memberId;
+        try
+        {
+            memberId = await _memberIdentityService.GetMemberIdAsync();
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(ex.Message);
+        }
         try
         {
             await _service.DeleteAsync(id, memberId);

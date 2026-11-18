@@ -55,7 +55,15 @@ public class MeetingsController(IMeetingService service, IMemberIdentityService 
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Create([FromBody] MeetingCreate model)
     {
-        var memberId = await _memberIdentityService.GetMemberIdAsync();
+        int memberId;
+        try
+        {
+            memberId = await _memberIdentityService.GetMemberIdAsync();
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(ex.Message);
+        }
         var entity = new MeetingEntity
         (
             id: 0,
@@ -88,7 +96,15 @@ public class MeetingsController(IMeetingService service, IMemberIdentityService 
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Update(int id, [FromBody] MeetingUpdate model)
     {
-        var memberId = await _memberIdentityService.GetMemberIdAsync();
+        int memberId;
+        try
+        {
+            memberId = await _memberIdentityService.GetMemberIdAsync();
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(ex.Message);
+        }
         var entity = new MeetingEntity
         (
             id: 0,
@@ -124,7 +140,15 @@ public class MeetingsController(IMeetingService service, IMemberIdentityService 
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Delete(int id)
     {
-        var memberId = await _memberIdentityService.GetMemberIdAsync();
+        int memberId;
+        try
+        {
+            memberId = await _memberIdentityService.GetMemberIdAsync();
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(ex.Message);
+        }
         try
         {
             await _service.DeleteAsync(id, memberId);

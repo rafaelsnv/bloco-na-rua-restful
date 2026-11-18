@@ -71,7 +71,15 @@ public class CarnivalBlocksController(ICarnivalBlockService service, IMemberIden
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Update(int id, [FromBody] CarnivalBlockUpdate model)
     {
-        var memberId = await _memberIdentityService.GetMemberIdAsync();
+        int memberId;
+        try
+        {
+            memberId = await _memberIdentityService.GetMemberIdAsync();
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(ex.Message);
+        }
         var entity = new CarnivalBlockEntity
         (
             id: id,
@@ -106,7 +114,15 @@ public class CarnivalBlocksController(ICarnivalBlockService service, IMemberIden
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Delete(int id)
     {
-        var memberId = await _memberIdentityService.GetMemberIdAsync();
+        int memberId;
+        try
+        {
+            memberId = await _memberIdentityService.GetMemberIdAsync();
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(ex.Message);
+        }
         try
         {
             await _service.DeleteAsync(id, memberId);

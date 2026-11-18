@@ -33,9 +33,17 @@ public class CarnivalBlockMembersController(ICarnivalBlockMembersService carniva
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> JoinByInviteCode(string inviteCode)
     {
+        int memberId;
         try
         {
-            var memberId = await _memberIdentityService.GetMemberIdAsync();
+            memberId = await _memberIdentityService.GetMemberIdAsync();
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(ex.Message);
+        }
+        try
+        {
             var result = await _carnivalBlockMembersService.JoinByInviteCodeAsync(inviteCode, memberId);
             return CreatedAtAction(nameof(GetBlocksMembersByBlockId), new { blockId = result.CarnivalBlockId }, result.ToJoinDTO());
         }
