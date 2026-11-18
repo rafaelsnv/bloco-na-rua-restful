@@ -25,7 +25,9 @@ public class MediaController(
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status413PayloadTooLarge)]
     [ProducesResponseType(StatusCodes.Status415UnsupportedMediaType)]
-    public async Task<IActionResult> UploadImage([FromForm] IFormFile file)
+    // No [FromForm] here: Swashbuckle cannot generate an operation for IFormFile with an
+    // explicit [FromForm] attribute, and [ApiController] already infers multipart binding.
+    public async Task<IActionResult> UploadImage(IFormFile file)
     {
         if (file is null || file.Length == 0)
             return BadRequest(new { message = "No file provided" });
