@@ -74,15 +74,17 @@ builder.Services.AddMemoryCache();
 // the defaults match TokenService so issued and validated tokens always agree.
 const string defaultAuthIssuer = "bloconarua-api";
 const string defaultAuthAudience = "bloconarua-api";
-// The Google handler needs a sign-in scheme to persist the OAuth state; it is a short-lived
-// state cookie only — the API itself authenticates exclusively with the Bearer JWT.
-const string googleStateScheme = "GoogleState";
-
 var authIssuer = configuration["Auth:Issuer"] ?? defaultAuthIssuer;
 var authAudience = configuration["Auth:Audience"] ?? defaultAuthAudience;
 var uploadsBasePath = configuration["Uploads:BasePath"] ?? "/app/uploads";
 
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+var googleClientId = configuration["Authentication:Google:ClientId"];
+var googleClientSecret = configuration["Authentication:Google:ClientSecret"];
+var googleConfigured =
+    !string.IsNullOrWhiteSpace(googleClientId) && !string.IsNullOrWhiteSpace(googleClientSecret);
+
+var authBuilder = builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
         options.MapInboundClaims = false;
@@ -106,22 +108,37 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 return Task.CompletedTask;
             }
         };
-    })
-    .AddCookie(googleStateScheme, options =>
-    {
-        options.Cookie.Name = "bnr_google_state";
-        options.Cookie.HttpOnly = true;
-        options.Cookie.SameSite = SameSiteMode.Lax;
-        options.ExpireTimeSpan = TimeSpan.FromMinutes(10);
-        options.SlidingExpiration = false;
-    })
-    .AddGoogle("Google", options =>
-    {
-        options.ClientId = configuration["Authentication:Google:ClientId"] ?? "";
-        options.ClientSecret = configuration["Authentication:Google:ClientSecret"] ?? "";
-        options.CallbackPath = "/api/v1/auth/google/callback";
-        options.SignInScheme = googleStateScheme;
     });
+
+if (googleConfigured)
+{
+    // The Google handler needs a sign-in scheme to persist the OAuth state; it is a short-lived
+    // state cookie only — the API itself authenticates exclusively with the Bearer JWT.
+    const string googleStateScheme = "GoogleState";
+
+    authBuilder
+        .AddCookie(googleStateScheme, options =>
+        {
+            options.Cookie.Name = "bnr_google_state";
+            options.Cookie.HttpOnly = true;
+            options.Cookie.SameSite = SameSiteMode.Lax;
+            options.ExpireTimeSpan = TimeSpan.FromMinutes(10);
+            options.SlidingExpiration = false;
+        })
+        .AddGoogle("Google", options =>
+        {
+            options.ClientId = googleClientId!;
+            options.ClientSecret = googleClientSecret!;
+            options.CallbackPath = "/api/v1/auth/google/callback";
+            options.SignInScheme = googleStateScheme;
+        });
+}
+else
+{
+    // Missing Google config must not take the whole API down (previously the scheme failed
+    // options validation on every request). The /auth/google endpoints answer 503
+    // (not configured) until Authentication__Google__ClientId / __ClientSecret are set.
+}
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("AdminOnly", policy =>
