@@ -55,13 +55,15 @@ public class AuthController(IAuthService authService) : ControllerBase
     /// </summary>
     /// <remarks>
     /// The email is normalized to lower case. A duplicate email answers 409.
+    /// Accepts the same form encoding as login for client consistency.
     /// </remarks>
     [HttpPost("signup")]
+    [Consumes("application/x-www-form-urlencoded")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> Signup([FromBody] SignupRequest request)
+    public async Task<IActionResult> Signup([FromForm] SignupRequest request)
     {
         if (!ModelState.IsValid)
         {
