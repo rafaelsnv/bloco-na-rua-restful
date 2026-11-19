@@ -1,5 +1,4 @@
 using System.Net;
-using System.Net.Http.Json;
 using System.Text.Json;
 using BlocoNaRua.Tests.Helpers;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -31,9 +30,9 @@ public class PasswordAuthApiIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task Signup_ReturnsCreated_WithTokenPair()
     {
-        var response = await _client.PostAsJsonAsync(
+        var response = await _client.PostAsFormUrlEncodedAsync(
             "/api/v1/auth/signup",
-            new { email = "signup@test.com", password = "password123", name = "Signup User" });
+            new Dictionary<string, string> { ["email"] = "signup@test.com", ["password"] = "password123", ["name"] = "Signup User" });
 
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
@@ -48,13 +47,13 @@ public class PasswordAuthApiIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task Signup_ReturnsConflict_WhenEmailIsAlreadyRegistered()
     {
-        await _client.PostAsJsonAsync(
+        await _client.PostAsFormUrlEncodedAsync(
             "/api/v1/auth/signup",
-            new { email = "duplicate@test.com", password = "password123", name = "First User" });
+            new Dictionary<string, string> { ["email"] = "duplicate@test.com", ["password"] = "password123", ["name"] = "First User" });
 
-        var response = await _client.PostAsJsonAsync(
+        var response = await _client.PostAsFormUrlEncodedAsync(
             "/api/v1/auth/signup",
-            new { email = "duplicate@test.com", password = "password123", name = "Second User" });
+            new Dictionary<string, string> { ["email"] = "duplicate@test.com", ["password"] = "password123", ["name"] = "Second User" });
 
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
     }
@@ -62,7 +61,7 @@ public class PasswordAuthApiIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task Signup_ReturnsBadRequest_WhenPayloadIsInvalid()
     {
-        var response = await _client.PostAsJsonAsync(
+        var response = await _client.PostAsFormUrlEncodedAsync(
             "/api/v1/auth/signup",
             new { email = "not-an-email", password = "short", name = "" });
 
@@ -72,9 +71,9 @@ public class PasswordAuthApiIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task Login_ReturnsOk_AfterSignup()
     {
-        await _client.PostAsJsonAsync(
+        await _client.PostAsFormUrlEncodedAsync(
             "/api/v1/auth/signup",
-            new { email = "login@test.com", password = "password123", name = "Login User" });
+            new Dictionary<string, string> { ["email"] = "login@test.com", ["password"] = "password123", ["name"] = "Login User" });
 
         using var content = new FormUrlEncodedContent(new Dictionary<string, string>
         {
@@ -90,9 +89,9 @@ public class PasswordAuthApiIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task Login_ReturnsUnauthorized_WhenPasswordIsWrong()
     {
-        await _client.PostAsJsonAsync(
+        await _client.PostAsFormUrlEncodedAsync(
             "/api/v1/auth/signup",
-            new { email = "wrong@test.com", password = "password123", name = "Wrong User" });
+            new Dictionary<string, string> { ["email"] = "wrong@test.com", ["password"] = "password123", ["name"] = "Wrong User" });
 
         using var content = new FormUrlEncodedContent(new Dictionary<string, string>
         {
