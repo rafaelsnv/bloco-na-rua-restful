@@ -34,6 +34,13 @@ public class MembersRepository(AppDbContext appContext) : RepositoryBase<MemberE
         return await DbSet.IgnoreQueryFilters().FirstOrDefaultAsync(m => m.Provider == provider && m.ProviderId == providerId, ct);
     }
 
+    public async Task<MemberEntity?> GetByEmailAsync(string email, CancellationToken ct)
+    {
+        // IgnoreQueryFilters: a soft deleted member must still be found by its email, otherwise the
+        // insert below would break the unique ux_members_provider index (provider_id = lowercased email).
+        return await DbSet.IgnoreQueryFilters().FirstOrDefaultAsync(m => m.Email == email, ct);
+    }
+
     public async Task<MemberEntity> AddAsync(MemberEntity entity, CancellationToken ct)
     {
         entity.CreatedAt = DateTime.UtcNow;

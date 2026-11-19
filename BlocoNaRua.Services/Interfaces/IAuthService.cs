@@ -12,6 +12,19 @@ public record LoginRequest(
     string Password
 );
 
+public record SignupRequest(
+    [Required(ErrorMessage = "Email is required")]
+    [EmailAddress(ErrorMessage = "Invalid email format")]
+    string Email,
+
+    [Required(ErrorMessage = "Password is required")]
+    [MinLength(6, ErrorMessage = "Password must be at least 6 characters")]
+    string Password,
+
+    [Required(ErrorMessage = "Name is required")]
+    string Name
+);
+
 public record LoginResponse(
     string AccessToken,
     string RefreshToken,
@@ -28,10 +41,21 @@ public record LoginResponse(
 public interface IAuthService
 {
     /// <summary>
-    /// Password login. Phase 2 (plan §7) — it always throws
-    /// <see cref="NotImplementedException"/>, which ASP.NET Core surfaces as HTTP 501.
+    /// Password login. The member is looked up by email and the password is checked against
+    /// <c>members.password_hash</c>. Every failure (unknown email, wrong password, account of
+    /// another provider) raises the same neutral <see cref="UnauthorizedAccessException"/>.
     /// </summary>
     Task<LoginResponse> LoginAsync(LoginRequest request);
+
+    /// <summary>
+    /// Creates a password account and issues a token pair.
+    /// The email is normalized to lower case and stored as <c>provider = "password"</c>;
+    /// <c>provider_id</c> is the lower cased email so it matches the unique provider index.
+    /// Returns <c>null</c> when the email is already registered (conflict).
+    /// </summary>
+    Task<(string AccessToken, string RefreshToken, int ExpiresIn)?> SignupAsync(
+        SignupRequest request,
+        CancellationToken ct = default);
 
     /// <summary>
     /// Upserts the member behind a Google identity and issues a fresh token pair.
