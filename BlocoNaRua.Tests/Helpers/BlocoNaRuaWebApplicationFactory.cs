@@ -27,15 +27,21 @@ public class BlocoNaRuaWebApplicationFactory : WebApplicationFactory<Program>
 
     private readonly Guid _databaseName = Guid.NewGuid();
     private readonly bool _configureGoogle;
+    private readonly bool _configureSigningKey;
     private TestCurrentMemberHolder? _currentMemberHolder;
 
     /// <param name="configureGoogle">
     /// When false the Google OAuth scheme is not registered, mirroring a deployment without
     /// Authentication__Google__ClientId / Authentication__Google__ClientSecret.
     /// </param>
-    public BlocoNaRuaWebApplicationFactory(bool configureGoogle = true)
+    /// <param name="configureSigningKey">
+    /// When false no Auth:SigningKey is injected, mirroring a deployment where the secret was
+    /// never set (the app must stay up with an ephemeral key).
+    /// </param>
+    public BlocoNaRuaWebApplicationFactory(bool configureGoogle = true, bool configureSigningKey = true)
     {
         _configureGoogle = configureGoogle;
+        _configureSigningKey = configureSigningKey;
     }
 
     /// <summary>
@@ -43,13 +49,22 @@ public class BlocoNaRuaWebApplicationFactory : WebApplicationFactory<Program>
     /// </summary>
     public static BlocoNaRuaWebApplicationFactory WithoutGoogle() => new(configureGoogle: false);
 
+    /// <summary>
+    /// Factory for a deployment without Auth:SigningKey configured.
+    /// </summary>
+    public static BlocoNaRuaWebApplicationFactory WithoutSigningKey() => new(configureSigningKey: false);
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
 
         // The app resolves these at startup (JWT validation parameters, static files).
         // Without them the host fails before any request is served.
-        builder.UseSetting("Auth:SigningKey", TestSigningKey);
+        if (_configureSigningKey)
+        {
+            builder.UseSetting("Auth:SigningKey", TestSigningKey);
+        }
+
         builder.UseSetting("Auth:Issuer", "bloconarua-api");
         builder.UseSetting("Auth:Audience", "bloconarua-api");
         builder.UseSetting("Uploads:BasePath", TestUploadsPath);
