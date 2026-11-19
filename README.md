@@ -88,9 +88,9 @@ The API will be available at `https://localhost:7001` (or the port configured in
 
 ## 🔐 Authentication <a name = "authentication"></a>
 
-Protected endpoints require an API-issued JWT Bearer token (HS256). Identity is Google OAuth — Supabase is not used:
+Protected endpoints require an API-issued JWT Bearer token (HS256). Identity is Google OAuth **or** an API-owned password account — Supabase is not used:
 
-1. **Login:** Start the Google OAuth flow at `GET /api/v1/auth/google/challenge`, then complete it at `GET /api/v1/auth/google/complete` to receive an access + refresh token pair. Rotate with `POST /api/v1/auth/refresh`; revoke with `POST /api/v1/auth/logout` (Bearer). (`POST /api/v1/auth/login` is a 501 placeholder for a future credential flow.)
+1. **Login:** Start the Google OAuth flow at `GET /api/v1/auth/google/challenge`, then complete it at `GET /api/v1/auth/google/complete` to receive an access + refresh token pair. Password accounts use `POST /api/v1/auth/signup` (JSON body) and `POST /api/v1/auth/login` (form-urlencoded), which return the same token pair. Rotate with `POST /api/v1/auth/refresh`; revoke with `POST /api/v1/auth/logout` (Bearer).
 2. **Authorize requests:** Include `Authorization: Bearer <access-token>` on requests to protected endpoints.
 3. **Admin endpoints:** Routes under `/api/v1/admin/*` require the `AdminOnly` policy (`role: admin` claim in the JWT).
 

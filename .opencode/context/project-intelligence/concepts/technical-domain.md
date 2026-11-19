@@ -78,7 +78,7 @@ public class MeetingsController(IMeetingService service, IMemberIdentityService 
 - URL: `api/v1/<ControllerName>` (PascalCase; singular names match entity names: `Members`, `Meetings`, `CarnivalBlocks`, `CarnivalBlockMembers`, `MeetingPresences`).
 - All controllers inherit `ControllerBase` (not `Controller`) — no view support needed.
 - Versioned via `AddApiVersioning` with `AssumeDefaultVersionWhenUnspecified = true` and `SubstituteApiVersionInUrl = true`.
-- Anonymous endpoints are the auth routes: `POST /api/v1/auth/login` (501 phase-2 stub), `GET /api/v1/auth/google/challenge`, `GET /api/v1/auth/google/complete`, and `POST /api/v1/auth/refresh`. Every other controller carries `[Authorize]`, and `AdminController` additionally requires `[Authorize(Policy = "AdminOnly")]`.
+- Anonymous endpoints are the auth routes: `POST /api/v1/auth/login`, `POST /api/v1/auth/signup`, `GET /api/v1/auth/google/challenge`, `GET /api/v1/auth/google/complete`, and `POST /api/v1/auth/refresh`. Every other controller carries `[Authorize]`, and `AdminController` additionally requires `[Authorize(Policy = "AdminOnly")]`.
 
 ### HTTP semantics
 
