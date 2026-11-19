@@ -53,7 +53,7 @@ A **.NET 8 RESTful API** that manages Brazilian carnival blocks (street groups),
 
 ## Endpoints
 
-All routes live under `api/v1/`. Every route requires `Authorization: Bearer <JWT>` except the anonymous auth routes (`POST /api/v1/auth/login` 501 stub, `GET /auth/google/challenge`, `GET /auth/google/complete`, `POST /auth/refresh`).
+All routes live under `api/v1/`. Every route requires `Authorization: Bearer <JWT>` except the anonymous auth routes (`POST /api/v1/auth/login`, `POST /api/v1/auth/signup`, `GET /auth/google/challenge`, `GET /auth/google/complete`, `POST /auth/refresh`).
 
 | Area | Routes | Auth |
 |------|--------|------|

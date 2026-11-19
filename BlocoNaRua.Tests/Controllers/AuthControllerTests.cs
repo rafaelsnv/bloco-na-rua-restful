@@ -10,28 +10,47 @@ namespace BlocoNaRua.Tests.Controllers;
 /// Controller level tests for the API owned auth endpoints.
 /// The full Google OAuth roundtrip (/auth/google/challenge + /auth/google/complete) is
 /// intentionally NOT covered here: it needs real Google credentials and a browser redirect.
-/// What is covered is everything around it — the 501 password stub, refresh and logout.
+/// What is covered is everything around it — password login/signup, refresh and logout.
 /// </summary>
 public class AuthControllerTests
 {
     private readonly Mock<IAuthService> _authServiceMock = new();
 
-    private AuthController CreateController() => new(_authServiceMock.Object);
+    private AuthController CreateController()
+    {
+        var controller = new AuthController(_authServiceMock.Object);
+        controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() };
+        return controller;
+    }
 
     [Fact]
-    public async Task Login_ReturnsNotImplemented_WhenPasswordLoginIsNotMigrated()
+    public async Task Login_ReturnsOk_WhenCredentialsAreValid()
     {
         var request = new LoginRequest("test@example.com", "password123");
         _authServiceMock
             .Setup(s => s.LoginAsync(It.IsAny<LoginRequest>()))
-            .ThrowsAsync(new NotImplementedException());
+            .ReturnsAsync(new LoginResponse("access", "refresh", 3600, "bearer", Guid.NewGuid()));
 
         var controller = CreateController();
 
         var result = await controller.Login(request);
 
-        var statusResult = Assert.IsType<ObjectResult>(result);
-        Assert.Equal(StatusCodes.Status501NotImplemented, statusResult.StatusCode);
+        Assert.IsType<OkObjectResult>(result);
+    }
+
+    [Fact]
+    public async Task Login_ReturnsUnauthorized_WhenCredentialsAreInvalid()
+    {
+        var request = new LoginRequest("test@example.com", "wrong-password");
+        _authServiceMock
+            .Setup(s => s.LoginAsync(It.IsAny<LoginRequest>()))
+            .ThrowsAsync(new UnauthorizedAccessException("Invalid credentials"));
+
+        var controller = CreateController();
+
+        var result = await controller.Login(request);
+
+        Assert.IsType<UnauthorizedObjectResult>(result);
     }
 
     [Fact]
@@ -47,6 +66,48 @@ public class AuthControllerTests
     }
 
     [Fact]
+    public async Task Signup_ReturnsCreated_WhenEmailIsNew()
+    {
+        _authServiceMock
+            .Setup(s => s.SignupAsync(It.IsAny<SignupRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(("access", "refresh", 3600));
+
+        var controller = CreateController();
+
+        var result = await controller.Signup(new SignupRequest("test@example.com", "password123", "Test User"));
+
+        var statusResult = Assert.IsType<ObjectResult>(result);
+        Assert.Equal(StatusCodes.Status201Created, statusResult.StatusCode);
+        Assert.NotNull(statusResult.Value);
+    }
+
+    [Fact]
+    public async Task Signup_ReturnsConflict_WhenEmailIsAlreadyRegistered()
+    {
+        _authServiceMock
+            .Setup(s => s.SignupAsync(It.IsAny<SignupRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(((string, string, int)?)null);
+
+        var controller = CreateController();
+
+        var result = await controller.Signup(new SignupRequest("test@example.com", "password123", "Test User"));
+
+        var conflictResult = Assert.IsType<ConflictObjectResult>(result);
+        Assert.Equal(StatusCodes.Status409Conflict, conflictResult.StatusCode);
+    }
+
+    [Fact]
+    public async Task Signup_ReturnsBadRequest_WhenModelStateInvalid()
+    {
+        var controller = CreateController();
+        controller.ModelState.AddModelError("Email", "Invalid email format");
+
+        var result = await controller.Signup(new SignupRequest("not-an-email", "password123", "Test User"));
+
+        Assert.IsType<BadRequestObjectResult>(result);
+    }
+
+    [Fact]
     public async Task Refresh_ReturnsUnauthorized_WhenTokenIsInvalid()
     {
         _authServiceMock
@@ -54,7 +115,6 @@ public class AuthControllerTests
             .ReturnsAsync(((string, string, int)?)null);
 
         var controller = CreateController();
-        controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() };
 
         var result = await controller.Refresh(new RefreshRequest("invalid-token"));
 
@@ -69,7 +129,6 @@ public class AuthControllerTests
             .ReturnsAsync(((string, string, int)?)("access", "refresh", 3600));
 
         var controller = CreateController();
-        controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() };
 
         var result = await controller.Refresh(new RefreshRequest("valid-token"));
 
@@ -97,7 +156,6 @@ public class AuthControllerTests
             });
 
         var controller = CreateController();
-        controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() };
 
         var first = await controller.Refresh(new RefreshRequest("old-token"));
         Assert.IsType<OkObjectResult>(first);

@@ -14,7 +14,7 @@ Authorization: Bearer <JWT>
 ```
 
 - The JWT is validated in `BlocoNaRua.Restful/Program.cs:85-109` — self-issued HS256; issuer/audience `bloconarua-api` (`Auth:Issuer` / `Auth:Audience`), signing key `Auth:SigningKey` (env-only, ≥ 32 bytes), lifetime validated.
-- Login flow: `GET /api/v1/auth/google/challenge` (302 to Google) → `GET /api/v1/auth/google/complete` returns the token pair. `POST /api/v1/auth/login` is a 501 phase-2 stub (password login not migrated).
+- Login flow: `GET /api/v1/auth/google/challenge` (302 to Google) → `GET /api/v1/auth/google/complete` returns the token pair. `POST /api/v1/auth/login` (form-urlencoded) and `POST /api/v1/auth/signup` (JSON) are the password paths.
 - The acting member is resolved from the `sub` claim (member UUID) via `IMemberIdentityService` → `Members.Uuid` → `int memberId`.
 - Block-level roles (`Owner` / `Manager` / `Member`) are applied in the service layer, not by an ASP.NET policy.
 - `/api/v1/admin/*` additionally requires the `role: admin` claim (policy `AdminOnly`, `Program.cs:125-129`).
@@ -35,11 +35,12 @@ Full chain: `../concepts/identity-auth.md`.
 
 ## Endpoint map
 
-All routes below require `Authorization: Bearer <JWT>` **except** the anonymous auth routes (`login` stub, `google/challenge`, `google/complete`, `refresh`).
+All routes below require `Authorization: Bearer <JWT>` **except** the anonymous auth routes (`login`, `signup`, `google/challenge`, `google/complete`, `refresh`).
 
 | Method | Route | Auth | Purpose |
 |--------|-------|------|---------|
-| `POST` | `/api/v1/auth/login` | none | **501** — password login is a phase-2 stub; use Google login |
+| `POST` | `/api/v1/auth/login` | none | Password login (form-urlencoded) — **200** with the token pair; bad credentials → **401** `{"message": "Invalid credentials"}` |
+| `POST` | `/api/v1/auth/signup` | none | Create a password account (JSON body `email`, `password`, `name`) — **201** with the token pair; duplicate email → **409**; invalid payload → **400** |
 | `GET` | `/api/v1/auth/google/challenge` | none | Start Google OAuth — 302 to accounts.google.com |
 | `GET` | `/api/v1/auth/google/complete` | none | OAuth callback — upserts member, returns `{ accessToken, refreshToken, expiresIn, tokenType }` |
 | `POST` | `/api/v1/auth/refresh` | none | Rotate refresh token — returns a fresh token pair; old refresh token is dead on return |
@@ -104,7 +105,8 @@ Host: api.bloconarua.com
 }
 ```
 
-- `POST /api/v1/auth/login` → **501** `{ "message": "Password login not yet migrated. Use /auth/google." }` — password login is phase 2; no password is checked today.
+- `POST /api/v1/auth/login` (form-urlencoded `email` + `password`) → **200** with the token pair; unknown email, wrong password and a non-password account all answer **401** `{"message": "Invalid credentials"}` (neutral — no account enumeration).
+- `POST /api/v1/auth/signup` (JSON `email`, `password`, `name`) → **201** `{ "access_token", "refresh_token", "expires_in", "token_type" }`; the email is normalized to lower case; a duplicate email answers **409** `{"message": "Email already registered"}`.
 - Refresh: `POST /api/v1/auth/refresh` with `{ "refreshToken": "..." }` — **rotation**: each call returns a brand-new token pair and invalidates the stored refresh token immediately. Unknown/expired token → `401 {"message": "Invalid refresh token"}`.
 - Logout: `POST /api/v1/auth/logout` (Bearer) → `200 { "revoked": true }` — revokes the refresh token only.
 - Invalid input on `complete` (missing `sub`/`email`) → `400`; inactive member → `401`.
@@ -166,7 +168,8 @@ Login → store the token → send it on every subsequent call:
 ```dart
 // 1. login — open GET /api/v1/auth/google/challenge (browser flow);
 //    the completion call returns { accessToken, refreshToken, expiresIn, tokenType }
-//    POST /api/v1/auth/login returns 501 (password login is phase 2)
+//    POST /api/v1/auth/signup (JSON) then POST /api/v1/auth/login (form-urlencoded)
+//    also return a token pair
 final token = tokenPair['accessToken'] as String;
 await secureStorage.write(key: 'access_token', value: token); // flutter_secure_storage
 

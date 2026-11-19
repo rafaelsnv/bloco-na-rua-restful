@@ -13,4 +13,5 @@ public interface IMembersRepository
     Task<MemberEntity?> GetByUuidAsync(Guid uuid, CancellationToken ct);
     Task<MemberEntity?> GetByUuidIgnoreFiltersAsync(Guid uuid, CancellationToken ct);
     Task<MemberEntity?> GetByProviderAsync(string provider, string providerId, CancellationToken ct);
+    Task<MemberEntity?> GetByEmailAsync(string email, CancellationToken ct);
 }

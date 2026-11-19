@@ -20,14 +20,13 @@ public class AuthController(IAuthService authService) : ControllerBase
     private readonly IAuthService _authService = authService;
 
     /// <summary>
-    /// Password login. Not migrated yet (phase 2) — always answers HTTP 501.
+    /// Password login.
     /// </summary>
     [HttpPost("login")]
     [Consumes("application/x-www-form-urlencoded")]
     [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status501NotImplemented)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> Login([FromForm] LoginRequest request)
     {
@@ -41,14 +40,50 @@ public class AuthController(IAuthService authService) : ControllerBase
             var result = await _authService.LoginAsync(request);
             return Ok(result);
         }
-        catch (NotImplementedException)
+        catch (UnauthorizedAccessException ex)
         {
-            return StatusCode(501, new { message = "Password login not yet migrated. Use /auth/google." });
+            return Unauthorized(new { message = ex.Message });
         }
         catch (HttpRequestException ex)
         {
             return Unauthorized(new { message = "Invalid credentials", detail = ex.Message });
         }
+    }
+
+    /// <summary>
+    /// Creates a password account and returns a fresh token pair.
+    /// </summary>
+    /// <remarks>
+    /// The email is normalized to lower case. A duplicate email answers 409.
+    /// </remarks>
+    [HttpPost("signup")]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> Signup([FromBody] SignupRequest request)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        var result = await _authService.SignupAsync(request, HttpContext.RequestAborted);
+        if (result is null)
+        {
+            return Conflict(new { message = "Email already registered" });
+        }
+
+        var (accessToken, refreshToken, expiresIn) = result.Value;
+        return StatusCode(
+            StatusCodes.Status201Created,
+            new
+            {
+                access_token = accessToken,
+                refresh_token = refreshToken,
+                expires_in = expiresIn,
+                token_type = "bearer"
+            });
     }
 
     /// <summary>

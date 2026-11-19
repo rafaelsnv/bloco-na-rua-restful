@@ -78,11 +78,14 @@
 
 ---
 
-## 2. Password login — `POST /api/v1/auth/login` (not migrated)
+## 2. Password login & signup — `POST /api/v1/auth/login` / `POST /api/v1/auth/signup`
 
-- Route `api/v{version:apiVersion}/[controller]` → `POST /api/v1/auth/login`, `[Consumes("application/x-www-form-urlencoded")]`, body `LoginRequest` (email + password).
-- `AuthService.LoginAsync` throws `NotImplementedException` → the controller answers **501** `{ message = "Password login not yet migrated. Use /auth/google." }`.
-- This is **phase 2** of the migration plan: the old Supabase password grant is gone, so no password is checked and no hash is migrated yet. `members.password_hash` exists in the schema but is unused.
+- Login route `api/v{version:apiVersion}/[controller]` → `POST /api/v1/auth/login`, `[Consumes("application/x-www-form-urlencoded")]`, body `LoginRequest` (email + password).
+- Signup route → `POST /api/v1/auth/signup`, `[FromBody] SignupRequest` (email + password + name, JSON).
+- `AuthService.LoginAsync` looks the member up by email (`IMembersRepository.GetByEmailAsync`, `IgnoreQueryFilters` so soft-deleted rows are found), then checks `provider = "password"` and verifies the password with `IPasswordHasher<MemberEntity>` (`Microsoft.AspNetCore.Identity.PasswordHasher`, ASP.NET Identity format, registered as a singleton in `ServicesExtensions.cs`).
+- Every failure is neutral: unknown email, wrong password and a Google-provider account all raise `UnauthorizedAccessException("Invalid credentials")` → **401** (no account enumeration). An inactive member gets `"Member account is inactive."`.
+- `AuthService.SignupAsync` normalizes the email to lower case, stores it as `provider = "password"` / `provider_id = <lowercased email>` (so it matches the unique `ux_members_provider` index), `email_confirmed = false`, `is_active = true` and a fresh `uuid`; it returns `null` when the email is already registered → the controller answers **409**.
+- Both endpoints issue the same token pair shape as the Google callback: `{ access_token, refresh_token, expires_in, token_type }`.
 
 ---
 
@@ -240,9 +243,9 @@ Two distinct authorization layers — do not conflate them:
 
 | Column | Type | Notes |
 |--------|------|-------|
-| `provider` | text? | `google` for OAuth members; `password` reserved for phase 2 |
-| `provider_id` | text? | the provider's subject id (`sub`) |
-| `password_hash` | text? | reserved for phase 2, currently unused |
+| `provider` | text? | `google` for OAuth members; `password` for API-owned password accounts |
+| `provider_id` | text? | the provider's subject id (`sub` for Google, the lower cased email for password accounts) |
+| `password_hash` | text? | ASP.NET Identity hash (`IPasswordHasher<MemberEntity>`), set on password signups |
 | `refresh_token` | text? | opaque base64url token, stored plaintext |
 | `refresh_token_expires_at` | timestamptz? | refresh-token expiry |
 | `email_confirmed` | bool | defaults `false`; Google members are created with `true` |
@@ -339,7 +342,7 @@ See the *Integration Test Pattern* section of `examples/component-patterns.md` f
 
 | Concern | File |
 |---------|------|
-| Auth endpoints (login stub, google challenge/complete, refresh, logout) | `BlocoNaRua.Restful/Controllers/AuthController.cs` |
+| Auth endpoints (login, signup, google challenge/complete, refresh, logout) | `BlocoNaRua.Restful/Controllers/AuthController.cs` |
 | Google callback upsert + refresh rotation + revocation | `BlocoNaRua.Services/Implementations/AuthService.cs` |
 | Auth contracts (`LoginRequest`, `LoginResponse`) | `BlocoNaRua.Services/Interfaces/IAuthService.cs` |
 | Access/refresh token issuing, `role` claim from `Auth:AdminEmails` | `BlocoNaRua.Services/Implementations/TokenService.cs`, `BlocoNaRua.Services/Interfaces/ITokenService.cs` |

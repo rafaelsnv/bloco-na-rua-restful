@@ -388,7 +388,7 @@ The project is self-hosting its infrastructure (Dokploy). Keeping Supabase solel
 - The API issues and validates its own **HS256 JWTs** (no JWKS / OIDC discovery / outbound call); `Auth:SigningKey` is env-only.
 - Social login is **Google-only OAuth 2.0**: `GET /auth/google/challenge` → `GET /auth/google/complete` returns the token pair; plus `POST /auth/refresh` (rotation) and `POST /auth/logout`.
 - The `members` table is the **single identity source** (provider/provider_id/refresh-token columns); `sub` claim = member UUID.
-- Password login is phase 2: `POST /auth/login` answers **501** (stub).
+- Password login is API-owned too: `POST /auth/login` and `POST /auth/signup` (phase 2, shipped 2026-11-18).
 - Image uploads go to a **local `/uploads` volume** via `IImageUrlService` / `MediaController` (no object storage provider).
 
 ### Rationale
