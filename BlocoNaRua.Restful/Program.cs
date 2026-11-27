@@ -24,6 +24,12 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
     options.ForwardedHeaders =
         ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost;
+    // The API sits behind Cloudflare/reverse proxies whose IPs change; the middleware
+    // ignores X-Forwarded-* from unknown proxies by default (default loopback-only list),
+    // which made the app see http:// and break the Google redirect_uri. Trusting all
+    // proxies is safe here because ingress traffic can only arrive via the proxy.
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
 });
 
 IConfiguration configuration = builder.Configuration;

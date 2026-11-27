@@ -81,7 +81,7 @@
 ## 2. Password login & signup — `POST /api/v1/auth/login` / `POST /api/v1/auth/signup`
 
 - Login route `api/v{version:apiVersion}/[controller]` → `POST /api/v1/auth/login`, `[Consumes("application/x-www-form-urlencoded")]`, body `LoginRequest` (email + password).
-- Signup route → `POST /api/v1/auth/signup`, `[FromBody] SignupRequest` (email + password + name, JSON).
+- Signup route → `POST /api/v1/auth/signup`, `[Consumes("application/x-www-form-urlencoded")]`, `[FromForm]` body `SignupRequest` (email + password + name) — same form-encoded style as login, not JSON.
 - `AuthService.LoginAsync` looks the member up by email (`IMembersRepository.GetByEmailAsync`, `IgnoreQueryFilters` so soft-deleted rows are found), then checks `provider = "password"` and verifies the password with `IPasswordHasher<MemberEntity>` (`Microsoft.AspNetCore.Identity.PasswordHasher`, ASP.NET Identity format, registered as a singleton in `ServicesExtensions.cs`).
 - Every failure is neutral: unknown email, wrong password and a Google-provider account all raise `UnauthorizedAccessException("Invalid credentials")` → **401** (no account enumeration). An inactive member gets `"Member account is inactive."`.
 - `AuthService.SignupAsync` normalizes the email to lower case, stores it as `provider = "password"` / `provider_id = <lowercased email>` (so it matches the unique `ux_members_provider` index), `email_confirmed = false`, `is_active = true` and a fresh `uuid`; it returns `null` when the email is already registered → the controller answers **409**.
