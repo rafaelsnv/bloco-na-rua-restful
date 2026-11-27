@@ -116,8 +116,15 @@ public class AuthController(IAuthService authService) : ControllerBase
     /// <summary>
     /// Completes the Google OAuth flow and issues an API token pair.
     /// </summary>
+    /// <remarks>
+    /// Native-app flow (RFC 8252): the browser follows Google back to this endpoint,
+    /// so the tokens must be handed back to the app via a 302 to the deep link with the
+    /// token pair in the URL fragment (fragments never reach servers — not the query
+    /// string, which leaks into logs/history). Any non-redirect response is treated as
+    /// failure by the app.
+    /// </remarks>
     [HttpGet("google/complete")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status302Found)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
@@ -169,13 +176,14 @@ public class AuthController(IAuthService authService) : ControllerBase
                 HttpContext.RequestAborted,
                 picture);
 
-            return Ok(new
-            {
-                access_token = accessToken,
-                refresh_token = refreshToken,
-                expires_in = expiresIn,
-                token_type = "bearer"
-            });
+            // Redirect() would reject the non-local deep-link URI (IsLocalUrl check), so the
+            // Location header is set directly. Fragment, not query string — RFC 8252 §7.5.
+            Response.StatusCode = StatusCodes.Status302Found;
+            Response.Headers.Location =
+                $"blocnatarua://auth/callback#access_token={Uri.EscapeDataString(accessToken)}" +
+                $"&refresh_token={Uri.EscapeDataString(refreshToken)}" +
+                $"&expires_in={expiresIn}&token_type=bearer";
+            return Empty;
         }
         catch (UnauthorizedAccessException ex)
         {
